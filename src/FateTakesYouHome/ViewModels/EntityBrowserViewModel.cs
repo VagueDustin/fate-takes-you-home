@@ -8,18 +8,16 @@ using FateTakesYouHome.Services;
 
 namespace FateTakesYouHome.ViewModels;
 
-/// <summary>A named run of entities — an area, a floor, or a domain.</summary>
-public sealed partial class EntityGroup : ObservableObject
-{
-    [ObservableProperty]
-    private bool _isExpanded = true;
-
-    public required string Name { get; init; }
-
-    public ObservableCollection<BrowsableEntityViewModel> Entities { get; } = [];
-
-    public int Count => Entities.Count;
-}
+/// <summary>
+/// A group heading in the flat browser list.
+/// </summary>
+/// <remarks>
+/// The list is deliberately flat — headers and entities interleaved in one collection — rather
+/// than a nested items control per group. WPF cannot virtualise nested items controls, and with a
+/// thousand-entity install that meant building every row and every visual for all of them up
+/// front. A flat collection lets one <c>VirtualizingStackPanel</c> realise only what is on screen.
+/// </remarks>
+public sealed record EntityGroupHeader(string Name, int Count);
 
 /// <summary>One row in the browser: a tile plus the controls for pinning it.</summary>
 public sealed partial class BrowsableEntityViewModel : ObservableObject
@@ -50,6 +48,15 @@ public sealed partial class BrowsableEntityViewModel : ObservableObject
         IsPinned = !IsPinned;
         PinToggled?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Sets the pin state without announcing it.
+    /// </summary>
+    /// <remarks>
+    /// Used when a cached row is reused during a rebuild. Going through the command would persist
+    /// the value straight back to settings and re-enter the rebuild.
+    /// </remarks>
+    internal void SetPinnedQuietly(bool pinned) => IsPinned = pinned;
 }
 
 /// <summary>
@@ -75,6 +82,9 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
     private readonly DispatcherTimer _searchTimer;
 
     private readonly Dictionary<string, EntityTileViewModel> _tiles =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, BrowsableEntityViewModel> _rows =
         new(StringComparer.OrdinalIgnoreCase);
 
     private bool _loaded;
@@ -114,9 +124,16 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
         _homeAssistant.SnapshotReloaded += OnSnapshotReloaded;
     }
 
-    public ObservableCollection<EntityGroup> Groups { get; } = [];
+    /// <summary>
+    /// Headers and entity rows interleaved, for a single virtualising list.
+    /// </summary>
+    /// <remarks>
+    /// Typed as <see cref="object"/> so the two implicit <c>DataTemplate</c>s keyed by data type
+    /// pick themselves. A template selector would work too but adds a class for nothing.
+    /// </remarks>
+    public ObservableCollection<object> Rows { get; } = [];
 
-    public bool IsEmpty => Groups.Count == 0;
+    public bool IsEmpty => Rows.Count == 0;
 
     /// <summary>Explains an empty result without making the user guess which filter did it.</summary>
     public string EmptyMessage
@@ -182,32 +199,40 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
 
         MatchCount = candidates.Count;
 
-        // Group, then sort inside each group. Ordinal-ignore-case on the display name so the
-        // ordering matches what the user is reading rather than the entity id.
+        // Group, then sort inside each group. Culture-aware on the display name so the ordering
+        // matches what the user is reading rather than the entity id.
         var groups = candidates
             .GroupBy(GroupNameFor)
             .OrderBy(g => g.Key == UngroupedName)
             .ThenBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase);
 
-        Groups.Clear();
+        Rows.Clear();
 
         foreach (IGrouping<string, HaEntityState> group in groups)
         {
-            var model = new EntityGroup { Name = group.Key };
+            HaEntityState[] members = group
+                .OrderBy(s => s.FriendlyName, StringComparer.CurrentCultureIgnoreCase)
+                .ToArray();
 
-            foreach (HaEntityState state in group
-                         .OrderBy(s => s.FriendlyName, StringComparer.CurrentCultureIgnoreCase))
+            Rows.Add(new EntityGroupHeader(group.Key, members.Length));
+
+            foreach (HaEntityState state in members)
             {
-                model.Entities.Add(BuildRow(state, pinned.Contains(state.EntityId)));
+                Rows.Add(BuildRow(state, pinned.Contains(state.EntityId)));
             }
-
-            Groups.Add(model);
         }
 
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(EmptyMessage));
     }
 
+    /// <summary>
+    /// Returns the row for an entity, reusing the existing one where possible.
+    /// </summary>
+    /// <remarks>
+    /// Rows are cached alongside their tiles. Building fresh ones on every filter change would
+    /// allocate a thousand view models per keystroke and leak an event subscription each time.
+    /// </remarks>
     private BrowsableEntityViewModel BuildRow(HaEntityState state, bool isPinned)
     {
         if (!_tiles.TryGetValue(state.EntityId, out EntityTileViewModel? tile))
@@ -220,8 +245,15 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
             tile.Update(state);
         }
 
+        if (_rows.TryGetValue(state.EntityId, out BrowsableEntityViewModel? existing))
+        {
+            existing.SetPinnedQuietly(isPinned);
+            return existing;
+        }
+
         var row = new BrowsableEntityViewModel(tile, _settings, isPinned);
         row.PinToggled += OnPinToggled;
+        _rows[state.EntityId] = row;
         return row;
     }
 
@@ -344,14 +376,27 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
             return;
         }
 
-        // An entity appearing or disappearing does change the shape of the list.
-        Rebuild();
+        // An entity appearing or disappearing changes the shape of the list, but so does every
+        // sensor this browser is filtering out. Coalesce, or a busy server rebuilds continuously.
+        _searchTimer.Stop();
+        _searchTimer.Start();
     }
 
     private void OnSnapshotReloaded(object? sender, EventArgs e)
     {
+        DetachRows();
         _tiles.Clear();
         Rebuild();
+    }
+
+    private void DetachRows()
+    {
+        foreach (BrowsableEntityViewModel row in _rows.Values)
+        {
+            row.PinToggled -= OnPinToggled;
+        }
+
+        _rows.Clear();
     }
 
     public void Dispose()
@@ -368,6 +413,8 @@ public sealed partial class EntityBrowserViewModel : ObservableObject, IDisposab
 
         _homeAssistant.EntityChanged -= OnEntityChanged;
         _homeAssistant.SnapshotReloaded -= OnSnapshotReloaded;
+
+        DetachRows();
 
         foreach (EntityTileViewModel tile in _tiles.Values)
         {

@@ -36,6 +36,15 @@ public static class ThemeResolver
         OrnamentTier tier = Pick(chain, static d => d.Tier) ?? OrnamentTier.Charted;
         ThemeOrnament tierDefaults = ThemeOrnament.ForTier(tier);
 
+        // Declaring a tier resets the ornament switches.
+        //
+        // Ornament is looked up in a chain that stops at whichever document declared the tier, so
+        // an ancestor's explicit switch cannot leak past it. Without this, a theme saying
+        // "tier": "utility" still inherited its parent's ornate flags — which is how a light,
+        // deliberately plain theme ended up with a star field painted over it. Switches the theme
+        // sets itself are still honoured, because its own document is at the end of this chain.
+        List<ThemeDocument> ornamentChain = ChainFromTierDeclaration(chain);
+
         double? radiusMd = Pick(chain, static d => d.Shape?.RadiusMd);
 
         return new Theme
@@ -123,19 +132,20 @@ public static class ThemeResolver
 
             Ornament = new ThemeOrnament
             {
-                CornerBrackets = Pick(chain, static d => d.Ornament?.CornerBrackets) ?? tierDefaults.CornerBrackets,
-                FilmGrain = Pick(chain, static d => d.Ornament?.FilmGrain) ?? tierDefaults.FilmGrain,
+                CornerBrackets = Pick(ornamentChain, static d => d.Ornament?.CornerBrackets) ?? tierDefaults.CornerBrackets,
+                FilmGrain = Pick(ornamentChain, static d => d.Ornament?.FilmGrain) ?? tierDefaults.FilmGrain,
                 FilmGrainOpacity = Math.Clamp(
-                    Pick(chain, static d => d.Ornament?.FilmGrainOpacity) ?? ThemeDefaults.FilmGrainOpacity, 0, 0.4),
-                Glassmorphism = Pick(chain, static d => d.Ornament?.Glassmorphism) ?? tierDefaults.Glassmorphism,
-                OrnateDividers = Pick(chain, static d => d.Ornament?.OrnateDividers) ?? tierDefaults.OrnateDividers,
-                AmbientMotion = Pick(chain, static d => d.Ornament?.AmbientMotion) ?? tierDefaults.AmbientMotion,
-                StaggerEntrances = Pick(chain, static d => d.Ornament?.StaggerEntrances) ?? tierDefaults.StaggerEntrances,
-                GradientDisplayFill = Pick(chain, static d => d.Ornament?.GradientDisplayFill) ?? tierDefaults.GradientDisplayFill,
-                DepthWash = Pick(chain, static d => d.Ornament?.DepthWash) ?? tierDefaults.DepthWash,
-                PanelEdge = Pick(chain, static d => d.Ornament?.PanelEdge) ?? tierDefaults.PanelEdge,
+                    Pick(ornamentChain, static d => d.Ornament?.FilmGrainOpacity) ?? ThemeDefaults.FilmGrainOpacity, 0, 0.4),
+                Glassmorphism = Pick(ornamentChain, static d => d.Ornament?.Glassmorphism) ?? tierDefaults.Glassmorphism,
+                OrnateDividers = Pick(ornamentChain, static d => d.Ornament?.OrnateDividers) ?? tierDefaults.OrnateDividers,
+                AmbientMotion = Pick(ornamentChain, static d => d.Ornament?.AmbientMotion) ?? tierDefaults.AmbientMotion,
+                StaggerEntrances = Pick(ornamentChain, static d => d.Ornament?.StaggerEntrances) ?? tierDefaults.StaggerEntrances,
+                GradientDisplayFill = Pick(ornamentChain, static d => d.Ornament?.GradientDisplayFill) ?? tierDefaults.GradientDisplayFill,
+                DepthWash = Pick(ornamentChain, static d => d.Ornament?.DepthWash) ?? tierDefaults.DepthWash,
+                Starfield = Pick(ornamentChain, static d => d.Ornament?.Starfield) ?? tierDefaults.Starfield,
+                PanelEdge = Pick(ornamentChain, static d => d.Ornament?.PanelEdge) ?? tierDefaults.PanelEdge,
                 MaxConcurrentAnimations = Math.Clamp(
-                    Pick(chain, static d => d.Ornament?.MaxConcurrentAnimations)
+                    Pick(ornamentChain, static d => d.Ornament?.MaxConcurrentAnimations)
                     ?? tierDefaults.MaxConcurrentAnimations, 1, 32),
             },
 
@@ -294,6 +304,28 @@ public static class ThemeResolver
             points[1],
             Math.Clamp(points[2], 0, 1),
             points[3]);
+    }
+
+    /// <summary>
+    /// Trims the chain to start at whichever document declared the ornament tier.
+    /// </summary>
+    /// <remarks>
+    /// The chain arrives root-first. Anything above the nearest <c>tier</c> declaration is dropped,
+    /// so a theme that picks a tier gets that tier's ornament defaults rather than its ancestor's
+    /// explicit choices — while still keeping any switch it sets itself, since its own document is
+    /// the last entry. A theme that declares no tier inherits the whole chain as before.
+    /// </remarks>
+    private static List<ThemeDocument> ChainFromTierDeclaration(List<ThemeDocument> rootFirstChain)
+    {
+        for (int i = rootFirstChain.Count - 1; i >= 0; i--)
+        {
+            if (rootFirstChain[i].Tier is not null)
+            {
+                return rootFirstChain.GetRange(i, rootFirstChain.Count - i);
+            }
+        }
+
+        return rootFirstChain;
     }
 
     /// <summary>

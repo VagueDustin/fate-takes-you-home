@@ -87,7 +87,51 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
     /// <summary>True when connected and the first snapshot has arrived.</summary>
     public bool IsReady => ConnectionState == HaConnectionState.Connected && !IsLoadingSnapshot;
 
+    /// <summary>
+    /// A snapshot of every known entity state.
+    /// </summary>
+    /// <remarks>
+    /// Allocates. With a thousand-entity install this is far too expensive to call from an event
+    /// handler — use <see cref="EnumerateStates"/> or <see cref="CountStates"/> on any hot path.
+    /// </remarks>
     public IReadOnlyCollection<HaEntityState> States => _states.Values.ToArray();
+
+    /// <summary>How many entities are known. Free; no enumeration.</summary>
+    public int StateCount => _states.Count;
+
+    /// <summary>
+    /// Walks the entity states without allocating a snapshot.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ConcurrentDictionary{TKey,TValue}.Values"/> builds a whole new collection every
+    /// time it is read, so it is not usable from a per-event code path. Enumerating the dictionary
+    /// itself does not.
+    /// </remarks>
+    public IEnumerable<HaEntityState> EnumerateStates()
+    {
+        foreach (KeyValuePair<string, HaEntityState> entry in _states)
+        {
+            yield return entry.Value;
+        }
+    }
+
+    /// <summary>Counts matching entities in a single pass, without allocating.</summary>
+    public int CountStates(Func<HaEntityState, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        int count = 0;
+
+        foreach (KeyValuePair<string, HaEntityState> entry in _states)
+        {
+            if (predicate(entry.Value))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     public IReadOnlyList<HaArea> Areas { get; private set; } = [];
 
@@ -431,8 +475,10 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
     /// <param name="includeUnavailable">Include entities the server cannot currently reach.</param>
     public IEnumerable<HaEntityState> Browsable(bool includeAuxiliary, bool includeUnavailable)
     {
-        foreach (HaEntityState state in _states.Values)
+        foreach (KeyValuePair<string, HaEntityState> pair in _states)
         {
+            HaEntityState state = pair.Value;
+
             if (!HaDomains.IsSupported(state.Domain))
             {
                 continue;
@@ -481,7 +527,22 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
         SnapshotReloaded?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Marshals onto the UI thread, running inline when already there.</summary>
+    /// <summary>
+    /// Marshals onto the UI thread, running inline when already there.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Queued at <see cref="DispatcherPriority.Background"/>, which is deliberately below both
+    /// <c>Render</c> and <c>Input</c>. This used to be <c>DataBind</c> — a <em>higher</em> priority
+    /// than rendering — and a burst of <c>state_changed</c> events from a busy server would
+    /// therefore starve the render loop and freeze the interface until the burst cleared. A house
+    /// with a thousand entities produces such bursts constantly.
+    /// </para>
+    /// <para>
+    /// The cost is that a state change may be applied a frame or two late. That is invisible; a
+    /// stalled window is not.
+    /// </para>
+    /// </remarks>
     private void Post(Action action)
     {
         if (_disposed)
@@ -495,7 +556,7 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
             return;
         }
 
-        _dispatcher.BeginInvoke(DispatcherPriority.DataBind, action);
+        _dispatcher.BeginInvoke(DispatcherPriority.Background, action);
     }
 
     private static string DescribeState(HaConnectionState state) => state switch

@@ -166,6 +166,7 @@ public sealed class ThemeDefaultsTests
     [InlineData("fate.json")]
     [InlineData("fate-ceremonial.json")]
     [InlineData("fate-utility.json")]
+    [InlineData("fate-charted-classic.json")]
     [InlineData("midnight.json")]
     [InlineData("daybreak.json")]
     [InlineData("mono.json")]

@@ -104,11 +104,17 @@
           <ItemsControl
             ItemsSource="{Binding Pinned}"
             ItemTemplate="{StaticResource Fate.Template.EntityTile}"
-            Margin="0,0,10,0">
+            Margin="0,0,10,0"
+            VerticalAlignment="Top">
+            <!--
+              VerticalAlignment=Top is load-bearing. A ScrollViewer arranges its content to at
+              least the viewport height, and UniformGrid divides whatever height it is given evenly
+              among its rows — so without this, three pinned tiles each stretched to half the window.
+            -->
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <!-- Two columns on a wide window, one when narrow. -->
-                <UniformGrid Columns="2" />
+                <UniformGrid Columns="2" VerticalAlignment="Top" />
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemContainerStyle>

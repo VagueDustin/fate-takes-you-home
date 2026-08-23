@@ -251,6 +251,75 @@ public static class WindowEffects
         }
     }
 
+    /// <summary>
+    /// Takes the foreground, working around the restriction that normally forbids it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Windows only lets a process call <c>SetForegroundWindow</c> if it owns the current
+    /// foreground window or received the last input event. When somebody clicks a tray icon,
+    /// neither is true of us — the click went to Explorer. The plain call is therefore refused,
+    /// the window appears without focus, and WPF immediately raises <c>Deactivated</c>. That is
+    /// the flyout that opens for a split second and closes again.
+    /// </para>
+    /// <para>
+    /// The fix is to attach to the foreground window's input queue for the duration of the call,
+    /// which makes the two threads count as one for the purposes of the check. It is the
+    /// long-standing documented workaround, and it is detached immediately afterwards.
+    /// </para>
+    /// </remarks>
+    public static bool ForceForeground(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        // The plain call works whenever we already hold foreground rights, which is the common
+        // case for a second click.
+        if (NativeMethods.SetForegroundWindow(hwnd))
+        {
+            return true;
+        }
+
+        IntPtr foreground = NativeMethods.GetForegroundWindow();
+
+        if (foreground == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        uint foregroundThread = NativeMethods.GetWindowThreadProcessId(foreground, out _);
+        uint ourThread = NativeMethods.GetCurrentThreadId();
+
+        if (foregroundThread == 0 || foregroundThread == ourThread)
+        {
+            return false;
+        }
+
+        bool attached = NativeMethods.AttachThreadInput(ourThread, foregroundThread, true);
+
+        try
+        {
+            NativeMethods.BringWindowToTop(hwnd);
+            bool ok = NativeMethods.SetForegroundWindow(hwnd);
+            NativeMethods.SetActiveWindow(hwnd);
+            NativeMethods.SetFocus(hwnd);
+            return ok;
+        }
+        finally
+        {
+            if (attached)
+            {
+                NativeMethods.AttachThreadInput(ourThread, foregroundThread, false);
+            }
+        }
+    }
+
+    /// <summary>True when the given window currently holds the foreground.</summary>
+    public static bool IsForeground(IntPtr hwnd) =>
+        hwnd != IntPtr.Zero && NativeMethods.GetForegroundWindow() == hwnd;
+
     /// <summary>Hides the window from Alt+Tab and the taskbar.</summary>
     public static void MakeToolWindow(IntPtr hwnd)
     {

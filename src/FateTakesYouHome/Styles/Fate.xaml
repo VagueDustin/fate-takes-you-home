@@ -72,14 +72,26 @@
     <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextAccent}" />
   </Style>
 
-  <!-- Wide small caps. The single most recognisable piece of the house style. -->
+  <!--
+    Wide small caps in gold. The single most recognisable piece of the house style — and it has to
+    be the accent, not a grey: in the reference product these labels are what carries the eye down
+    the page, and a faint grey version reads as a disclaimer instead of a heading.
+  -->
   <Style x:Key="Fate.Display.SectionLabel" TargetType="c:TrackedTextBlock">
     <Setter Property="FontFamily" Value="{DynamicResource Fate.Font.Body}" />
     <Setter Property="FontSize" Value="{DynamicResource Fate.Size.Caption}" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Tracking" Value="{DynamicResource Fate.Tracking.Label}" />
     <Setter Property="UpperCase" Value="True" />
-    <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextFaint}" />
+    <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextAccent}" />
+  </Style>
+
+  <!-- A page title: Cinzel, large, confident. -->
+  <Style x:Key="Fate.Display.PageTitle" TargetType="c:TrackedTextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource Fate.Font.Display}" />
+    <Setter Property="FontSize" Value="{DynamicResource Fate.Size.Display}" />
+    <Setter Property="Tracking" Value="{DynamicResource Fate.Tracking.Display}" />
+    <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextPrimary}" />
   </Style>
 
   <!-- ==================================================================== surfaces -->
@@ -316,6 +328,78 @@
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.ButtonFaceDisabled}" />
               <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.ButtonTextDisabled}" />
+              <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!--
+    The primary action.
+
+    Gold outline, gold text, a dark fill, and a halo on hover — the treatment the reference product
+    uses for its one important button on a page. Deliberately distinct from the default button,
+    because previously every button on a page looked identical and nothing led the eye.
+  -->
+  <Style x:Key="Fate.Button.Primary" TargetType="ButtonBase" BasedOn="{StaticResource Fate.Button}">
+    <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextAccent}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ButtonBase">
+          <Grid>
+            <!-- The halo sits outside the face, so it reads as light rather than as a fill. -->
+            <Border
+              x:Name="Halo"
+              Margin="-3"
+              CornerRadius="{DynamicResource Fate.Radius.Button}"
+              Background="{DynamicResource Fate.Brush.AccentGlow}"
+              Opacity="0"
+              IsHitTestVisible="False" />
+
+            <Border
+              x:Name="Face"
+              Background="{DynamicResource Fate.Brush.SurfaceRaised}"
+              BorderBrush="{DynamicResource Fate.Brush.AccentDefault}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource Fate.Radius.Button}">
+              <ContentPresenter
+                Margin="{TemplateBinding Padding}"
+                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                RecognizesAccessKey="True"
+                TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+          </Grid>
+
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Halo" Property="Opacity" Value="0.35" />
+              <Setter TargetName="Face" Property="BorderBrush"
+                      Value="{DynamicResource Fate.Brush.AccentHover}" />
+              <Setter TargetName="Face" Property="Background"
+                      Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+              <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.AccentHover}" />
+            </Trigger>
+
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Halo" Property="Opacity" Value="0" />
+              <Setter TargetName="Face" Property="BorderBrush"
+                      Value="{DynamicResource Fate.Brush.AccentPressed}" />
+              <Setter TargetName="Face" Property="Background"
+                      Value="{DynamicResource Fate.Brush.SurfaceSunken}" />
+            </Trigger>
+
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Halo" Property="Opacity" Value="0.5" />
+            </Trigger>
+
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Face" Property="BorderBrush"
+                      Value="{DynamicResource Fate.Brush.BorderDefault}" />
+              <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextFaint}" />
               <Setter Property="Cursor" Value="Arrow" />
             </Trigger>
           </ControlTemplate.Triggers>
@@ -605,7 +689,23 @@
       <Setter.Value>
         <ControlTemplate TargetType="ScrollViewer">
           <Grid>
-            <ScrollContentPresenter />
+            <!--
+              Both of these are load-bearing and neither is optional.
+
+              The name: ScrollViewer locates its presenter with GetTemplateChild by this exact
+              string. Without it the presenter is never found and scrolling degrades.
+
+              CanContentScroll: the presenter defaults to false regardless of what the ScrollViewer
+              is set to, and false means pixel scrolling, and pixel scrolling silently disables
+              virtualisation. A thousand-row list then realises every single row — which is exactly
+              what happened here, with a VirtualizingStackPanel correctly configured above it.
+            -->
+            <ScrollContentPresenter
+              x:Name="PART_ScrollContentPresenter"
+              CanContentScroll="{TemplateBinding CanContentScroll}"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              Margin="{TemplateBinding Padding}" />
             <ScrollBar
               x:Name="PART_VerticalScrollBar"
               HorizontalAlignment="Right"
@@ -646,6 +746,44 @@
       <Setter.Value>
         <ControlTemplate TargetType="ListBox">
           <ScrollViewer Style="{StaticResource Fate.ScrollViewer}" Focusable="False">
+            <ItemsPresenter />
+          </ScrollViewer>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!--
+    A virtualising list for large collections.
+
+    Three things are load-bearing and all three are easy to lose:
+      * CanContentScroll must be True. Pixel scrolling silently disables virtualisation, which is
+        the single most common way a WPF list ends up realising ten thousand elements.
+      * VirtualizationMode Recycling reuses containers instead of discarding and rebuilding them.
+      * The items panel must not be overridden — ListBox already uses a VirtualizingStackPanel,
+        and replacing it with a plain StackPanel turns virtualisation off with no warning.
+  -->
+  <Style x:Key="Fate.ListBox.Virtualised" TargetType="ListBox">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+
+    <!-- Keeps content clear of the overlay scrollbar, which otherwise covers right-aligned text. -->
+    <Setter Property="Padding" Value="0,0,14,0" />
+    <Setter Property="ItemContainerStyle" Value="{StaticResource Fate.ListBoxItem}" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+    <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+    <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+    <Setter Property="VirtualizingPanel.ScrollUnit" Value="Item" />
+    <Setter Property="VirtualizingPanel.CacheLengthUnit" Value="Item" />
+    <Setter Property="VirtualizingPanel.CacheLength" Value="8,8" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBox">
+          <ScrollViewer
+            Style="{StaticResource Fate.ScrollViewer}"
+            CanContentScroll="True"
+            Focusable="False">
             <ItemsPresenter />
           </ScrollViewer>
         </ControlTemplate>

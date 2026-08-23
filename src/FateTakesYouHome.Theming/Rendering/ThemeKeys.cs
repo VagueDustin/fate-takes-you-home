@@ -64,6 +64,9 @@ public static class ThemeKeys
     /// <summary>Tiling monochrome noise. Null when the tier has film grain switched off.</summary>
     public const string BrushFilmGrain = "Fate.Brush.FilmGrain";
 
+    /// <summary>The night sky behind the full window. Rendered once, then just an image.</summary>
+    public const string BrushStarfield = "Fate.Brush.Starfield";
+
     // -- Colours ----------------------------------------------------------------------------
     // Animations interpolate Color, not Brush, so the raw values are published too.
 
@@ -164,6 +167,7 @@ public static class ThemeKeys
     public const string VisibilityFilmGrain = "Fate.Visibility.FilmGrain";
     public const string VisibilityOrnateDividers = "Fate.Visibility.OrnateDividers";
     public const string VisibilityGlassmorphism = "Fate.Visibility.Glassmorphism";
+    public const string VisibilityStarfield = "Fate.Visibility.Starfield";
 
     /// <summary>Opacity the film grain overlay should be drawn at.</summary>
     public const string OpacityFilmGrain = "Fate.Opacity.FilmGrain";

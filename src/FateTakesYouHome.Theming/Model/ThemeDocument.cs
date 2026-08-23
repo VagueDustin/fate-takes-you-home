@@ -289,6 +289,15 @@ public sealed class ThemeOrnamentDocument
     [JsonPropertyName("gradientDisplayFill")] public bool? GradientDisplayFill { get; set; }
     [JsonPropertyName("depthWash")] public bool? DepthWash { get; set; }
 
+    /// <summary>
+    /// Draw the star field behind the full window.
+    /// </summary>
+    /// <remarks>
+    /// Rendered once to a bitmap and treated as an image, so it costs nothing per frame. Applies
+    /// to the full window only; the tray panel stays quiet.
+    /// </remarks>
+    [JsonPropertyName("starfield")] public bool? Starfield { get; set; }
+
     /// <summary>Either <c>hairline</c> or <c>gradient</c>.</summary>
     [JsonPropertyName("panelEdge")] public PanelEdge? PanelEdge { get; set; }
 

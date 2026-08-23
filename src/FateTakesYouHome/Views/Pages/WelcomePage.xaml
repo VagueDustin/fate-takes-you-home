@@ -5,25 +5,45 @@
   xmlns:c="clr-namespace:FateTakesYouHome.Controls">
 
   <ContentControl Style="{StaticResource Fate.Panel}">
-    <Grid Margin="48,44">
+    <Grid Margin="48,40">
       <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <StackPanel Grid.Row="0" HorizontalAlignment="Left" MaxWidth="620">
-        <Image
-          x:Name="Mark"
-          Width="72"
-          Height="72"
-          HorizontalAlignment="Left"
-          RenderOptions.BitmapScalingMode="HighQuality" />
+      <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="620">
+        <!--
+          The mark with a real halo behind it. In the reference product the glow is most of what
+          makes the logo feel lit rather than pasted on; a bare bitmap on navy looks like a sticker.
+        -->
+        <Grid Width="150" Height="150" HorizontalAlignment="Center">
+          <Ellipse IsHitTestVisible="False">
+            <Ellipse.Fill>
+              <RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+                <GradientStop Offset="0.15" Color="{DynamicResource Fate.Color.AccentGlow}" />
+                <GradientStop Offset="1" Color="Transparent" />
+              </RadialGradientBrush>
+            </Ellipse.Fill>
+          </Ellipse>
+
+          <Image
+            x:Name="Mark"
+            Width="84"
+            Height="84"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            RenderOptions.BitmapScalingMode="HighQuality" />
+        </Grid>
 
         <c:TrackedTextBlock
-          Margin="0,26,0,0"
-          Style="{StaticResource Fate.Display.Title}"
-          FontSize="{DynamicResource Fate.Size.Display}"
+          Margin="0,18,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource Fate.Display.PageTitle}"
+          FontSize="42"
+          Tracking="{DynamicResource Fate.Tracking.Wordmark}"
+          UpperCase="True"
+          Foreground="{DynamicResource Fate.Brush.TextAccent}"
           Text="Fate Takes You Home" />
 
         <!--
@@ -31,25 +51,36 @@
           clause. Everything functional below this stays functional.
         -->
         <TextBlock
-          Margin="0,14,0,0"
+          Margin="0,16,0,0"
+          HorizontalAlignment="Center"
+          TextAlignment="Center"
           Style="{StaticResource Fate.Text.Muted}"
           FontSize="{DynamicResource Fate.Size.Subtitle}"
           LineHeight="26"
           TextWrapping="Wrap"
           Text="Your lights, scenes and automations, one click from the taskbar — so the house is ready before you are." />
 
-        <Border Style="{StaticResource Fate.Divider}" Margin="0,28,0,0" />
+        <c:TrackedTextBlock
+          Margin="0,16,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource Fate.Display.SectionLabel}"
+          Text="Provided by VagueDustin Enterprises™" />
+
+        <Border Style="{StaticResource Fate.Divider}" Margin="0,30,0,0" />
 
         <TextBlock
-          Margin="0,20,0,0"
+          Margin="0,22,0,0"
+          HorizontalAlignment="Center"
+          TextAlignment="Center"
           Style="{StaticResource Fate.Text.Body}"
           TextWrapping="Wrap"
           LineHeight="22"
           Text="Setting this up takes about two minutes. You will need your Home Assistant address and a Long-Lived Access Token, which you create from your Home Assistant profile page." />
 
-        <StackPanel Orientation="Horizontal" Margin="0,26,0,0">
+        <StackPanel Orientation="Horizontal" Margin="0,28,0,0" HorizontalAlignment="Center">
           <Button
             x:Name="StartButton"
+            Style="{StaticResource Fate.Button.Primary}"
             Content="Set up the connection"
             Click="OnStartClicked" />
 
@@ -65,9 +96,10 @@
         </StackPanel>
       </StackPanel>
 
-      <StackPanel Grid.Row="2" HorizontalAlignment="Left" MaxWidth="620">
+      <StackPanel Grid.Row="2" HorizontalAlignment="Center" MaxWidth="620">
         <TextBlock
           Style="{StaticResource Fate.Text.Faint}"
+          TextAlignment="Center"
           TextWrapping="Wrap"
           Text="Nothing leaves this machine. The app talks directly to your Home Assistant instance, and your access token is encrypted with Windows data protection so only your account can read it." />
       </StackPanel>

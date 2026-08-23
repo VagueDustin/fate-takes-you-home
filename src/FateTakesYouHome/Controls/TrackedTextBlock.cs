@@ -34,7 +34,8 @@ public sealed class TrackedTextBlock : FrameworkElement
         typeof(TrackedTextBlock),
         new FrameworkPropertyMetadata(
             string.Empty,
-            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
+            OnLayoutInputChanged));
 
     /// <summary>Letter spacing in ems, matching the CSS unit the brand tokens use.</summary>
     public static readonly DependencyProperty TrackingProperty = DependencyProperty.Register(
@@ -43,7 +44,8 @@ public sealed class TrackedTextBlock : FrameworkElement
         typeof(TrackedTextBlock),
         new FrameworkPropertyMetadata(
             0d,
-            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
+            OnLayoutInputChanged));
 
     /// <summary>Upper-cases the text before drawing, for small-caps section labels.</summary>
     public static readonly DependencyProperty UpperCaseProperty = DependencyProperty.Register(
@@ -52,7 +54,8 @@ public sealed class TrackedTextBlock : FrameworkElement
         typeof(TrackedTextBlock),
         new FrameworkPropertyMetadata(
             false,
-            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
+            OnLayoutInputChanged));
 
     public static readonly DependencyProperty ForegroundProperty =
         TextElement.ForegroundProperty.AddOwner(
@@ -60,7 +63,8 @@ public sealed class TrackedTextBlock : FrameworkElement
             new FrameworkPropertyMetadata(
                 SystemColors.ControlTextBrush,
                 FrameworkPropertyMetadataOptions.AffectsRender
-                | FrameworkPropertyMetadataOptions.Inherits));
+                | FrameworkPropertyMetadataOptions.Inherits,
+                OnLayoutInputChanged));
 
     public static readonly DependencyProperty FontFamilyProperty =
         TextElement.FontFamilyProperty.AddOwner(
@@ -69,7 +73,8 @@ public sealed class TrackedTextBlock : FrameworkElement
                 SystemFonts.MessageFontFamily,
                 FrameworkPropertyMetadataOptions.AffectsMeasure
                 | FrameworkPropertyMetadataOptions.AffectsRender
-                | FrameworkPropertyMetadataOptions.Inherits));
+                | FrameworkPropertyMetadataOptions.Inherits,
+                OnLayoutInputChanged));
 
     public static readonly DependencyProperty FontSizeProperty =
         TextElement.FontSizeProperty.AddOwner(
@@ -78,7 +83,8 @@ public sealed class TrackedTextBlock : FrameworkElement
                 SystemFonts.MessageFontSize,
                 FrameworkPropertyMetadataOptions.AffectsMeasure
                 | FrameworkPropertyMetadataOptions.AffectsRender
-                | FrameworkPropertyMetadataOptions.Inherits));
+                | FrameworkPropertyMetadataOptions.Inherits,
+                OnLayoutInputChanged));
 
     public static readonly DependencyProperty FontWeightProperty =
         TextElement.FontWeightProperty.AddOwner(
@@ -87,7 +93,8 @@ public sealed class TrackedTextBlock : FrameworkElement
                 FontWeights.Normal,
                 FrameworkPropertyMetadataOptions.AffectsMeasure
                 | FrameworkPropertyMetadataOptions.AffectsRender
-                | FrameworkPropertyMetadataOptions.Inherits));
+                | FrameworkPropertyMetadataOptions.Inherits,
+                OnLayoutInputChanged));
 
     public static readonly DependencyProperty FontStyleProperty =
         TextElement.FontStyleProperty.AddOwner(
@@ -96,7 +103,8 @@ public sealed class TrackedTextBlock : FrameworkElement
                 FontStyles.Normal,
                 FrameworkPropertyMetadataOptions.AffectsMeasure
                 | FrameworkPropertyMetadataOptions.AffectsRender
-                | FrameworkPropertyMetadataOptions.Inherits));
+                | FrameworkPropertyMetadataOptions.Inherits,
+                OnLayoutInputChanged));
 
     /// <summary>Fill for the glyphs themselves. Overrides <see cref="Foreground"/> when set.</summary>
     /// <remarks>
@@ -107,7 +115,8 @@ public sealed class TrackedTextBlock : FrameworkElement
         nameof(GlyphBrush),
         typeof(Brush),
         typeof(TrackedTextBlock),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(
+            null, FrameworkPropertyMetadataOptions.AffectsRender, OnLayoutInputChanged));
 
     public string Text
     {
@@ -163,74 +172,121 @@ public sealed class TrackedTextBlock : FrameworkElement
         set => SetValue(FontStyleProperty, value);
     }
 
+    /// <summary>
+    /// The laid-out glyphs, built once and reused by both measure and render.
+    /// </summary>
+    /// <remarks>
+    /// Formatting is not cheap, and WPF calls measure and render separately — and repeatedly, on
+    /// any invalidation. Building the run twice per layout pass showed up as real cost once these
+    /// labels appeared on every group header in a long list.
+    /// </remarks>
+    private sealed record Layout(FormattedText[] Glyphs, double[] Offsets, Size Size);
+
+    private Layout? _layout;
+
+    private static void OnLayoutInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
+        ((TrackedTextBlock)d).InvalidateLayoutCache();
+
+    /// <summary>
+    /// Moving to a display with a different scale factor changes the glyph metrics, which the
+    /// cached run has already baked in.
+    /// </summary>
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        InvalidateLayoutCache();
+    }
+
+    /// <summary>Discards the cached layout. Called whenever an input to it changes.</summary>
+    private void InvalidateLayoutCache()
+    {
+        _layout = null;
+        InvalidateMeasure();
+        InvalidateVisual();
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
-        string text = EffectiveText();
+        Layout? layout = EnsureLayout();
 
-        if (text.Length == 0)
+        if (layout is null)
         {
             return new Size(0, LineHeight());
         }
 
-        (double width, double height) = Layout(text, measureOnly: true, dc: null);
-        return new Size(Math.Min(width, availableSize.Width), height);
+        return new Size(Math.Min(layout.Size.Width, availableSize.Width), layout.Size.Height);
     }
 
     protected override void OnRender(DrawingContext drawingContext)
     {
-        string text = EffectiveText();
+        Layout? layout = EnsureLayout();
 
-        if (text.Length == 0)
+        if (layout is null)
         {
             return;
         }
 
-        Layout(text, measureOnly: false, drawingContext);
+        for (int i = 0; i < layout.Glyphs.Length; i++)
+        {
+            drawingContext.DrawText(layout.Glyphs[i], new Point(layout.Offsets[i], 0));
+        }
     }
 
     /// <summary>
-    /// Walks the string once, either measuring or drawing.
+    /// Builds the glyph run if it is not already cached.
     /// </summary>
     /// <remarks>
-    /// Measure and render share this so the two can never disagree about advance widths — which
-    /// would show up as text clipped by exactly one character.
+    /// Measure and render share the result, so the two can never disagree about advance widths —
+    /// a disagreement that shows up as text clipped by exactly one character.
     /// </remarks>
-    private (double Width, double Height) Layout(string text, bool measureOnly, DrawingContext? dc)
+    private Layout? EnsureLayout()
     {
+        if (_layout is not null)
+        {
+            return _layout;
+        }
+
+        string text = EffectiveText();
+
+        if (text.Length == 0)
+        {
+            return null;
+        }
+
         double trackingPx = Tracking * FontSize;
         Brush brush = GlyphBrush ?? Foreground;
         double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
         var typeface = new Typeface(FontFamily, FontStyle, FontWeight, FontStretches.Normal);
 
-        // Zero tracking is the common case for body text; one formatted run is both faster and
-        // better shaped, because kerning pairs survive.
+        // Zero tracking is the common case; one formatted run is faster and better shaped, because
+        // kerning pairs survive.
         if (Math.Abs(trackingPx) < 0.01)
         {
             FormattedText whole = Format(text, typeface, pixelsPerDip, brush);
 
-            if (!measureOnly)
-            {
-                dc?.DrawText(whole, new Point(0, 0));
-            }
+            _layout = new Layout(
+                [whole],
+                [0],
+                new Size(whole.WidthIncludingTrailingWhitespace, whole.Height));
 
-            return (whole.WidthIncludingTrailingWhitespace, whole.Height);
+            return _layout;
         }
+
+        var glyphs = new List<FormattedText>(text.Length);
+        var offsets = new List<double>(text.Length);
 
         double x = 0;
         double height = 0;
 
-        // Text enumeration by rune, not by char, so an emoji or any other astral-plane character
-        // is advanced as one glyph rather than split into two broken halves.
+        // By rune, not by char, so an astral-plane character advances as one glyph rather than
+        // being split into two broken halves.
         foreach (Rune rune in text.EnumerateRunes())
         {
-            string glyph = rune.ToString();
-            FormattedText formatted = Format(glyph, typeface, pixelsPerDip, brush);
+            FormattedText formatted = Format(rune.ToString(), typeface, pixelsPerDip, brush);
 
-            if (!measureOnly)
-            {
-                dc?.DrawText(formatted, new Point(x, 0));
-            }
+            glyphs.Add(formatted);
+            offsets.Add(x);
 
             x += formatted.WidthIncludingTrailingWhitespace + trackingPx;
             height = Math.Max(height, formatted.Height);
@@ -240,7 +296,12 @@ public sealed class TrackedTextBlock : FrameworkElement
         // off-centre inside anything that centres it.
         x -= trackingPx;
 
-        return (Math.Max(0, x), height > 0 ? height : LineHeight());
+        _layout = new Layout(
+            [.. glyphs],
+            [.. offsets],
+            new Size(Math.Max(0, x), height > 0 ? height : LineHeight()));
+
+        return _layout;
     }
 
     private FormattedText Format(string text, Typeface typeface, double pixelsPerDip, Brush brush) =>

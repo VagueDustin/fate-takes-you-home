@@ -1,0 +1,15 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "fate-charted-classic",
+  "name": "FATE Charted",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "FATE with the full charted-tier ornament: corner brackets and film grain, and no star field.",
+  "basedOn": "fate",
+
+  "ornament": {
+    "cornerBrackets": true,
+    "filmGrain": true,
+    "starfield": false
+  }
+}

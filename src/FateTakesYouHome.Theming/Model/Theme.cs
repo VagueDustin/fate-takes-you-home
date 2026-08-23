@@ -191,6 +191,9 @@ public sealed class ThemeOrnament
     public bool StaggerEntrances { get; init; }
     public bool GradientDisplayFill { get; init; }
     public bool DepthWash { get; init; } = true;
+
+    /// <summary>Star field behind the full window.</summary>
+    public bool Starfield { get; init; }
     public PanelEdge PanelEdge { get; init; } = PanelEdge.Hairline;
     public int MaxConcurrentAnimations { get; init; } = 3;
 
@@ -207,6 +210,7 @@ public sealed class ThemeOrnament
             StaggerEntrances = true,
             GradientDisplayFill = true,
             DepthWash = true,
+            Starfield = true,
             PanelEdge = PanelEdge.Gradient,
             MaxConcurrentAnimations = 5,
         },
@@ -220,6 +224,7 @@ public sealed class ThemeOrnament
             StaggerEntrances = true,
             GradientDisplayFill = false,
             DepthWash = true,
+            Starfield = true,
             PanelEdge = PanelEdge.Hairline,
             MaxConcurrentAnimations = 3,
         },
@@ -233,6 +238,7 @@ public sealed class ThemeOrnament
             StaggerEntrances = false,
             GradientDisplayFill = false,
             DepthWash = true,
+            Starfield = false,
             PanelEdge = PanelEdge.Hairline,
             MaxConcurrentAnimations = 1,
         },

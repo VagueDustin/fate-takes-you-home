@@ -44,6 +44,17 @@
   </Window.Resources>
 
   <Grid x:Name="RootLayer">
+    <!--
+      The night sky. Rendered once to a bitmap when the theme is applied and drawn as a plain
+      image, so it costs nothing per frame. This is the atmosphere the house look depends on — a
+      flat navy fill reads as a form, not as depth.
+    -->
+    <Rectangle
+      Fill="{DynamicResource Fate.Brush.Starfield}"
+      Visibility="{DynamicResource Fate.Visibility.Starfield}"
+      IsHitTestVisible="False"
+      Panel.ZIndex="-1" />
+
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
@@ -156,7 +167,10 @@
             TextWrapping="Wrap" />
 
           <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0">
-            <Button Content="Settings" Command="{Binding GoToSettingsCommand}" />
+            <Button
+              Style="{StaticResource Fate.Button.Primary}"
+              Content="Settings"
+              Command="{Binding GoToSettingsCommand}" />
             <Button Margin="8,0,0,0" Content="Retry" Command="{Binding ReconnectCommand}" />
           </StackPanel>
         </Grid>
@@ -194,7 +208,9 @@
                       <Border
                         x:Name="Face"
                         Background="Transparent"
-                        CornerRadius="{DynamicResource Fate.Radius.Sm}"
+                        BorderBrush="Transparent"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Fate.Radius.Md}"
                         Padding="10,9">
                         <Grid>
                           <Grid.ColumnDefinitions>
@@ -223,16 +239,25 @@
                         <Trigger Property="IsMouseOver" Value="True">
                           <Setter TargetName="Face" Property="Background"
                                   Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+                          <Setter TargetName="Label" Property="Foreground"
+                                  Value="{DynamicResource Fate.Brush.TextPrimary}" />
                         </Trigger>
+
+                        <!-- A gold-outlined pill, as the reference product does it. A tinted fill
+                             alone was too quiet to tell you where you were. -->
                         <Trigger Property="IsChecked" Value="True">
                           <Setter TargetName="Face" Property="Background"
                                   Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+                          <Setter TargetName="Face" Property="BorderBrush"
+                                  Value="{DynamicResource Fate.Brush.AccentDefault}" />
+                          <Setter TargetName="Face" Property="BorderThickness" Value="1" />
                           <Setter TargetName="Icon" Property="Stroke"
                                   Value="{DynamicResource Fate.Brush.AccentDefault}" />
                           <Setter TargetName="Label" Property="Foreground"
                                   Value="{DynamicResource Fate.Brush.TextAccent}" />
                           <Setter TargetName="Label" Property="FontWeight" Value="SemiBold" />
                         </Trigger>
+
                         <Trigger Property="IsKeyboardFocused" Value="True">
                           <Setter TargetName="Face" Property="BorderBrush"
                                   Value="{DynamicResource Fate.Brush.AccentHover}" />

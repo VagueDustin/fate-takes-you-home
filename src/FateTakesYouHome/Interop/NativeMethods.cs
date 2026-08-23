@@ -259,6 +259,45 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern uint GetDoubleClickTime();
 
+    // ==================================================================== foreground rights
+
+    /// <summary>
+    /// Ties two threads' input queues together.
+    /// </summary>
+    /// <remarks>
+    /// The documented workaround for <c>SetForegroundWindow</c> being refused. Windows only grants
+    /// foreground to a process that received the last input event; when the user clicks a tray
+    /// icon that process is Explorer, not us. Briefly attaching to Explorer's input queue makes the
+    /// call succeed, which is the difference between a flyout that opens and one that flickers and
+    /// vanishes.
+    /// </remarks>
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetActiveWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetFocus(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool BringWindowToTop(IntPtr hWnd);
+
+    /// <summary>Grants another process the right to take the foreground.</summary>
+    public const uint ASFW_ANY = 0xFFFFFFFF;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AllowSetForegroundWindow(uint dwProcessId);
+
     // ==================================================================== DWM
 
     /// <summary>Documented <c>DWMWINDOWATTRIBUTE</c> values used by this application.</summary>

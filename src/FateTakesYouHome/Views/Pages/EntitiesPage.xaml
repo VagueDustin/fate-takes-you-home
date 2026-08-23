@@ -25,8 +25,29 @@
       </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
 
+    <!--
+      A group heading. Typed rather than keyed, so the virtualising list picks it automatically
+      from the item's type without a template selector.
+    -->
+    <DataTemplate DataType="{x:Type vm:EntityGroupHeader}">
+      <Grid Margin="0,14,0,9">
+        <c:TrackedTextBlock
+          Style="{StaticResource Fate.Display.SectionLabel}"
+          Text="{Binding Name}" />
+        <TextBlock
+          HorizontalAlignment="Right"
+          Style="{StaticResource Fate.Text.Faint}"
+          Text="{Binding Count}" />
+        <Border
+          Height="1"
+          Margin="0,0,0,-6"
+          VerticalAlignment="Bottom"
+          Background="{DynamicResource Fate.Brush.BorderSubtle}" />
+      </Grid>
+    </DataTemplate>
+
     <!-- One browser row: the shared tile, plus the pin control the browser adds. -->
-    <DataTemplate x:Key="Fate.Template.BrowsableEntity" DataType="{x:Type vm:BrowsableEntityViewModel}">
+    <DataTemplate DataType="{x:Type vm:BrowsableEntityViewModel}">
       <Grid Margin="0,0,0,7">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
@@ -158,38 +179,26 @@
       <!-- ============================================================ results -->
 
       <Grid Grid.Row="3" Margin="0,14,0,0">
-        <ScrollViewer
-          x:Name="ResultsList"
-          Style="{StaticResource Fate.ScrollViewer}"
-          Visibility="{Binding Groups.Count, Converter={StaticResource AnyToVisibility}}">
-          <ItemsControl ItemsSource="{Binding Groups}" Margin="0,0,10,0">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="{x:Type vm:EntityGroup}">
-                <StackPanel Margin="0,0,0,18">
-                  <Grid Margin="0,0,0,9">
-                    <c:TrackedTextBlock
-                      Style="{StaticResource Fate.Display.SectionLabel}"
-                      Text="{Binding Name}" />
-                    <TextBlock
-                      HorizontalAlignment="Right"
-                      Style="{StaticResource Fate.Text.Faint}"
-                      Text="{Binding Count}" />
-                  </Grid>
+        <!--
+          One flat virtualising list, not a list of lists. WPF cannot virtualise nested items
+          controls, so the previous shape realised every one of a thousand-plus rows up front —
+          around fifteen thousand visual elements — which is what made scrolling stutter.
 
-                  <ItemsControl
-                    ItemsSource="{Binding Entities}"
-                    ItemTemplate="{StaticResource Fate.Template.BrowsableEntity}" />
-                </StackPanel>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
+          Recycling mode reuses the containers as they scroll rather than throwing them away, and
+          CanContentScroll is required: pixel scrolling silently disables virtualisation.
+        -->
+        <ListBox
+          x:Name="ResultsList"
+          Margin="0,0,10,0"
+          Style="{StaticResource Fate.ListBox.Virtualised}"
+          ItemsSource="{Binding Rows}"
+          Visibility="{Binding Rows.Count, Converter={StaticResource AnyToVisibility}}" />
 
         <StackPanel
           VerticalAlignment="Center"
           HorizontalAlignment="Center"
           MaxWidth="440"
-          Visibility="{Binding Groups.Count, Converter={StaticResource NoneToVisibility}}">
+          Visibility="{Binding Rows.Count, Converter={StaticResource NoneToVisibility}}">
           <TextBlock
             Style="{StaticResource Fate.Text.Subtitle}"
             HorizontalAlignment="Center"

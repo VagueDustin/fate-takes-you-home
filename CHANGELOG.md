@@ -6,6 +6,56 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-08-23
+
+Fixes from the first real install, against a 1057-entity Home Assistant.
+
+### Fixed
+
+- **The tray panel opened and closed again immediately.** Windows only grants foreground rights to
+  a process that received the last input event, and when you click a tray icon that process is
+  Explorer. `SetForegroundWindow` was therefore refused, the panel appeared unfocused, and WPF
+  raised `Deactivated` — which the panel treated as a click elsewhere and dismissed itself. It now
+  takes the foreground through the documented `AttachThreadInput` route and disregards a
+  deactivation for 450 ms after opening, re-asserting the foreground instead of hiding. A repeated
+  tray notification is also coalesced, since some shells deliver two for one click.
+- **The entity browser realised every row.** `ScrollViewer`'s content presenter defaults
+  `CanContentScroll` to false whatever the `ScrollViewer` says, and the custom template neither
+  bound it nor named the presenter `PART_ScrollContentPresenter`. Pixel scrolling silently disables
+  virtualisation, so a correctly configured `VirtualizingStackPanel` above it was still building
+  all 253 visible rows — and roughly 700 with diagnostics shown. Now 7 of 253 are realised, and
+  working set dropped from 317 MB to 214 MB.
+- **The nested items controls could not virtualise at all.** The browser was a list of groups each
+  containing a list of entities; WPF cannot virtualise that shape. It is now one flat list of
+  interleaved headers and rows with recycling.
+- **State events starved the render loop.** They were queued at `DispatcherPriority.DataBind`,
+  which is *higher* than `Render`, so a burst from a busy server froze the window until it cleared.
+  Now `Background`.
+- **The dashboard rescanned every entity six times per state event**, each scan over a freshly
+  allocated snapshot. One pass, no allocation, debounced, and the counts only rebuild when a number
+  actually moves.
+- **Pinned tiles stretched to half the window.** A `ScrollViewer` arranges content to at least the
+  viewport height and `UniformGrid` divides whatever height it is given among its rows.
+- **A declared tier no longer inherits an ancestor's ornament switches.** The light Daybreak theme,
+  tier utility, was rendering a star field because its FATE parent enabled one explicitly.
+  Declaring a tier now resets the switches; a theme's own choices still win.
+- `TrackedTextBlock` formatted every glyph twice per layout pass. The run is now built once and
+  cached.
+- The window background and film grain brushes are rasterised once rather than re-rendered per
+  paint.
+
+### Changed
+
+- **The interface follows the FATE reference product much more closely.** A rendered star field
+  with constellations behind the full window; section labels in gold rather than grey; a
+  gold-outlined pill for the selected navigation item; a distinct gold-outlined primary button; a
+  real halo behind the mark; a larger, widely tracked Cinzel wordmark.
+- FATE drops corner brackets and film grain — redundant once there is a star field, and fussy
+  beside it. `FATE Charted` is a new theme for anyone who wants the full bracketed tier look.
+- New `starfield` ornament switch, on by default at the ceremonial and charted tiers.
+- The entity browser logs how many rows it realised when verbose logging is on, so losing
+  virtualisation again would be visible rather than merely slow.
+
 ## [0.1.0] — 2026-08-23
 
 First release.
@@ -80,5 +130,6 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/VagueDustin/fate-takes-you-home/releases/tag/v0.1.0

@@ -98,6 +98,10 @@ public static class ThemeResourceBuilder
         d[ThemeKeys.BrushGoldSheen] = BuildGoldSheen(theme);
         d[ThemeKeys.BrushFilmGrain] = theme.Ornament.FilmGrain ? GetGrainBrush() : Brushes.Transparent;
 
+        d[ThemeKeys.BrushStarfield] = theme.Ornament.Starfield
+            ? StarfieldRenderer.ForTheme(theme)
+            : Brushes.Transparent;
+
         d[ThemeKeys.ColorSurfaceBase] = c.SurfaceBase;
         d[ThemeKeys.ColorSurfaceRaised] = c.SurfaceRaised;
         d[ThemeKeys.ColorSurfaceOverlay] = c.SurfaceOverlay;
@@ -168,6 +172,14 @@ public static class ThemeResourceBuilder
             ViewportUnits = BrushMappingMode.RelativeToBoundingBox,
             Viewport = unitRect,
         };
+
+        // A DrawingBrush re-runs its drawing on every paint unless it is cached. This one covers
+        // the whole window and never changes, so rasterising it once is the difference between a
+        // static background and a per-frame cost on every window in the application.
+        RenderOptions.SetCachingHint(brush, CachingHint.Cache);
+        RenderOptions.SetCacheInvalidationThresholdMinimum(brush, 0.5);
+        RenderOptions.SetCacheInvalidationThresholdMaximum(brush, 2.0);
+
         brush.Freeze();
 
         return brush;
@@ -299,6 +311,10 @@ public static class ThemeResourceBuilder
             Viewport = new Rect(0, 0, GrainTextureSize, GrainTextureSize),
             Stretch = Stretch.None,
         };
+
+        // Tiled over every panel in the application, so it is worth rasterising once.
+        RenderOptions.SetCachingHint(brush, CachingHint.Cache);
+
         brush.Freeze();
 
         _cachedGrain = brush;
@@ -470,6 +486,7 @@ public static class ThemeResourceBuilder
         d[ThemeKeys.VisibilityFilmGrain] = Show(o.FilmGrain);
         d[ThemeKeys.VisibilityOrnateDividers] = Show(o.OrnateDividers);
         d[ThemeKeys.VisibilityGlassmorphism] = Show(o.Glassmorphism);
+        d[ThemeKeys.VisibilityStarfield] = Show(o.Starfield);
         d[ThemeKeys.OpacityFilmGrain] = o.FilmGrain ? o.FilmGrainOpacity : 0d;
 
         d[ThemeKeys.ButtonActiveGlow] = theme.Buttons.ActiveGlow;

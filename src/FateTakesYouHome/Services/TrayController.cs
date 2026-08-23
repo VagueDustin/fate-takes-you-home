@@ -42,6 +42,11 @@ public sealed class TrayController : IDisposable
     private readonly ThemeService _themes;
     private readonly HomeAssistantService _homeAssistant;
 
+    /// <summary>Window within which a second tray notification is treated as the same click.</summary>
+    private static readonly TimeSpan ToggleCoalesce = TimeSpan.FromMilliseconds(120);
+
+    private DateTime _lastToggle = DateTime.MinValue;
+
     private TrayIcon? _icon;
     private FlyoutWindow? _flyout;
     private MainWindow? _mainWindow;
@@ -113,9 +118,26 @@ public sealed class TrayController : IDisposable
         }
     }
 
-    /// <summary>Shows the flyout anchored to the tray icon, or hides it if already open.</summary>
+    /// <summary>
+    /// Shows the flyout anchored to the tray icon, or hides it if already open.
+    /// </summary>
+    /// <remarks>
+    /// Guarded against a repeated notification. Some shell configurations deliver both
+    /// <c>NIN_SELECT</c> and a legacy button message for one click, and two toggles in a row means
+    /// the panel opens and immediately closes again. The window is far shorter than a deliberate
+    /// second click, so toggle-to-dismiss still works.
+    /// </remarks>
     public void ToggleFlyout(TrayClickEventArgs? click = null)
     {
+        DateTime now = DateTime.UtcNow;
+
+        if (now - _lastToggle < ToggleCoalesce)
+        {
+            return;
+        }
+
+        _lastToggle = now;
+
         if (_flyout is { IsOpen: true })
         {
             HideFlyout();

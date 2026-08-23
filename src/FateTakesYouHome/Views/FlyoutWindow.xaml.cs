@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Threading;
 using FateTakesYouHome.Animation;
 using FateTakesYouHome.HomeAssistant;
 using FateTakesYouHome.Interop;
@@ -36,9 +37,19 @@ public partial class FlyoutWindow : Window
     private readonly HomeAssistantService _homeAssistant;
     private readonly FlyoutViewModel _viewModel;
 
+    /// <summary>
+    /// How long after showing to disregard a deactivation.
+    /// </summary>
+    /// <remarks>
+    /// Long enough to cover the show-position-activate sequence and Explorer letting go of the
+    /// foreground, short enough that a genuine click elsewhere still dismisses the panel promptly.
+    /// </remarks>
+    private static readonly TimeSpan ActivationGrace = TimeSpan.FromMilliseconds(450);
+
     private HwndSource? _source;
     private bool _closingForReal;
     private bool _isAnimatingOut;
+    private DateTime _ignoreDeactivateUntil = DateTime.MinValue;
 
     public FlyoutWindow(
         AppLog log,
@@ -110,7 +121,12 @@ public partial class FlyoutWindow : Window
         FlyoutPlacement placement = Place(anchor, theme);
         Move(placement);
 
-        Activate();
+        // Everything between Show and here can produce a transient deactivation: Explorer still
+        // holds the foreground because the click went to it, and the reposition can shuffle
+        // activation. Guard the window against dismissing itself while it is still arriving.
+        _ignoreDeactivateUntil = DateTime.UtcNow + ActivationGrace;
+
+        TakeForeground();
         PlayEntrance(placement, theme);
     }
 
@@ -247,9 +263,18 @@ public partial class FlyoutWindow : Window
         }
 
         _isAnimatingOut = false;
+        _ignoreDeactivateUntil = DateTime.MinValue;
         Hide();
     }
 
+    /// <summary>
+    /// Dismisses the panel when focus genuinely moves elsewhere.
+    /// </summary>
+    /// <remarks>
+    /// A deactivation arriving during the grace window is not the user clicking away — it is
+    /// Explorer still holding the foreground from the tray click. Hiding on it is what made the
+    /// panel flash and vanish. Inside the window the foreground is re-asserted instead.
+    /// </remarks>
     private void OnDeactivated(object? sender, EventArgs e)
     {
         if (_settings.Current.PinFlyoutOpen)
@@ -257,7 +282,32 @@ public partial class FlyoutWindow : Window
             return;
         }
 
+        if (DateTime.UtcNow < _ignoreDeactivateUntil)
+        {
+            // Try again for the foreground; if it never arrives the panel simply stays open until
+            // the next click, which is far better than closing itself immediately.
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(TakeForeground));
+            return;
+        }
+
         HideAnimated();
+    }
+
+    /// <summary>Claims the foreground, working around the restriction on doing so.</summary>
+    private void TakeForeground()
+    {
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        if (_source?.Handle is { } handle && handle != IntPtr.Zero)
+        {
+            WindowEffects.ForceForeground(handle);
+        }
+
+        Activate();
+        Focus();
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)

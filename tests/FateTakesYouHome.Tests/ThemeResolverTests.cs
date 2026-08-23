@@ -152,6 +152,100 @@ public sealed class ThemeResolverTests
         Assert.False(theme.Ornament.FilmGrain);
     }
 
+    /// <summary>
+    /// Declaring a tier resets the ornament switches rather than inheriting the parent's.
+    /// </summary>
+    /// <remarks>
+    /// This is the rule that stops a deliberately plain child theme inheriting its parent's ornate
+    /// flags. It was found the hard way: the light Daybreak theme, tier utility, was rendering a
+    /// star field because its FATE parent had switched one on explicitly.
+    /// </remarks>
+    [Fact]
+    public void DeclaringATierDiscardsAnAncestorsOrnamentSwitches()
+    {
+        var parent = new ThemeDocument
+        {
+            Id = "ornate",
+            Tier = OrnamentTier.Ceremonial,
+            Ornament = new ThemeOrnamentDocument
+            {
+                Starfield = true,
+                FilmGrain = true,
+                CornerBrackets = true,
+            },
+        };
+
+        var child = new ThemeDocument
+        {
+            Id = "plain",
+            BasedOn = "ornate",
+            Tier = OrnamentTier.Utility,
+        };
+
+        Theme theme = ThemeResolver.Resolve(child, Lookup(parent, child));
+
+        Assert.False(theme.Ornament.Starfield);
+        Assert.False(theme.Ornament.FilmGrain);
+        Assert.False(theme.Ornament.CornerBrackets);
+        Assert.Equal(OrnamentTier.Utility, theme.Tier);
+    }
+
+    /// <summary>A theme's own switches survive its own tier reset.</summary>
+    [Fact]
+    public void ATierResetKeepsSwitchesTheThemeSetsItself()
+    {
+        var parent = new ThemeDocument
+        {
+            Id = "ornate",
+            Tier = OrnamentTier.Ceremonial,
+            Ornament = new ThemeOrnamentDocument { Starfield = true, FilmGrain = true },
+        };
+
+        var child = new ThemeDocument
+        {
+            Id = "mostly-plain",
+            BasedOn = "ornate",
+            Tier = OrnamentTier.Utility,
+            Ornament = new ThemeOrnamentDocument { CornerBrackets = true },
+        };
+
+        Theme theme = ThemeResolver.Resolve(child, Lookup(parent, child));
+
+        Assert.True(theme.Ornament.CornerBrackets);
+        Assert.False(theme.Ornament.Starfield);
+        Assert.False(theme.Ornament.FilmGrain);
+    }
+
+    /// <summary>Without its own tier, a theme inherits ornament as normal.</summary>
+    [Fact]
+    public void AThemeWithNoTierStillInheritsOrnament()
+    {
+        var parent = new ThemeDocument
+        {
+            Id = "ornate",
+            Tier = OrnamentTier.Ceremonial,
+            Ornament = new ThemeOrnamentDocument { Starfield = true },
+        };
+
+        var child = new ThemeDocument { Id = "follower", BasedOn = "ornate" };
+
+        Theme theme = ThemeResolver.Resolve(child, Lookup(parent, child));
+
+        Assert.True(theme.Ornament.Starfield);
+        Assert.Equal(OrnamentTier.Ceremonial, theme.Tier);
+    }
+
+    [Theory]
+    [InlineData(OrnamentTier.Ceremonial, true)]
+    [InlineData(OrnamentTier.Charted, true)]
+    [InlineData(OrnamentTier.Utility, false)]
+    public void TheStarfieldFollowsTheTier(OrnamentTier tier, bool expected)
+    {
+        Theme theme = ThemeResolver.Resolve(new ThemeDocument { Id = "t", Tier = tier });
+
+        Assert.Equal(expected, theme.Ornament.Starfield);
+    }
+
     // ------------------------------------------------------------------ depth wash
 
     /// <summary>

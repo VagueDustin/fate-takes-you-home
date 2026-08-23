@@ -114,8 +114,8 @@
   },
 
   "ornament": {
-    "cornerBrackets": true,
-    "filmGrain": true,
+    "cornerBrackets": false,
+    "filmGrain": false,
     "filmGrainOpacity": 0.035,
     "glassmorphism": true,
     "ornateDividers": false,
@@ -123,6 +123,7 @@
     "staggerEntrances": true,
     "gradientDisplayFill": false,
     "depthWash": true,
+    "starfield": true,
     "panelEdge": "hairline",
     "maxConcurrentAnimations": 3
   },
