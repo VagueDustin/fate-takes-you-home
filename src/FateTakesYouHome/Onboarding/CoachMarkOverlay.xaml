@@ -1,0 +1,86 @@
+<UserControl
+  x:Class="FateTakesYouHome.Onboarding.CoachMarkOverlay"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  Focusable="True"
+  Visibility="Collapsed">
+
+  <!--
+    The guided tour.
+
+    A dim layer with a hole cut in it around whatever is being explained, and a callout beside it.
+    The hole is a real geometric exclusion rather than four rectangles around the target, so it
+    follows the target's rounded corners and cannot leave hairline seams at fractional DPI.
+  -->
+
+  <Canvas x:Name="Surface" Background="Transparent">
+
+    <!-- Fills the control; sized in code because a Canvas gives its children no layout. -->
+    <Path
+      x:Name="Scrim"
+      Fill="#B0000000"
+      IsHitTestVisible="True" />
+
+    <!-- The lit edge around the cut-out, so the spotlight reads as deliberate. -->
+    <Rectangle
+      x:Name="SpotlightEdge"
+      Stroke="{DynamicResource Fate.Brush.AccentDefault}"
+      StrokeThickness="1.5"
+      Opacity="0.85"
+      IsHitTestVisible="False" />
+
+    <Border
+      x:Name="Callout"
+      MaxWidth="380"
+      Padding="18,16"
+      Background="{DynamicResource Fate.Brush.SurfaceOverlay}"
+      BorderBrush="{DynamicResource Fate.Brush.BorderEmphasis}"
+      BorderThickness="1"
+      CornerRadius="{DynamicResource Fate.Radius.Lg}"
+      Effect="{DynamicResource Fate.Effect.PanelShadow}">
+
+      <StackPanel>
+        <c:TrackedTextBlock
+          x:Name="StepCounter"
+          Style="{StaticResource Fate.Display.SectionLabel}"
+          Text="Step 1 of 6" />
+
+        <TextBlock
+          x:Name="Title"
+          Margin="0,8,0,0"
+          Style="{StaticResource Fate.Text.Subtitle}"
+          Text="Title"
+          TextWrapping="Wrap" />
+
+        <TextBlock
+          x:Name="Body"
+          Margin="0,6,0,0"
+          Style="{StaticResource Fate.Text.Muted}"
+          Text="Body"
+          TextWrapping="Wrap"
+          LineHeight="19" />
+
+        <Grid Margin="0,16,0,0">
+          <Button
+            x:Name="SkipButton"
+            HorizontalAlignment="Left"
+            Content="Skip the tour"
+            Click="OnSkipClicked" />
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button
+              x:Name="BackButton"
+              Content="Back"
+              Click="OnBackClicked" />
+            <Button
+              x:Name="NextButton"
+              Margin="8,0,0,0"
+              Content="Next"
+              Click="OnNextClicked" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
+  </Canvas>
+</UserControl>

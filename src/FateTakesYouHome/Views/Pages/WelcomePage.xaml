@@ -1,0 +1,76 @@
+<UserControl
+  x:Class="FateTakesYouHome.Views.Pages.WelcomePage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls">
+
+  <ContentControl Style="{StaticResource Fate.Panel}">
+    <Grid Margin="48,44">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="0" HorizontalAlignment="Left" MaxWidth="620">
+        <Image
+          x:Name="Mark"
+          Width="72"
+          Height="72"
+          HorizontalAlignment="Left"
+          RenderOptions.BitmapScalingMode="HighQuality" />
+
+        <c:TrackedTextBlock
+          Margin="0,26,0,0"
+          Style="{StaticResource Fate.Display.Title}"
+          FontSize="{DynamicResource Fate.Size.Display}"
+          Text="Fate Takes You Home" />
+
+        <!--
+          The brand's voice rule: state the concrete promise plainly, then turn mythic in the last
+          clause. Everything functional below this stays functional.
+        -->
+        <TextBlock
+          Margin="0,14,0,0"
+          Style="{StaticResource Fate.Text.Muted}"
+          FontSize="{DynamicResource Fate.Size.Subtitle}"
+          LineHeight="26"
+          TextWrapping="Wrap"
+          Text="Your lights, scenes and automations, one click from the taskbar — so the house is ready before you are." />
+
+        <Border Style="{StaticResource Fate.Divider}" Margin="0,28,0,0" />
+
+        <TextBlock
+          Margin="0,20,0,0"
+          Style="{StaticResource Fate.Text.Body}"
+          TextWrapping="Wrap"
+          LineHeight="22"
+          Text="Setting this up takes about two minutes. You will need your Home Assistant address and a Long-Lived Access Token, which you create from your Home Assistant profile page." />
+
+        <StackPanel Orientation="Horizontal" Margin="0,26,0,0">
+          <Button
+            x:Name="StartButton"
+            Content="Set up the connection"
+            Click="OnStartClicked" />
+
+          <Button
+            Margin="10,0,0,0"
+            Content="Show me around first"
+            Click="OnTourClicked" />
+
+          <Button
+            Margin="10,0,0,0"
+            Content="Skip"
+            Click="OnSkipClicked" />
+        </StackPanel>
+      </StackPanel>
+
+      <StackPanel Grid.Row="2" HorizontalAlignment="Left" MaxWidth="620">
+        <TextBlock
+          Style="{StaticResource Fate.Text.Faint}"
+          TextWrapping="Wrap"
+          Text="Nothing leaves this machine. The app talks directly to your Home Assistant instance, and your access token is encrypted with Windows data protection so only your account can read it." />
+      </StackPanel>
+    </Grid>
+  </ContentControl>
+</UserControl>

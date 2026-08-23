@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>FateTakesYouHome</RootNamespace>
+    <AssemblyName>FateTakesYouHome</AssemblyName>
+    <ApplicationIcon>Assets\Icons\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Description>A desktop control surface for Home Assistant. Lives in the tray; goes home when you do.</Description>
+
+    <!-- Trim/AOT are incompatible with WPF; single-file is incompatible with WPF's resource loading. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FateTakesYouHome.HomeAssistant\FateTakesYouHome.HomeAssistant.csproj" />
+    <ProjectReference Include="..\FateTakesYouHome.Theming\FateTakesYouHome.Theming.csproj" />
+  </ItemGroup>
+
+  <!-- The brand mark, shared with build/FateIconGen so the runtime tray icon and the compiled
+       .ico can never drift apart. Linked rather than referenced: the generator has to run before
+       this project can build, so a project reference would be a cycle. -->
+  <ItemGroup>
+    <Compile Include="..\Shared\FateMark.cs" Link="Branding\FateMark.cs" />
+  </ItemGroup>
+
+  <!-- Embedded typefaces. OFL-1.1 permits embedding; see Assets/Fonts/OFL.txt. -->
+  <ItemGroup>
+    <Resource Include="Assets\Fonts\*.ttf" />
+    <Resource Include="Assets\Icons\*.ico" />
+    <Resource Include="Assets\Icons\*.png" />
+  </ItemGroup>
+
+  <!-- Bundled themes ship beside the executable and are copied to %APPDATA% on first run. -->
+  <ItemGroup>
+    <Content Include="..\..\themes\**\*.json" Link="Themes\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

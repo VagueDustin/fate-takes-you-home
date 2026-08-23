@@ -1,0 +1,76 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Windows only, and not a matrix: the projects target net8.0-windows and use WPF, so there is
+    # nothing to gain from pretending otherwise.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      # Proves the icon in the repository still matches the geometry that generates it. A change to
+      # FateMark.cs that nobody regenerated would otherwise ship a stale icon.
+      - name: Check the brand mark is up to date
+        run: |
+          dotnet run --project build/FateIconGen --configuration Release -- "${{ github.workspace }}"
+          git diff --exit-code -- src/FateTakesYouHome/Assets/Icons
+        shell: pwsh
+
+  package:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install the WiX toolset
+        run: |
+          dotnet tool install --global wix --version 5.*
+          wix extension add -g WixToolset.UI.wixext
+          wix extension add -g WixToolset.Util.wixext
+        shell: pwsh
+
+      - name: Publish and package
+        run: ./build/publish.ps1
+        shell: pwsh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fate-takes-you-home
+          path: |
+            artifacts/*.msi
+            artifacts/*.zip
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>FateTakesYouHome.Theming</RootNamespace>
+    <AssemblyName>FateTakesYouHome.Theming</AssemblyName>
+    <Description>Theme model, loader, validator and WPF resource renderer for the Fate theme SDK.</Description>
+  </PropertyGroup>
+
+</Project>

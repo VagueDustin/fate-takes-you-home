@@ -1,0 +1,422 @@
+<UserControl
+  x:Class="FateTakesYouHome.Views.Pages.SettingsPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:conv="clr-namespace:FateTakesYouHome.Converters"
+  xmlns:models="clr-namespace:FateTakesYouHome.Models"
+  xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:SettingsPageViewModel}">
+
+  <UserControl.Resources>
+    <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
+    <conv:CountToVisibilityConverter x:Key="NoneToVisibility" WhenEmpty="True" />
+    <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+
+    <ObjectDataProvider
+      x:Key="TrayActionValues"
+      MethodName="GetValues"
+      ObjectType="{x:Type sys:Enum}">
+      <ObjectDataProvider.MethodParameters>
+        <x:Type TypeName="models:TrayAction" />
+      </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+
+    <Style x:Key="SettingLabel" TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Body}">
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+
+    <Style x:Key="SettingHint" TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+      <Setter Property="Margin" Value="0,4,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </UserControl.Resources>
+
+  <ContentControl Style="{StaticResource Fate.Panel}">
+    <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
+      <StackPanel Margin="26,22,36,26">
+
+        <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Settings" />
+
+        <!-- ========================================================== connection -->
+
+        <Border x:Name="ConnectionSection" Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Home Assistant" />
+            <TextBlock
+              Style="{StaticResource SettingHint}"
+              Text="The address of your instance and a Long-Lived Access Token from your profile page." />
+
+            <TextBlock Style="{StaticResource SettingLabel}" Margin="0,18,0,4" Text="Server address" />
+            <TextBox
+              Style="{StaticResource Fate.TextBox}"
+              Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
+              AutomationProperties.Name="Server address" />
+            <TextBlock
+              Style="{StaticResource SettingHint}"
+              Text="For example http://homeassistant.local:8123 — include https only if you have TLS set up." />
+
+            <TextBlock Style="{StaticResource SettingLabel}" Margin="0,16,0,4" Text="Long-Lived Access Token" />
+            <PasswordBox
+              x:Name="TokenBox"
+              Style="{StaticResource Fate.PasswordBox}"
+              PasswordChanged="OnTokenChanged"
+              AutomationProperties.Name="Long-lived access token" />
+
+            <Grid Margin="0,6,0,0">
+              <TextBlock Style="{StaticResource Fate.Text.Faint}" Text="{Binding TokenStatus}" />
+              <Button
+                HorizontalAlignment="Right"
+                Content="Clear"
+                Command="{Binding ClearTokenCommand}" />
+            </Grid>
+
+            <CheckBox
+              Margin="0,16,0,0"
+              Style="{StaticResource Fate.CheckBox}"
+              Content="Accept self-signed certificates"
+              IsChecked="{Binding AllowInvalidCertificate}" />
+            <TextBlock
+              Style="{StaticResource SettingHint}"
+              Text="Only turn this on for a certificate you issued yourself on your own network. It disables the check that would otherwise catch an intercepted connection." />
+
+            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+              <Button
+                Content="Test connection"
+                Command="{Binding TestConnectionCommand}"
+                IsEnabled="{Binding IsTesting, Converter={StaticResource InverseBool}}" />
+              <Button
+                Margin="10,0,0,0"
+                Content="Save and connect"
+                Command="{Binding SaveConnectionCommand}" />
+              <Button
+                Margin="10,0,0,0"
+                Content="Reconnect"
+                Command="{Binding ReconnectCommand}" />
+            </StackPanel>
+
+            <Border
+              Margin="0,14,0,0"
+              Padding="12,10"
+              CornerRadius="{DynamicResource Fate.Radius.Sm}"
+              Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+              Visibility="{Binding TestResult, Converter={StaticResource TextToVisibility}}">
+              <TextBlock
+                TextWrapping="Wrap"
+                Text="{Binding TestResult}">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Caption}">
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding TestSucceeded}" Value="True">
+                        <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.StatusSuccess}" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding TestSucceeded}" Value="False">
+                        <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.StatusDanger}" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Border>
+
+            <TextBlock
+              Margin="0,10,0,0"
+              Style="{StaticResource Fate.Text.Faint}"
+              Text="{Binding StatusMessage}"
+              Visibility="{Binding StatusMessage, Converter={StaticResource TextToVisibility}}" />
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== startup -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Startup and tray" />
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Start with Windows" />
+                <TextBlock
+                  Style="{StaticResource SettingHint}"
+                  Margin="0,0,0,0"
+                  Text="Launches straight into the tray when you sign in. No administrator rights needed." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding StartWithWindows}"
+                AutomationProperties.Name="Start with Windows" />
+            </Grid>
+
+            <Border
+              Margin="0,10,0,0"
+              Padding="12,9"
+              CornerRadius="{DynamicResource Fate.Radius.Sm}"
+              Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+              Visibility="{Binding StartupWarning, Converter={StaticResource TextToVisibility}}">
+              <StackPanel>
+                <TextBlock
+                  Style="{StaticResource Fate.Text.Caption}"
+                  Foreground="{DynamicResource Fate.Brush.StatusWarning}"
+                  TextWrapping="Wrap"
+                  Text="{Binding StartupWarning}" />
+                <Button
+                  Margin="0,9,0,0"
+                  HorizontalAlignment="Left"
+                  Content="Open Windows startup settings"
+                  Command="{Binding OpenStartupSettingsCommand}" />
+              </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Fate.Divider}" Margin="0,18" />
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Double-click the tray icon" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Single click always opens the panel." />
+              </StackPanel>
+              <ComboBox
+                Grid.Column="1"
+                Width="190"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.ComboBox}"
+                ItemsSource="{Binding Source={StaticResource TrayActionValues}}"
+                SelectedItem="{Binding DoubleClickAction}"
+                AutomationProperties.Name="Double-click action" />
+            </Grid>
+
+            <Grid Margin="0,14,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Middle-click the tray icon" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Runs whichever pin is marked as the default action, below." />
+              </StackPanel>
+              <ComboBox
+                Grid.Column="1"
+                Width="190"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.ComboBox}"
+                ItemsSource="{Binding Source={StaticResource TrayActionValues}}"
+                SelectedItem="{Binding MiddleClickAction}"
+                AutomationProperties.Name="Middle-click action" />
+            </Grid>
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Closing this window keeps it running" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Off means the close button exits the application entirely." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding CloseToTray}"
+                AutomationProperties.Name="Close to tray" />
+            </Grid>
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Keep the panel open when it loses focus" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Useful while arranging pins. Off is the normal tray behaviour." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding PinFlyoutOpen}"
+                AutomationProperties.Name="Keep the panel open" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== pins -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Pinned items" />
+            <TextBlock
+              Style="{StaticResource SettingHint}"
+              Text="What the tray panel shows, in order. Rename anything whose Home Assistant name is unhelpful." />
+
+            <ItemsControl
+              Margin="0,16,0,0"
+              ItemsSource="{Binding Pins}"
+              Visibility="{Binding Pins.Count, Converter={StaticResource AnyToVisibility}}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:PinnedRowViewModel}">
+                  <Border
+                    Margin="0,0,0,7"
+                    Padding="12,9"
+                    Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+                    BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource Fate.Radius.Sm}">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+
+                      <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBox
+                          Style="{StaticResource Fate.TextBox}"
+                          Padding="8,6"
+                          Text="{Binding Label, UpdateSourceTrigger=LostFocus}"
+                          Tag="{Binding Placeholder}"
+                          AutomationProperties.Name="Display name" />
+                        <TextBlock
+                          Margin="2,5,0,0"
+                          Style="{StaticResource Fate.Text.Mono}"
+                          Text="{Binding EntityId}" />
+                        <TextBlock
+                          Margin="2,3,0,0"
+                          Style="{StaticResource Fate.Text.Caption}"
+                          Foreground="{DynamicResource Fate.Brush.StatusWarning}"
+                          Text="Not currently reported by Home Assistant."
+                          Visibility="{Binding IsMissing, Converter={StaticResource BoolToVisibility}}" />
+                      </StackPanel>
+
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <CheckBox
+                          Style="{StaticResource Fate.CheckBox}"
+                          Content="Default action"
+                          IsChecked="{Binding IsDefaultAction}"
+                          ToolTip="The pin that a middle-click on the tray icon fires." />
+                      </StackPanel>
+
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button
+                          Style="{StaticResource Fate.Button.Icon}"
+                          ToolTip="Move up"
+                          AutomationProperties.Name="Move up"
+                          Command="{Binding DataContext.MovePinUpCommand,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          CommandParameter="{Binding}">
+                          <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.ChevronUp}" />
+                        </Button>
+                        <Button
+                          Margin="6,0,0,0"
+                          Style="{StaticResource Fate.Button.Icon}"
+                          ToolTip="Move down"
+                          AutomationProperties.Name="Move down"
+                          Command="{Binding DataContext.MovePinDownCommand,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          CommandParameter="{Binding}">
+                          <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.ChevronDown}" />
+                        </Button>
+                        <Button
+                          Margin="6,0,0,0"
+                          Style="{StaticResource Fate.Button.Icon}"
+                          ToolTip="Remove"
+                          AutomationProperties.Name="Remove pin"
+                          Command="{Binding DataContext.RemovePinCommand,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          CommandParameter="{Binding}">
+                          <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Trash}" />
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock
+              Margin="0,10,0,0"
+              Style="{StaticResource Fate.Text.Faint}"
+              Text="Nothing pinned yet. Pin things from the Everything page."
+              Visibility="{Binding Pins.Count, Converter={StaticResource NoneToVisibility}}" />
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== appearance -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Appearance" />
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Disable animations" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Overrides whatever the theme asks for. The Windows animation accessibility setting is honoured either way." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding DisableAnimations}"
+                AutomationProperties.Name="Disable animations" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== diagnostics -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Files and diagnostics" />
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Verbose logging" />
+                <TextBlock Style="{StaticResource SettingHint}" Margin="0"
+                           Text="Records every message exchanged with Home Assistant. Useful when something is going wrong; noisy otherwise." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding VerboseLogging}"
+                AutomationProperties.Name="Verbose logging" />
+            </Grid>
+
+            <Border Style="{StaticResource Fate.Divider}" Margin="0,18" />
+
+            <StackPanel>
+              <TextBlock Style="{StaticResource Fate.Text.Faint}" Text="Settings" />
+              <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                         Text="{Binding Source={x:Static vm:SettingsPageViewModel.SettingsFilePath}}" />
+
+              <TextBlock Margin="0,10,0,0" Style="{StaticResource Fate.Text.Faint}" Text="Themes" />
+              <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                         Text="{Binding Source={x:Static vm:SettingsPageViewModel.ThemesFolderPath}}" />
+
+              <TextBlock Margin="0,10,0,0" Style="{StaticResource Fate.Text.Faint}" Text="Logs" />
+              <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                         Text="{Binding Source={x:Static vm:SettingsPageViewModel.LogFolderPath}}" />
+
+              <TextBlock Margin="0,10,0,0" Style="{StaticResource Fate.Text.Faint}" Text="Installed at" />
+              <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                         Text="{Binding Source={x:Static vm:SettingsPageViewModel.InstallPath}}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <Button Content="Open settings folder" Command="{Binding OpenSettingsFolderCommand}" />
+              <Button Margin="10,0,0,0" Content="Open themes folder" Command="{Binding OpenThemesFolderCommand}" />
+              <Button Margin="10,0,0,0" Content="Open logs" Command="{Binding OpenLogFolderCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </ContentControl>
+</UserControl>

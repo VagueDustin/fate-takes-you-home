@@ -1,0 +1,71 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "midnight",
+  "name": "Midnight",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "A neutral dark theme that follows Windows conventions rather than the house style. For when the interface should disappear.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+
+  "colors": {
+    "surfaceBase": "#1F1F1F",
+    "surfaceRaised": "#272727",
+    "surfaceOverlay": "#2D2D2D",
+    "surfaceSunken": "#171717",
+    "surfaceHighest": "#383838",
+
+    "borderSubtle": "rgba(255, 255, 255, 0.06)",
+    "borderDefault": "#3D3D3D",
+    "borderEmphasis": "#4CC2FF",
+
+    "textPrimary": "#FFFFFF",
+    "textMuted": "#C5C5C5",
+    "textFaint": "#9A9A9A",
+    "textInverse": "#1F1F1F",
+    "textAccent": "#4CC2FF",
+
+    "accentDefault": "#4CC2FF",
+    "accentHover": "#77CFFF",
+    "accentPressed": "#3AA0D6",
+    "accentSubtle": "rgba(76, 194, 255, 0.14)",
+    "accentGlow": "rgba(76, 194, 255, 0.40)",
+
+    "depthWash": []
+  },
+
+  "typography": {
+    "displayFamily": "Segoe UI Variable Display",
+    "bodyFamily": "Segoe UI Variable Text",
+    "proseFamily": "Segoe UI Variable Text",
+    "trackingWordmark": 0.0,
+    "trackingLabel": 0.08
+  },
+
+  "shape": {
+    "radiusSm": 4,
+    "radiusMd": 8,
+    "radiusLg": 8,
+    "flyoutRadius": 8
+  },
+
+  "ornament": {
+    "depthWash": false,
+    "filmGrain": false,
+    "cornerBrackets": false
+  },
+
+  "buttons": {
+    "style": "ghost",
+    "hoverLift": 0,
+    "activeGlow": false
+  },
+
+  "backdrop": {
+    "mode": "acrylic",
+    "tintOpacity": 0.80,
+    "shadowBlur": 24,
+    "shadowOpacity": 0.55
+  }
+}

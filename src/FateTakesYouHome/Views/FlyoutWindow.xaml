@@ -1,0 +1,187 @@
+<Window
+  x:Class="FateTakesYouHome.Views.FlyoutWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  d:DataContext="{d:DesignInstance Type=vm:FlyoutViewModel}"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  Title="Fate Takes You Home"
+  WindowStyle="None"
+  AllowsTransparency="True"
+  Background="Transparent"
+  ShowInTaskbar="False"
+  Topmost="True"
+  ResizeMode="NoResize"
+  SizeToContent="Height"
+  ShowActivated="True"
+  UseLayoutRounding="True"
+  TextOptions.TextFormattingMode="Ideal"
+  FontFamily="{DynamicResource Fate.Font.Body}">
+
+  <!--
+    Transparency is on so the app composites the panel itself: the rounded corners, the shadow and
+    the entrance animation are all ours. The alternative — a DWM system backdrop — cannot be
+    animated the same way, which is why "composited" is the default backdrop mode.
+
+    ShadowFrame is empty margin around the panel that the drop shadow renders into. Without it the
+    shadow is clipped at the window edge and the panel looks like it is sitting in a box.
+  -->
+
+  <Grid x:Name="ShadowFrame" Margin="28">
+    <Grid.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform x:Name="Zoom" ScaleX="1" ScaleY="1" />
+        <TranslateTransform x:Name="Slide" />
+      </TransformGroup>
+    </Grid.RenderTransform>
+
+    <Border
+      x:Name="Panel"
+      Background="{DynamicResource Fate.Brush.WindowBackground}"
+      BorderBrush="{DynamicResource Fate.Brush.PanelEdge}"
+      BorderThickness="{DynamicResource Fate.Thickness.Stroke}"
+      CornerRadius="{DynamicResource Fate.Radius.Flyout}"
+      Effect="{DynamicResource Fate.Effect.PanelShadow}"
+      SnapsToDevicePixels="True">
+
+      <!-- Clips the grain and brackets to the rounded corners. -->
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================================================ header -->
+
+        <Grid Grid.Row="0" Margin="16,14,12,10">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <StackPanel Grid.Column="0" VerticalAlignment="Center">
+            <c:TrackedTextBlock
+              Style="{StaticResource Fate.Display.Wordmark}"
+              Text="Fate Takes You Home" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+              <Border
+                x:Name="StatusDot"
+                Width="7"
+                Height="7"
+                Margin="0,0,7,0"
+                VerticalAlignment="Center"
+                CornerRadius="3.5"
+                Background="{DynamicResource Fate.Brush.TextFaint}" />
+              <TextBlock
+                x:Name="StatusText"
+                Style="{StaticResource Fate.Text.Caption}"
+                Text="{Binding HomeName}"
+                VerticalAlignment="Center"
+                TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </StackPanel>
+
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+            <Button
+              Style="{StaticResource Fate.Button.Icon}"
+              Command="{Binding OpenSettingsCommand}"
+              ToolTip="Settings"
+              AutomationProperties.Name="Settings">
+              <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Settings}" />
+            </Button>
+
+            <Button
+              Margin="6,0,0,0"
+              Style="{StaticResource Fate.Button.Icon}"
+              Command="{Binding ExpandCommand}"
+              ToolTip="Open the full window"
+              AutomationProperties.Name="Open the full window">
+              <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Expand}" />
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource Fate.Divider}" Margin="16,0,16,0" />
+
+        <!-- ============================================================ body -->
+
+        <Grid Grid.Row="2">
+          <!-- The pinned items. -->
+          <ScrollViewer
+            x:Name="TileScroller"
+            Style="{StaticResource Fate.ScrollViewer}"
+            MaxHeight="{DynamicResource Fate.Metric.FlyoutMaxHeight}"
+            Margin="0,10,0,0"
+            Visibility="{Binding ShowsPlaceholder, Converter={StaticResource InverseBoolToVisibility}}">
+            <ItemsControl
+              x:Name="Tiles"
+              Margin="12,0,12,14"
+              ItemsSource="{Binding Tiles}"
+              ItemTemplate="{StaticResource Fate.Template.EntityTile}"
+              KeyboardNavigation.TabNavigation="Continue">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                  <Setter Property="Margin" Value="0,0,0,7" />
+                </Style>
+              </ItemsControl.ItemContainerStyle>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <!-- Nothing to show: say what is missing and offer the one useful next step. -->
+          <StackPanel
+            Margin="20,18,20,20"
+            Visibility="{Binding ShowsPlaceholder, Converter={StaticResource BoolToVisibility}}">
+
+            <TextBlock
+              Style="{StaticResource Fate.Text.Subtitle}"
+              Text="{Binding PlaceholderTitle}"
+              TextWrapping="Wrap" />
+
+            <TextBlock
+              Margin="0,6,0,0"
+              Style="{StaticResource Fate.Text.Muted}"
+              Text="{Binding PlaceholderDetail}"
+              TextWrapping="Wrap" />
+
+            <Button
+              Margin="0,14,0,0"
+              HorizontalAlignment="Left"
+              Content="{Binding PlaceholderAction}"
+              Command="{Binding ExpandCommand}" />
+          </StackPanel>
+        </Grid>
+      </Grid>
+    </Border>
+
+    <!-- Ornament sits above the content but never intercepts it. -->
+    <Border
+      CornerRadius="{DynamicResource Fate.Radius.Flyout}"
+      ClipToBounds="True"
+      IsHitTestVisible="False">
+      <Grid>
+        <Rectangle
+          Fill="{DynamicResource Fate.Brush.FilmGrain}"
+          Opacity="{DynamicResource Fate.Opacity.FilmGrain}"
+          Visibility="{DynamicResource Fate.Visibility.FilmGrain}" />
+      </Grid>
+    </Border>
+
+    <c:CornerBrackets
+      Stroke="{DynamicResource Fate.Brush.BorderEmphasis}"
+      StrokeThickness="1"
+      ArmLength="13"
+      Inset="6"
+      Opacity="0.4"
+      Visibility="{DynamicResource Fate.Visibility.CornerBrackets}" />
+  </Grid>
+</Window>

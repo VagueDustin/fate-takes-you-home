@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/VagueDustin/fate-takes-you-home/main/themes/theme.schema.json",
+  "title": "Fate Takes You Home theme",
+  "description": "A theme is a patch. Declare only what you want to change; everything else is inherited from basedOn, and ultimately from the built-in FATE theme.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "definitions": {
+    "color": {
+      "type": "string",
+      "description": "A colour. Accepts #RGB, #RGBA, #RRGGBB, #RRGGBBAA (CSS order, alpha last), rgb(), rgba(), or a standard colour name.",
+      "pattern": "^(#[0-9a-fA-F]{3,8}|[Rr][Gg][Bb][Aa]?\\s*\\(.+\\)|[A-Za-z]+)$"
+    },
+    "easing": {
+      "type": "string",
+      "description": "Either a preset name or a literal cubic-bezier(x1, y1, x2, y2).",
+      "examples": [
+        "fate",
+        "fate-spring",
+        "linear",
+        "ease-out",
+        "cubic-bezier(0.2, 0.7, 0.3, 1)"
+      ]
+    },
+    "milliseconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10000
+    }
+  },
+
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "id": {
+      "type": "string",
+      "description": "Unique identifier. Lower-case words joined by single hyphens.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name shown in the theme picker."
+    },
+    "author": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "homepage": { "type": "string", "format": "uri" },
+
+    "basedOn": {
+      "type": "string",
+      "description": "Id of a theme to inherit from. Cycles are rejected; chains are followed up to 16 deep.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+
+    "appearance": {
+      "enum": ["dark", "light"],
+      "description": "Drives the window title bar and caption buttons. Must match the actual lightness of surfaceBase or the chrome will not match the content."
+    },
+
+    "tier": {
+      "enum": ["ceremonial", "charted", "utility"],
+      "description": "Ornament tier. Sets the defaults for every switch in `ornament`. Ceremonial is ornate, utility is restrained, charted sits between them."
+    },
+
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Semantic roles. Gold — or whatever your accent is — means interactive or brand, never status.",
+      "properties": {
+        "surfaceBase": { "$ref": "#/definitions/color" },
+        "surfaceRaised": { "$ref": "#/definitions/color" },
+        "surfaceOverlay": { "$ref": "#/definitions/color" },
+        "surfaceSunken": { "$ref": "#/definitions/color" },
+        "surfaceHighest": { "$ref": "#/definitions/color" },
+
+        "borderSubtle": { "$ref": "#/definitions/color" },
+        "borderDefault": { "$ref": "#/definitions/color" },
+        "borderEmphasis": { "$ref": "#/definitions/color" },
+
+        "textPrimary": { "$ref": "#/definitions/color" },
+        "textMuted": { "$ref": "#/definitions/color" },
+        "textFaint": { "$ref": "#/definitions/color" },
+        "textInverse": {
+          "$ref": "#/definitions/color",
+          "description": "Text drawn on top of a filled accent surface."
+        },
+        "textAccent": { "$ref": "#/definitions/color" },
+
+        "accentDefault": { "$ref": "#/definitions/color" },
+        "accentHover": { "$ref": "#/definitions/color" },
+        "accentPressed": { "$ref": "#/definitions/color" },
+        "accentSubtle": { "$ref": "#/definitions/color" },
+        "accentGlow": { "$ref": "#/definitions/color" },
+
+        "statusLive": { "$ref": "#/definitions/color" },
+        "statusSuccess": { "$ref": "#/definitions/color" },
+        "statusWarning": { "$ref": "#/definitions/color" },
+        "statusDanger": { "$ref": "#/definitions/color" },
+        "statusInfo": { "$ref": "#/definitions/color" },
+
+        "depthWash": {
+          "type": "array",
+          "description": "Radial layers painted over surfaceBase, back to front. Replaces the inherited stack wholesale rather than merging. An empty array gives a flat fill.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "centerX": { "type": "number", "description": "Fraction of surface width. May sit outside 0-1." },
+              "centerY": { "type": "number", "description": "Fraction of surface height. May sit outside 0-1." },
+              "radiusX": { "type": "number", "exclusiveMinimum": 0 },
+              "radiusY": { "type": "number", "exclusiveMinimum": 0 },
+              "color": { "$ref": "#/definitions/color" },
+              "falloff": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1,
+                "description": "Where the layer fades to nothing, along the radius."
+              }
+            },
+            "required": ["color"]
+          }
+        }
+      }
+    },
+
+    "typography": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "displayFamily": { "type": "string", "description": "Page titles and the wordmark." },
+        "bodyFamily": { "type": "string", "description": "Interface text." },
+        "proseFamily": { "type": "string", "description": "Long-form prose. Ceremonial tier only." },
+        "monoFamily": { "type": "string" },
+        "trackingWordmark": { "type": "number", "description": "Letter spacing in ems." },
+        "trackingLabel": { "type": "number", "description": "Letter spacing in ems for small-caps section labels." },
+        "trackingDisplay": { "type": "number" },
+        "scale": {
+          "type": "number",
+          "minimum": 0.75,
+          "maximum": 2,
+          "description": "Multiplier applied to every font size."
+        },
+        "sizeCaption": { "type": "number", "exclusiveMinimum": 0 },
+        "sizeBody": { "type": "number", "exclusiveMinimum": 0 },
+        "sizeSubtitle": { "type": "number", "exclusiveMinimum": 0 },
+        "sizeTitle": { "type": "number", "exclusiveMinimum": 0 },
+        "sizeDisplay": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+
+    "shape": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "radiusSm": { "type": "number", "minimum": 0 },
+        "radiusMd": { "type": "number", "minimum": 0 },
+        "radiusLg": { "type": "number", "minimum": 0 },
+        "radiusPill": { "type": "number", "minimum": 0 },
+        "strokeThickness": { "type": "number", "minimum": 0 },
+        "flyoutRadius": { "type": "number", "minimum": 0 },
+        "flyoutWidth": { "type": "number", "minimum": 240, "maximum": 900 },
+        "flyoutMaxHeight": { "type": "number", "minimum": 200, "maximum": 1600 },
+        "flyoutMargin": { "type": "number", "minimum": 0 },
+        "tileHeight": { "type": "number", "minimum": 32, "maximum": 120 }
+      }
+    },
+
+    "motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Master switch. False makes every transition instant." },
+        "speedScale": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 4,
+          "description": "Multiplier on every duration. 0.5 is twice as fast."
+        },
+        "flyoutOpenMs": { "$ref": "#/definitions/milliseconds" },
+        "flyoutCloseMs": { "$ref": "#/definitions/milliseconds" },
+        "hoverMs": { "$ref": "#/definitions/milliseconds" },
+        "pressMs": { "$ref": "#/definitions/milliseconds" },
+        "pageTransitionMs": { "$ref": "#/definitions/milliseconds" },
+        "staggerStepMs": { "$ref": "#/definitions/milliseconds" },
+        "staggerMaxItems": { "type": "integer", "minimum": 0, "maximum": 200 },
+        "flyoutEasing": { "$ref": "#/definitions/easing" },
+        "standardEasing": { "$ref": "#/definitions/easing" },
+        "flyoutTravel": {
+          "type": "number",
+          "description": "Pixels the flyout slides as it opens."
+        },
+        "flyoutScaleFrom": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1.5,
+          "description": "Scale the flyout grows from. 1.0 disables the zoom."
+        },
+        "respectSystemReducedMotion": {
+          "type": "boolean",
+          "description": "Honour the Windows animation accessibility setting. Leave this on."
+        }
+      }
+    },
+
+    "ornament": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Individual switches. Each defaults to whatever the tier prescribes; set one only to make a deliberate exception.",
+      "properties": {
+        "cornerBrackets": { "type": "boolean" },
+        "filmGrain": { "type": "boolean" },
+        "filmGrainOpacity": { "type": "number", "minimum": 0, "maximum": 0.4 },
+        "glassmorphism": { "type": "boolean" },
+        "ornateDividers": { "type": "boolean" },
+        "ambientMotion": { "type": "boolean" },
+        "staggerEntrances": { "type": "boolean" },
+        "gradientDisplayFill": { "type": "boolean" },
+        "depthWash": { "type": "boolean" },
+        "panelEdge": { "enum": ["hairline", "gradient"] },
+        "maxConcurrentAnimations": { "type": "integer", "minimum": 1, "maximum": 32 }
+      }
+    },
+
+    "buttons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "enum": ["engraved", "foil", "glow", "ghost", "outline", "pill"],
+          "description": "engraved: recessed fill with a lit top edge. foil: solid accent fill. glow: dark fill with an accent halo. ghost: no fill until hover. outline: hairline only. pill: fully rounded and filled."
+        },
+        "radius": { "type": "number", "minimum": 0, "description": "Overrides shape.radiusMd for buttons only." },
+        "hoverLift": { "type": "number", "description": "Pixels the control rises on hover. 0 disables it." },
+        "pressScale": { "type": "number", "minimum": 0.5, "maximum": 1.5 },
+        "activeGlow": { "type": "boolean" },
+        "hoverSheen": { "type": "boolean", "description": "Sweep a highlight across on hover. Ceremonial and charted only." },
+        "padding": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "backdrop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": ["composited", "acrylic", "mica", "solid"],
+          "description": "composited: the app paints everything, giving the smoothest animation on every Windows build. acrylic and mica use the Windows 11 system backdrop and fall back to composited when unavailable. solid is an opaque fill."
+        },
+        "tintOpacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "flyoutOpacity": { "type": "number", "minimum": 0.2, "maximum": 1 },
+        "shadowBlur": { "type": "number", "minimum": 0 },
+        "shadowOpacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "shadowDepth": { "type": "number" }
+      }
+    }
+  },
+
+  "required": ["id"]
+}

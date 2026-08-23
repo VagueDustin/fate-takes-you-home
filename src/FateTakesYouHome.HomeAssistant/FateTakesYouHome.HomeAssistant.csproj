@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>FateTakesYouHome.HomeAssistant</RootNamespace>
+    <AssemblyName>FateTakesYouHome.HomeAssistant</AssemblyName>
+    <Description>Home Assistant WebSocket and REST client. No UI dependencies.</Description>
+  </PropertyGroup>
+
+</Project>

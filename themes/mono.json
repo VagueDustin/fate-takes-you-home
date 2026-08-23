@@ -1,0 +1,78 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "mono",
+  "name": "Mono",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Monospaced and monochrome, with square corners and no motion. Built for people who want a control panel, not an experience.",
+  "basedOn": "fate",
+  "tier": "utility",
+
+  "colors": {
+    "surfaceBase": "#0C0C0C",
+    "surfaceRaised": "#141414",
+    "surfaceOverlay": "#1C1C1C",
+    "surfaceSunken": "#000000",
+    "surfaceHighest": "#242424",
+
+    "borderSubtle": "rgba(255, 255, 255, 0.08)",
+    "borderDefault": "#2E2E2E",
+    "borderEmphasis": "#E0E0E0",
+
+    "textPrimary": "#E8E8E8",
+    "textMuted": "#A0A0A0",
+    "textFaint": "#8A8A8A",
+    "textInverse": "#0C0C0C",
+    "textAccent": "#FFFFFF",
+
+    "accentDefault": "#D8D8D8",
+    "accentHover": "#FFFFFF",
+    "accentPressed": "#A8A8A8",
+    "accentSubtle": "rgba(255, 255, 255, 0.10)",
+    "accentGlow": "rgba(255, 255, 255, 0.25)",
+
+    "depthWash": []
+  },
+
+  "typography": {
+    "displayFamily": "JetBrains Mono",
+    "bodyFamily": "JetBrains Mono",
+    "proseFamily": "JetBrains Mono",
+    "sizeBody": 12,
+    "trackingLabel": 0.16,
+    "trackingWordmark": 0.10
+  },
+
+  "shape": {
+    "radiusSm": 0,
+    "radiusMd": 0,
+    "radiusLg": 0,
+    "radiusPill": 0,
+    "flyoutRadius": 0
+  },
+
+  "motion": {
+    "enabled": false
+  },
+
+  "ornament": {
+    "depthWash": false,
+    "filmGrain": false,
+    "cornerBrackets": true,
+    "glassmorphism": false
+  },
+
+  "buttons": {
+    "style": "outline",
+    "hoverLift": 0,
+    "pressScale": 1.0,
+    "activeGlow": false
+  },
+
+  "backdrop": {
+    "mode": "solid",
+    "shadowBlur": 12,
+    "shadowOpacity": 0.9,
+    "shadowDepth": 4
+  }
+}

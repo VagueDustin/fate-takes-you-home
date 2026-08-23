@@ -1,0 +1,32 @@
+<Application
+  x:Class="FateTakesYouHome.App"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  ShutdownMode="OnExplicitShutdown">
+
+  <!--
+    No StartupUri. This is a tray application: it has no window until somebody asks for one, and
+    OnExplicitShutdown keeps it alive while every window is closed.
+
+    The live theme is inserted at index 0 of these merged dictionaries by ThemeService, ahead of
+    the styles below. Everything in Fate.xaml binds it with DynamicResource, so swapping the theme
+    repaints the running UI without recreating a single control.
+  -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <!--
+          Order matters, because StaticResource resolves at parse time and only sees dictionaries
+          merged before it. Icons.xaml first: Fate.xaml's expander template reaches for the chevron
+          geometry and the shared icon style. Tiles.xaml last: it consumes styles from both.
+          Everything theme-valued is DynamicResource, so the live theme can still be inserted at
+          index 0 afterwards.
+        -->
+        <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Icons.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Fate.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Tiles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+</Application>

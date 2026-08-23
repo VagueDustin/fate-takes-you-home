@@ -1,0 +1,212 @@
+<UserControl
+  x:Class="FateTakesYouHome.Views.Pages.EntitiesPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:conv="clr-namespace:FateTakesYouHome.Converters"
+  xmlns:models="clr-namespace:FateTakesYouHome.Models"
+  xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:EntityBrowserViewModel}">
+
+  <UserControl.Resources>
+    <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
+    <conv:CountToVisibilityConverter x:Key="NoneToVisibility" WhenEmpty="True" />
+
+    <ObjectDataProvider
+      x:Key="GroupingValues"
+      MethodName="GetValues"
+      ObjectType="{x:Type sys:Enum}">
+      <ObjectDataProvider.MethodParameters>
+        <x:Type TypeName="models:EntityGrouping" />
+      </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+
+    <!-- One browser row: the shared tile, plus the pin control the browser adds. -->
+    <DataTemplate x:Key="Fate.Template.BrowsableEntity" DataType="{x:Type vm:BrowsableEntityViewModel}">
+      <Grid Margin="0,0,0,7">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <ContentControl
+          Grid.Column="0"
+          Content="{Binding Tile}"
+          ContentTemplate="{StaticResource Fate.Template.EntityTile}"
+          Focusable="False" />
+
+        <ToggleButton
+          Grid.Column="1"
+          Width="40"
+          Height="40"
+          Margin="8,0,0,0"
+          VerticalAlignment="Top"
+          Style="{StaticResource Fate.Toggle}"
+          IsChecked="{Binding IsPinned, Mode=OneWay}"
+          Command="{Binding TogglePinCommand}"
+          Padding="0"
+          ToolTip="Pin to the tray panel"
+          AutomationProperties.Name="Pin to the tray panel">
+          <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Pin}" />
+        </ToggleButton>
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <ContentControl Style="{StaticResource Fate.Panel}">
+    <Grid Margin="26,22">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <!-- ============================================================ heading -->
+
+      <StackPanel Grid.Row="0">
+        <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Everything" />
+        <TextBlock
+          Margin="0,8,0,0"
+          Style="{StaticResource Fate.Text.Muted}"
+          TextWrapping="Wrap"
+          Text="Every entity this app can control. Pin the ones you want in the tray panel." />
+      </StackPanel>
+
+      <!-- ============================================================ search -->
+
+      <Grid x:Name="SearchRow" Grid.Row="1" Margin="0,16,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+          <TextBox
+            x:Name="SearchBox"
+            Style="{StaticResource Fate.TextBox}"
+            Padding="36,9,32,9"
+            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+            AutomationProperties.Name="Search entities" />
+
+          <Path
+            Style="{StaticResource Fate.UiIcon}"
+            Data="{StaticResource Fate.Icon.Search}"
+            HorizontalAlignment="Left"
+            Margin="11,0,0,0"
+            VerticalAlignment="Center"
+            IsHitTestVisible="False" />
+
+          <TextBlock
+            Margin="38,0,0,0"
+            VerticalAlignment="Center"
+            IsHitTestVisible="False"
+            Text="Search by name, area or entity id">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding SearchText}" Value="">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+        </Grid>
+
+        <ComboBox
+          Grid.Column="1"
+          Width="150"
+          Margin="10,0,0,0"
+          Style="{StaticResource Fate.ComboBox}"
+          ItemsSource="{Binding Source={StaticResource GroupingValues}}"
+          SelectedItem="{Binding Grouping}"
+          ToolTip="How to group the results"
+          AutomationProperties.Name="Group by" />
+      </Grid>
+
+      <!-- ============================================================ filters -->
+
+      <Grid Grid.Row="2" Margin="0,12,0,0">
+        <StackPanel Orientation="Horizontal">
+          <CheckBox
+            Style="{StaticResource Fate.CheckBox}"
+            Content="Show unavailable"
+            IsChecked="{Binding ShowUnavailable}" />
+          <CheckBox
+            Margin="18,0,0,0"
+            Style="{StaticResource Fate.CheckBox}"
+            Content="Show diagnostic entities"
+            IsChecked="{Binding ShowAuxiliary}" />
+        </StackPanel>
+
+        <TextBlock
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          Style="{StaticResource Fate.Text.Faint}">
+          <Run Text="{Binding MatchCount, Mode=OneWay}" />
+          <Run Text="of" />
+          <Run Text="{Binding TotalCount, Mode=OneWay}" />
+        </TextBlock>
+      </Grid>
+
+      <!-- ============================================================ results -->
+
+      <Grid Grid.Row="3" Margin="0,14,0,0">
+        <ScrollViewer
+          x:Name="ResultsList"
+          Style="{StaticResource Fate.ScrollViewer}"
+          Visibility="{Binding Groups.Count, Converter={StaticResource AnyToVisibility}}">
+          <ItemsControl ItemsSource="{Binding Groups}" Margin="0,0,10,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:EntityGroup}">
+                <StackPanel Margin="0,0,0,18">
+                  <Grid Margin="0,0,0,9">
+                    <c:TrackedTextBlock
+                      Style="{StaticResource Fate.Display.SectionLabel}"
+                      Text="{Binding Name}" />
+                    <TextBlock
+                      HorizontalAlignment="Right"
+                      Style="{StaticResource Fate.Text.Faint}"
+                      Text="{Binding Count}" />
+                  </Grid>
+
+                  <ItemsControl
+                    ItemsSource="{Binding Entities}"
+                    ItemTemplate="{StaticResource Fate.Template.BrowsableEntity}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel
+          VerticalAlignment="Center"
+          HorizontalAlignment="Center"
+          MaxWidth="440"
+          Visibility="{Binding Groups.Count, Converter={StaticResource NoneToVisibility}}">
+          <TextBlock
+            Style="{StaticResource Fate.Text.Subtitle}"
+            HorizontalAlignment="Center"
+            Text="Nothing to show" />
+          <TextBlock
+            Margin="0,8,0,0"
+            Style="{StaticResource Fate.Text.Muted}"
+            TextAlignment="Center"
+            TextWrapping="Wrap"
+            Text="{Binding EmptyMessage}" />
+          <Button
+            Margin="0,18,0,0"
+            HorizontalAlignment="Center"
+            Content="Clear search"
+            Command="{Binding ClearSearchCommand}" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </ContentControl>
+</UserControl>

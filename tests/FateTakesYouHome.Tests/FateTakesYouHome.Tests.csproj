@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>FateTakesYouHome.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FateTakesYouHome.HomeAssistant\FateTakesYouHome.HomeAssistant.csproj" />
+    <ProjectReference Include="..\..\src\FateTakesYouHome.Theming\FateTakesYouHome.Theming.csproj" />
+
+    <!-- The application is referenced as a library so the placement maths can be tested. It is a
+         WinExe, which is fine to reference, but its self-contained publish settings must not be
+         inherited by the test host. -->
+    <ProjectReference Include="..\..\src\FateTakesYouHome\FateTakesYouHome.csproj">
+      <Private>true</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile</IncludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

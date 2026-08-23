@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <!--
+    The installer.
+
+    Per-machine, into C:\Program Files\VagueDustin Enterprises\Fate Takes You Home. The application
+    itself never writes there — settings, themes and logs all live under the user's profile — so
+    the install directory can stay read-only for standard users, which is what Program Files is for.
+
+    Autostart is deliberately not written here. It is a per-user setting, this is a per-machine
+    install, and an MSI writing HKCU for whoever happened to run it is the classic way to end up
+    with a startup entry the next user cannot find or remove. The application manages its own
+    Run key from Settings, where it needs no elevation.
+  -->
+
+  <Package
+    Name="Fate Takes You Home"
+    Manufacturer="VagueDustin Enterprises"
+    Version="$(var.ProductVersion)"
+    UpgradeCode="8f3a6d21-4c7e-4b39-9a2f-6d5e1c8b4a70"
+    Scope="perMachine"
+    Compressed="yes"
+    InstallerVersion="500">
+
+    <SummaryInformation
+      Description="Fate Takes You Home — a desktop control surface for Home Assistant"
+      Manufacturer="VagueDustin Enterprises" />
+
+    <!-- Replace an older version in place rather than leaving two entries in Programs and
+         Features. Downgrades are refused with a message rather than silently half-applied. -->
+    <MajorUpgrade
+      AllowDowngrades="no"
+      DowngradeErrorMessage="A newer version of Fate Takes You Home is already installed. Uninstall it first if you really mean to go back."
+      Schedule="afterInstallValidate" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Windows 10 1809 is the floor: the app targets .NET 8, and the tray placement relies on
+         per-monitor v2 DPI awareness, which is not dependable before it. -->
+    <Launch
+      Condition="Installed OR (VersionNT &gt;= 603)"
+      Message="Fate Takes You Home requires Windows 10 or later." />
+
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/VagueDustin/fate-takes-you-home" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/VagueDustin/fate-takes-you-home" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+
+    <Icon Id="AppIcon" SourceFile="$(var.PublishDir)\FateTakesYouHome.exe" />
+
+    <!--
+      Shut the running copy down before replacing its files.
+
+      Without this the installer hits a locked FateTakesYouHome.exe and asks the user to close an
+      app whose only window is a tray icon they may not realise is running. CloseApplication sends
+      it a close message first and only then falls back to ending the process.
+    -->
+    <util:CloseApplication
+      Id="CloseFateTakesYouHome"
+      Target="FateTakesYouHome.exe"
+      CloseMessage="yes"
+      EndSessionMessage="yes"
+      RebootPrompt="no"
+      Timeout="10" />
+
+    <!-- ================================================================ layout -->
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="ManufacturerFolder" Name="VagueDustin Enterprises">
+        <Directory Id="INSTALLFOLDER" Name="Fate Takes You Home" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ShortcutFolder" Name="VagueDustin Enterprises" />
+    </StandardDirectory>
+
+    <!-- ================================================================ payload -->
+
+    <Feature Id="Main" Title="Fate Takes You Home" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentGroupRef Id="Shortcuts" />
+    </Feature>
+
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <!-- Harvested from the publish output, so a new dependency needs no change here. -->
+      <Files Include="$(var.PublishDir)\**" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="Shortcuts">
+      <Component Id="StartMenuShortcut" Directory="ShortcutFolder" Guid="*">
+        <Shortcut
+          Id="AppShortcut"
+          Name="Fate Takes You Home"
+          Description="Your lights, scenes and automations, one click from the taskbar."
+          Target="[INSTALLFOLDER]FateTakesYouHome.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+
+        <!--
+          A second shortcut for the tray panel. Windows lets a shortcut carry a hotkey, so this is
+          what somebody assigns a key combination to when they want the panel without the mouse.
+        -->
+        <Shortcut
+          Id="PanelShortcut"
+          Name="Fate Takes You Home — Panel"
+          Description="Open the tray panel directly. Assign a shortcut key to this."
+          Target="[INSTALLFOLDER]FateTakesYouHome.exe"
+          Arguments="--panel"
+          WorkingDirectory="INSTALLFOLDER" />
+
+        <RemoveFolder Id="RemoveShortcutFolder" Directory="ShortcutFolder" On="uninstall" />
+
+        <!-- A per-user registry value is the documented keypath for a per-user shortcut. -->
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\VagueDustin Enterprises\Fate Takes You Home"
+          Name="Installed"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ================================================================ finish -->
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+
+    <!-- Offer to start it, ticked by default: a tray app that is not running does nothing. -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Start Fate Takes You Home now" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <CustomAction
+      Id="LaunchApplication"
+      Directory="INSTALLFOLDER"
+      ExeCommand="[INSTALLFOLDER]FateTakesYouHome.exe"
+      Return="asyncNoWait"
+      Impersonate="yes" />
+
+    <!--
+      Launch as the invoking user, not as the elevated installer account. Impersonate="yes" plus
+      running after InstallFinalize is what keeps the app's settings and its DPAPI-protected token
+      under the right profile.
+    -->
+    <InstallExecuteSequence>
+      <Custom
+        Action="LaunchApplication"
+        After="InstallFinalize"
+        Condition="NOT Installed AND WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1" />
+    </InstallExecuteSequence>
+
+  </Package>
+</Wix>

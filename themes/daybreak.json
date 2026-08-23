@@ -1,0 +1,78 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "daybreak",
+  "name": "Daybreak",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "A light theme for bright rooms. Warm parchment surfaces with the house gold darkened enough to stay legible on them.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "light",
+
+  "colors": {
+    "surfaceBase": "#F6F4EE",
+    "surfaceRaised": "#FFFFFF",
+    "surfaceOverlay": "#FBFAF6",
+    "surfaceSunken": "#E9E5DA",
+    "surfaceHighest": "#FFFFFF",
+
+    "borderSubtle": "rgba(20, 30, 60, 0.08)",
+    "borderDefault": "#D8D2C4",
+    "borderEmphasis": "#8C6A26",
+
+    "textPrimary": "#141B2E",
+    "textMuted": "#4E5570",
+    "textFaint": "#646B85",
+    "textInverse": "#FFFFFF",
+    "textAccent": "#7A5C1F",
+
+    "accentDefault": "#8C6A26",
+    "accentHover": "#A6802F",
+    "accentPressed": "#6B4F1B",
+    "accentSubtle": "rgba(140, 106, 38, 0.12)",
+    "accentGlow": "rgba(140, 106, 38, 0.28)",
+
+    "statusLive": "#B3103A",
+    "statusSuccess": "#2E6E1F",
+    "statusWarning": "#8A5A00",
+    "statusDanger": "#B3103A",
+    "statusInfo": "#1A5FA8",
+
+    "depthWash": [
+      {
+        "centerX": 0.5,
+        "centerY": -0.1,
+        "radiusX": 0.9,
+        "radiusY": 0.6,
+        "color": "rgba(212, 175, 55, 0.10)",
+        "falloff": 1.0
+      },
+      {
+        "centerX": 1.05,
+        "centerY": 0.1,
+        "radiusX": 0.8,
+        "radiusY": 1.0,
+        "color": "rgba(180, 170, 145, 0.22)",
+        "falloff": 0.7
+      }
+    ]
+  },
+
+  "ornament": {
+    "filmGrain": false,
+    "cornerBrackets": false,
+    "depthWash": true
+  },
+
+  "buttons": {
+    "style": "outline",
+    "hoverLift": 0
+  },
+
+  "backdrop": {
+    "mode": "composited",
+    "shadowBlur": 22,
+    "shadowOpacity": 0.22,
+    "shadowDepth": 6
+  }
+}

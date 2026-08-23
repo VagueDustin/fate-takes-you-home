@@ -1,0 +1,192 @@
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:conv="clr-namespace:FateTakesYouHome.Converters">
+
+  <!--
+    The entity row.
+
+    One template serves the tray panel and the entity browser. A row is a single clickable surface
+    with an optional slider beneath it, because the two things people do to a light are "turn it
+    off" and "make it dimmer", and both should be reachable without opening anything.
+  -->
+
+  <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+  <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+  <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+  <conv:InverseBooleanConverter x:Key="InverseBool" />
+
+  <!-- The domain glyph. Stroked, never filled: the tier calls for engraving, not pictographs. -->
+  <Style x:Key="Fate.TileIcon" TargetType="Path">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.6" />
+    <Setter Property="StrokeLineJoin" Value="Round" />
+    <Setter Property="StrokeStartLineCap" Value="Round" />
+    <Setter Property="StrokeEndLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource Fate.Brush.TextMuted}" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- The row's press target. Deliberately unstyled: the card around it provides the surface. -->
+  <Style x:Key="Fate.TileSurface" TargetType="Button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Focusable" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Hit" Background="Transparent" CornerRadius="{DynamicResource Fate.Radius.Md}">
+            <ContentPresenter />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Hit" Property="Background" Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <DataTemplate x:Key="Fate.Template.EntityTile" DataType="{x:Type vm:EntityTileViewModel}">
+    <Border
+      x:Name="Card"
+      Background="{DynamicResource Fate.Brush.SurfaceOverlay}"
+      BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+      BorderThickness="{DynamicResource Fate.Thickness.Stroke}"
+      CornerRadius="{DynamicResource Fate.Radius.Md}"
+      Padding="12,9"
+      SnapsToDevicePixels="True">
+
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: icon, names, and the primary control. -->
+        <Button
+          Grid.Row="0"
+          Style="{StaticResource Fate.TileSurface}"
+          Command="{Binding PrimaryCommand}"
+          IsEnabled="{Binding IsInteractive}"
+          AutomationProperties.Name="{Binding DisplayName}"
+          AutomationProperties.HelpText="{Binding StateText}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The icon sits in its own well so an active entity reads at a glance. -->
+            <Border
+              x:Name="IconWell"
+              Grid.Column="0"
+              Width="38"
+              Height="38"
+              Margin="0,0,11,0"
+              VerticalAlignment="Center"
+              Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+              BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource Fate.Radius.Sm}">
+              <Path x:Name="Icon" Data="{Binding Glyph}" Style="{StaticResource Fate.TileIcon}" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock
+                Text="{Binding DisplayName}"
+                Style="{StaticResource Fate.Text.Body}"
+                FontWeight="Medium"
+                TextTrimming="CharacterEllipsis" />
+              <TextBlock
+                x:Name="State"
+                Margin="0,1,0,0"
+                Style="{StaticResource Fate.Text.Caption}"
+                TextTrimming="CharacterEllipsis">
+                <Run Text="{Binding SubLabel, Mode=OneWay}" />
+                <Run Text=" · " />
+                <Run Text="{Binding StateText, Mode=OneWay}" />
+              </TextBlock>
+            </StackPanel>
+
+            <!-- A dot rather than a switch: the whole row is the switch. -->
+            <Border
+              x:Name="StatusDot"
+              Grid.Column="2"
+              Width="10"
+              Height="10"
+              Margin="10,0,2,0"
+              VerticalAlignment="Center"
+              CornerRadius="5"
+              Background="{DynamicResource Fate.Brush.BorderDefault}" />
+          </Grid>
+        </Button>
+
+        <!-- Row 1: the level, when there is one to set. -->
+        <Slider
+          Grid.Row="1"
+          Margin="0,9,0,1"
+          Style="{StaticResource Fate.Slider}"
+          Value="{Binding SliderValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          IsEnabled="{Binding IsInteractive}"
+          AutomationProperties.Name="{Binding DisplayName}"
+          Visibility="{Binding HasSlider, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Row 2: whatever Home Assistant refused, in its own words. -->
+        <TextBlock
+          Grid.Row="2"
+          Margin="0,6,0,0"
+          Style="{StaticResource Fate.Text.Caption}"
+          Foreground="{DynamicResource Fate.Brush.StatusDanger}"
+          TextWrapping="Wrap"
+          Text="{Binding ErrorMessage}"
+          Visibility="{Binding ErrorMessage, Converter={StaticResource TextToVisibility}}" />
+      </Grid>
+    </Border>
+
+    <DataTemplate.Triggers>
+      <!-- Active: the accent arrives on the icon and the dot, never on the whole card. -->
+      <DataTrigger Binding="{Binding IsOn}" Value="True">
+        <Setter TargetName="Icon" Property="Stroke" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+        <Setter TargetName="IconWell" Property="Background" Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+        <Setter TargetName="IconWell" Property="BorderBrush" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+        <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+      </DataTrigger>
+
+      <DataTrigger Binding="{Binding IsUnavailable}" Value="True">
+        <Setter TargetName="Card" Property="Opacity" Value="0.5" />
+        <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+      </DataTrigger>
+
+      <!-- Momentary entities have no state to show as "on", so the dot becomes a chevron cue. -->
+      <DataTrigger Binding="{Binding Kind}" Value="Momentary">
+        <Setter TargetName="StatusDot" Property="Width" Value="6" />
+        <Setter TargetName="StatusDot" Property="Height" Value="6" />
+        <Setter TargetName="StatusDot" Property="CornerRadius" Value="3" />
+      </DataTrigger>
+
+      <DataTrigger Binding="{Binding Kind}" Value="Readout">
+        <Setter TargetName="StatusDot" Property="Visibility" Value="Collapsed" />
+      </DataTrigger>
+
+      <DataTrigger Binding="{Binding IsBusy}" Value="True">
+        <Setter TargetName="Card" Property="Opacity" Value="0.7" />
+      </DataTrigger>
+
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter TargetName="Card" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+        <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource Fate.Brush.BorderDefault}" />
+      </Trigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+</ResourceDictionary>

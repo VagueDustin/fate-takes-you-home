@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4267527B-8454-4BAF-88E3-4E75B2F4774E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FateTakesYouHome.HomeAssistant", "src\FateTakesYouHome.HomeAssistant\FateTakesYouHome.HomeAssistant.csproj", "{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FateTakesYouHome.Theming", "src\FateTakesYouHome.Theming\FateTakesYouHome.Theming.csproj", "{1640F677-5B6D-4B7C-AC24-7C0952289005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FateTakesYouHome", "src\FateTakesYouHome\FateTakesYouHome.csproj", "{1395EDD1-0AE1-40B5-9E9C-57E48E266465}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9A156613-BD1F-4766-9162-D6DD16F592F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FateTakesYouHome.Tests", "tests\FateTakesYouHome.Tests\FateTakesYouHome.Tests.csproj", "{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1640F677-5B6D-4B7C-AC24-7C0952289005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1640F677-5B6D-4B7C-AC24-7C0952289005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1640F677-5B6D-4B7C-AC24-7C0952289005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1640F677-5B6D-4B7C-AC24-7C0952289005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1395EDD1-0AE1-40B5-9E9C-57E48E266465}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1395EDD1-0AE1-40B5-9E9C-57E48E266465}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1395EDD1-0AE1-40B5-9E9C-57E48E266465}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1395EDD1-0AE1-40B5-9E9C-57E48E266465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A33AAE5E-B0C6-414F-B8D1-FD1798E35CA1} = {4267527B-8454-4BAF-88E3-4E75B2F4774E}
+		{1640F677-5B6D-4B7C-AC24-7C0952289005} = {4267527B-8454-4BAF-88E3-4E75B2F4774E}
+		{1395EDD1-0AE1-40B5-9E9C-57E48E266465} = {4267527B-8454-4BAF-88E3-4E75B2F4774E}
+		{DE9A3ED9-1FB7-4B04-8C84-39D232FAD540} = {9A156613-BD1F-4766-9162-D6DD16F592F8}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,37 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "fate-ceremonial",
+  "name": "FATE Ceremonial",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "The full Fatenames treatment. Gold behaves as light: gradient display fill, ornate dividers, ambient motion.",
+  "basedOn": "fate",
+  "tier": "ceremonial",
+
+  "colors": {
+    "surfaceBase": "#020617",
+    "surfaceRaised": "#0A0E27",
+    "surfaceOverlay": "#101736",
+    "surfaceHighest": "#16213E",
+    "borderSubtle": "rgba(255, 233, 168, 0.10)",
+    "borderDefault": "rgba(212, 175, 55, 0.22)",
+    "borderEmphasis": "#F2C94C",
+    "textAccent": "#FFE9A8",
+    "accentDefault": "#F2C94C",
+    "accentHover": "#FFE9A8",
+    "accentPressed": "#D4AF37",
+    "accentSubtle": "rgba(242, 201, 76, 0.12)",
+    "accentGlow": "rgba(242, 201, 76, 0.45)"
+  },
+
+  "motion": {
+    "flyoutOpenMs": 280,
+    "staggerStepMs": 32
+  },
+
+  "buttons": {
+    "style": "glow",
+    "hoverSheen": true,
+    "hoverLift": 2
+  }
+}

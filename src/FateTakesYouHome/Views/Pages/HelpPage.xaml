@@ -1,0 +1,233 @@
+<UserControl
+  x:Class="FateTakesYouHome.Views.Pages.HelpPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:conv="clr-namespace:FateTakesYouHome.Converters"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:HelpViewModel}">
+
+  <UserControl.Resources>
+    <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+  </UserControl.Resources>
+
+  <ContentControl Style="{StaticResource Fate.Panel}">
+    <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
+      <StackPanel Margin="26,22,36,26" MaxWidth="760" HorizontalAlignment="Left">
+
+        <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Help" />
+
+        <!-- ========================================================== quickstart -->
+
+        <Grid Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock
+              Style="{StaticResource Fate.Text.Subtitle}"
+              FontSize="{DynamicResource Fate.Size.Title}"
+              Text="Quickstart" />
+            <TextBlock
+              Margin="0,6,0,0"
+              Style="{StaticResource Fate.Text.Muted}"
+              Text="Four steps. Each one marks itself done when it actually is." />
+          </StackPanel>
+
+          <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+            <TextBlock
+              VerticalAlignment="Center"
+              Margin="0,0,12,0"
+              Style="{StaticResource Fate.Text.Faint}"
+              Text="{Binding ProgressLine}" />
+            <Button Content="Take the tour" Command="{Binding StartTourCommand}" />
+          </StackPanel>
+        </Grid>
+
+        <ItemsControl Margin="0,18,0,0" ItemsSource="{Binding Steps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:QuickstartStep}">
+              <Border Padding="18" Margin="0,0,0,10">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+
+                  <!-- The step number becomes a tick once the step is genuinely satisfied. -->
+                  <Grid Grid.Column="0" Width="30" Height="30" Margin="0,0,16,0" VerticalAlignment="Top">
+                    <Border
+                      x:Name="Badge"
+                      CornerRadius="15"
+                      Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+                      BorderBrush="{DynamicResource Fate.Brush.BorderDefault}"
+                      BorderThickness="1" />
+                    <TextBlock
+                      x:Name="Number"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource Fate.Text.Caption}"
+                      FontWeight="SemiBold"
+                      Text="{Binding Number}" />
+                    <Path
+                      x:Name="Tick"
+                      Width="14"
+                      Height="14"
+                      Stretch="Uniform"
+                      Data="{StaticResource Fate.Icon.Check}"
+                      Stroke="{DynamicResource Fate.Brush.TextInverse}"
+                      StrokeThickness="2.2"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      Visibility="Collapsed" />
+                  </Grid>
+
+                  <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                    <TextBlock
+                      Style="{StaticResource Fate.Text.Body}"
+                      FontWeight="SemiBold"
+                      Text="{Binding Title}" />
+                    <TextBlock
+                      Margin="0,5,0,0"
+                      Style="{StaticResource Fate.Text.Muted}"
+                      TextWrapping="Wrap"
+                      LineHeight="20"
+                      Text="{Binding Body}" />
+                  </StackPanel>
+
+                  <Button
+                    Grid.Column="2"
+                    VerticalAlignment="Top"
+                    Content="{Binding ActionLabel}"
+                    Command="{Binding Action}"
+                    Visibility="{Binding ActionLabel, Converter={StaticResource TextToVisibility}}" />
+                </Grid>
+
+                <Border.Style>
+                  <Style TargetType="Border" BasedOn="{StaticResource Fate.Card}">
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsComplete}" Value="True">
+                        <Setter Property="Opacity" Value="0.72" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </Border.Style>
+              </Border>
+
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsComplete}" Value="True">
+                  <Setter TargetName="Badge" Property="Background"
+                          Value="{DynamicResource Fate.Brush.AccentDefault}" />
+                  <Setter TargetName="Badge" Property="BorderBrush"
+                          Value="{DynamicResource Fate.Brush.AccentDefault}" />
+                  <Setter TargetName="Number" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ========================================================== how it works -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="How it works" />
+
+            <StackPanel Margin="0,14,0,0">
+              <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium"
+                         Text="Single click the tray icon" />
+              <TextBlock Style="{StaticResource Fate.Text.Muted}" Margin="0,3,0,0" TextWrapping="Wrap"
+                         Text="Opens the panel next to the icon, showing your pinned items. Click anywhere else to dismiss it." />
+            </StackPanel>
+
+            <StackPanel Margin="0,14,0,0">
+              <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium"
+                         Text="Double click, or the expand button" />
+              <TextBlock Style="{StaticResource Fate.Text.Muted}" Margin="0,3,0,0" TextWrapping="Wrap"
+                         Text="Opens this window. Both gestures are configurable in Settings." />
+            </StackPanel>
+
+            <StackPanel Margin="0,14,0,0">
+              <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium"
+                         Text="Right click" />
+              <TextBlock Style="{StaticResource Fate.Text.Muted}" Margin="0,3,0,0" TextWrapping="Wrap"
+                         Text="A short menu: open, reconnect, settings, help, exit." />
+            </StackPanel>
+
+            <StackPanel Margin="0,14,0,0">
+              <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium"
+                         Text="Clicking a row" />
+              <TextBlock Style="{StaticResource Fate.Text.Muted}" Margin="0,3,0,0" TextWrapping="Wrap"
+                         Text="Toggles a light or switch, activates a scene, runs a script, fires an automation. Anything with a level gets a slider underneath." />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== troubleshooting -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="When something is wrong" />
+
+            <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Topics}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:HelpTopic}">
+                  <Expander Margin="0,6,0,0">
+                    <Expander.Header>
+                      <TextBlock
+                        Style="{StaticResource Fate.Text.Body}"
+                        FontWeight="Medium"
+                        TextWrapping="Wrap"
+                        Text="{Binding Question}" />
+                    </Expander.Header>
+                    <TextBlock
+                      Margin="0,8,0,4"
+                      Style="{StaticResource Fate.Text.Muted}"
+                      TextWrapping="Wrap"
+                      LineHeight="20"
+                      Text="{Binding Answer}" />
+                  </Expander>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== about -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="About" />
+
+            <TextBlock Margin="0,12,0,0" Style="{StaticResource Fate.Text.Body}"
+                       Text="{Binding Source={x:Static vm:HelpViewModel.VersionLine}}" />
+
+            <TextBlock Margin="0,10,0,0" Style="{StaticResource Fate.Text.Faint}" Text="Installed at" />
+            <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                       Text="{Binding Source={x:Static vm:HelpViewModel.InstallLine}}" />
+
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource Fate.Text.Faint}" Text="Your data" />
+            <TextBlock Style="{StaticResource Fate.Text.Mono}" TextWrapping="Wrap"
+                       Text="{Binding Source={x:Static vm:HelpViewModel.DataLine}}" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <Button Content="Open the log" Command="{Binding OpenLogFileCommand}" />
+              <Button Margin="10,0,0,0" Content="Project page" Command="{Binding OpenProjectPageCommand}" />
+              <Button Margin="10,0,0,0" Content="Home Assistant docs" Command="{Binding OpenHomeAssistantDocsCommand}" />
+            </StackPanel>
+
+            <Border Style="{StaticResource Fate.Divider}" Margin="0,18" />
+
+            <TextBlock
+              Style="{StaticResource Fate.Text.Faint}"
+              TextWrapping="Wrap"
+              LineHeight="19"
+              Text="Fate Takes You Home is free software released under the GNU Affero General Public License, version 3 or later. It talks only to the Home Assistant instance you point it at; nothing is sent anywhere else." />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </ContentControl>
+</UserControl>

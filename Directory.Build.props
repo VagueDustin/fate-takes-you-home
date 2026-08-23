@@ -1,0 +1,32 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CA1416;NU1701</NoWarn>
+  </PropertyGroup>
+
+  <!-- Product identity. Single source of truth for versioning and branding strings. -->
+  <PropertyGroup>
+    <Product>Fate Takes You Home</Product>
+    <Company>VagueDustin Enterprises</Company>
+    <Authors>VagueDustin Enterprises</Authors>
+    <Copyright>Copyright © 2026 VagueDustin Enterprises</Copyright>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <RepositoryUrl>https://github.com/VagueDustin/fate-takes-you-home</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Note: the WindowsDesktop SDK deliberately removes System.IO from the implicit usings for
+       WPF projects, because System.IO.Path collides with System.Windows.Shapes.Path. Do not add
+       it back globally — WPF files declare "using System.IO;" individually where they need it. -->
+
+</Project>

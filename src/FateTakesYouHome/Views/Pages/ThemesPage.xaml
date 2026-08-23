@@ -1,0 +1,564 @@
+<UserControl
+  x:Class="FateTakesYouHome.Views.Pages.ThemesPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:conv="clr-namespace:FateTakesYouHome.Converters"
+  xmlns:loading="clr-namespace:FateTakesYouHome.Theming.Loading;assembly=FateTakesYouHome.Theming"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:ThemesViewModel}">
+
+  <UserControl.Resources>
+    <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+    <conv:SeverityToBrushConverter x:Key="SeverityToBrush" />
+    <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- ============================================================ picker -->
+
+    <ContentControl x:Name="ThemeList" Grid.Column="0" Style="{StaticResource Fate.Panel}" Margin="0,0,14,0">
+      <Grid Margin="18,20">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+          <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Themes" />
+          <TextBlock
+            Margin="0,8,0,14"
+            Style="{StaticResource Fate.Text.Faint}"
+            TextWrapping="Wrap"
+            Text="Pick one, or build your own. Changes preview live as you make them." />
+        </StackPanel>
+
+        <ListBox
+          Grid.Row="1"
+          Style="{StaticResource Fate.ListBox}"
+          ItemsSource="{Binding Available}"
+          SelectedItem="{Binding Selected}">
+          <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem">
+              <Setter Property="Margin" Value="0,0,0,5" />
+              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              <Setter Property="Cursor" Value="Hand" />
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate TargetType="ListBoxItem">
+                    <Border
+                      x:Name="Face"
+                      Padding="12,10"
+                      Background="{DynamicResource Fate.Brush.SurfaceOverlay}"
+                      BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                      BorderThickness="1"
+                      CornerRadius="{DynamicResource Fate.Radius.Sm}">
+                      <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Face" Property="Background"
+                                Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+                      </Trigger>
+                      <Trigger Property="IsSelected" Value="True">
+                        <Setter TargetName="Face" Property="Background"
+                                Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+                        <Setter TargetName="Face" Property="BorderBrush"
+                                Value="{DynamicResource Fate.Brush.AccentDefault}" />
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </ListBox.ItemContainerStyle>
+
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type loading:ThemeEntry}">
+              <StackPanel>
+                <Grid>
+                  <TextBlock
+                    Style="{StaticResource Fate.Text.Body}"
+                    FontWeight="Medium"
+                    Text="{Binding DisplayName}" />
+                  <TextBlock
+                    HorizontalAlignment="Right"
+                    Text="Built in">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Origin}" Value="BuiltIn">
+                            <Setter Property="Visibility" Value="Visible" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                </Grid>
+                <TextBlock
+                  Margin="0,3,0,0"
+                  Style="{StaticResource Fate.Text.Caption}"
+                  TextTrimming="CharacterEllipsis"
+                  Text="{Binding Document.Description}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="2" Margin="0,14,0,0">
+          <UniformGrid Columns="2">
+            <Button Margin="0,0,4,6" Content="New" Command="{Binding NewThemeCommand}" />
+            <Button Margin="4,0,0,6" Content="Edit" Command="{Binding EditCommand}"
+                    IsEnabled="{Binding CanEditSelected}" />
+            <Button Margin="0,0,4,6" Content="Duplicate" Command="{Binding DuplicateCommand}"
+                    IsEnabled="{Binding CanEditSelected}" />
+            <Button Margin="4,0,0,6" Content="Delete" Command="{Binding DeleteCommand}"
+                    IsEnabled="{Binding CanDeleteSelected}" />
+            <Button Margin="0,0,4,0" Content="Import" Command="{Binding ImportCommand}" />
+            <Button Margin="4,0,0,0" Content="Export" Command="{Binding ExportCommand}"
+                    IsEnabled="{Binding CanEditSelected}" />
+          </UniformGrid>
+
+          <Button
+            Margin="0,6,0,0"
+            HorizontalAlignment="Stretch"
+            Content="Open themes folder"
+            Command="{Binding OpenThemesFolderCommand}" />
+
+          <TextBlock
+            Margin="0,10,0,0"
+            Style="{StaticResource Fate.Text.Faint}"
+            TextWrapping="Wrap"
+            Text="{Binding StatusMessage}"
+            Visibility="{Binding StatusMessage, Converter={StaticResource TextToVisibility}}" />
+        </StackPanel>
+      </Grid>
+    </ContentControl>
+
+    <!-- ============================================================ editor -->
+
+    <ContentControl Grid.Column="1" Style="{StaticResource Fate.Panel}">
+      <Grid>
+        <!-- Not editing: describe the selected theme. -->
+        <StackPanel
+          Margin="26,24"
+          VerticalAlignment="Top">
+          <StackPanel.Style>
+            <Style TargetType="StackPanel">
+              <Setter Property="Visibility" Value="Visible" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </StackPanel.Style>
+
+          <c:TrackedTextBlock
+            Style="{StaticResource Fate.Display.Title}"
+            Text="{Binding Selected.DisplayName}" />
+
+          <TextBlock
+            Margin="0,10,0,0"
+            Style="{StaticResource Fate.Text.Muted}"
+            TextWrapping="Wrap"
+            Text="{Binding Selected.Document.Description}" />
+
+          <Border Style="{StaticResource Fate.Divider}" Margin="0,20" />
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,20,7"
+                       Style="{StaticResource Fate.Text.Faint}" Text="Author" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Margin="0,0,0,7"
+                       Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.Author}" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,20,7"
+                       Style="{StaticResource Fate.Text.Faint}" Text="Version" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,0,0,7"
+                       Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.Version}" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,20,7"
+                       Style="{StaticResource Fate.Text.Faint}" Text="Based on" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,0,0,7"
+                       Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.BasedOn}" />
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,20,0"
+                       Style="{StaticResource Fate.Text.Faint}" Text="File" />
+            <TextBlock Grid.Row="3" Grid.Column="1" TextWrapping="Wrap"
+                       Style="{StaticResource Fate.Text.Mono}" Text="{Binding Selected.SourcePath}" />
+          </Grid>
+
+          <Border Style="{StaticResource Fate.Divider}" Margin="0,20" />
+
+          <TextBlock
+            Style="{StaticResource Fate.Text.Faint}"
+            TextWrapping="Wrap"
+            Text="Themes are patches: a file only declares what it changes and inherits the rest. Drop a .json file in the themes folder and it appears here within a second — edit it while the app runs and the interface repaints as you save." />
+        </StackPanel>
+
+        <!-- Editing. -->
+        <ScrollViewer>
+          <ScrollViewer.Style>
+            <Style TargetType="ScrollViewer" BasedOn="{StaticResource Fate.ScrollViewer}">
+              <Setter Property="Visibility" Value="Collapsed" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                  <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </ScrollViewer.Style>
+
+          <StackPanel Margin="26,24,36,26">
+
+            <!-- Identity -->
+            <Grid>
+              <StackPanel>
+                <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Editing" />
+                <TextBlock
+                  Margin="0,7,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  Text="Unsaved changes"
+                  Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="Discard" Command="{Binding CancelEditCommand}" />
+                <Button Margin="8,0,0,0" Content="Save" Command="{Binding SaveCommand}" />
+              </StackPanel>
+            </Grid>
+
+            <Border Style="{StaticResource Fate.Card}" Padding="18" Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium" Text="Name" />
+                <TextBox
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.TextBox}"
+                  Text="{Binding DraftName, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Description" />
+                <TextBox
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.TextBox}"
+                  TextWrapping="Wrap"
+                  AcceptsReturn="True"
+                  MinHeight="54"
+                  Text="{Binding DraftDescription, UpdateSourceTrigger=PropertyChanged}" />
+
+                <UniformGrid Columns="2" Margin="0,14,0,0">
+                  <StackPanel Margin="0,0,7,0">
+                    <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium" Text="Ornament tier" />
+                    <ComboBox
+                      Margin="0,5,0,0"
+                      Style="{StaticResource Fate.ComboBox}"
+                      ItemsSource="{Binding Tiers}"
+                      SelectedItem="{Binding DraftTier}" />
+                  </StackPanel>
+                  <StackPanel Margin="7,0,0,0">
+                    <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium" Text="Appearance" />
+                    <ComboBox
+                      Margin="0,5,0,0"
+                      Style="{StaticResource Fate.ComboBox}"
+                      ItemsSource="{Binding Appearances}"
+                      SelectedItem="{Binding DraftAppearance}" />
+                  </StackPanel>
+                </UniformGrid>
+
+                <TextBlock
+                  Margin="0,8,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="The tier sets the defaults for every ornament switch. Ceremonial is ornate, utility is restrained, charted sits between them." />
+              </StackPanel>
+            </Border>
+
+            <!-- Colours -->
+            <Border Style="{StaticResource Fate.Card}" Padding="18" Margin="0,14,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Colours" />
+                <TextBlock
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="Semantic roles, not raw values. Accepts #RGB, #RRGGBB, #RRGGBBAA in CSS order, rgb(), rgba() and colour names." />
+
+                <ItemsControl Margin="0,14,0,0" ItemsSource="{Binding Colors}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ThemeColorSlot}">
+                      <Grid Margin="0,0,0,7">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="150" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                          Grid.Column="0"
+                          Width="26"
+                          Height="26"
+                          Margin="0,0,11,0"
+                          VerticalAlignment="Center"
+                          Background="{Binding Swatch}"
+                          BorderBrush="{DynamicResource Fate.Brush.BorderDefault}"
+                          BorderThickness="1"
+                          CornerRadius="{DynamicResource Fate.Radius.Sm}" />
+
+                        <TextBlock
+                          Grid.Column="1"
+                          VerticalAlignment="Center"
+                          Style="{StaticResource Fate.Text.Caption}"
+                          Text="{Binding Label}" />
+
+                        <StackPanel Grid.Column="2">
+                          <TextBox
+                            Style="{StaticResource Fate.TextBox}"
+                            Padding="8,6"
+                            FontFamily="{DynamicResource Fate.Font.Mono}"
+                            Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                            AutomationProperties.Name="{Binding Label}" />
+                          <TextBlock
+                            Margin="2,3,0,0"
+                            Style="{StaticResource Fate.Text.Caption}"
+                            Foreground="{DynamicResource Fate.Brush.StatusDanger}"
+                            TextWrapping="Wrap"
+                            Text="{Binding Error}"
+                            Visibility="{Binding Error, Converter={StaticResource TextToVisibility}}" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Buttons and shape -->
+            <Border Style="{StaticResource Fate.Card}" Padding="18" Margin="0,14,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Controls and shape" />
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Button style" />
+                <ComboBox
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.ComboBox}"
+                  ItemsSource="{Binding ButtonStyles}"
+                  SelectedItem="{Binding DraftButtonStyle}" />
+                <TextBlock
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="Engraved is a recessed face with a lit top edge. Foil is a solid accent slab. Glow keeps the surface dark and adds a halo. Ghost and outline are the quiet options." />
+
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Corner radius" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="0" Maximum="24"
+                          Value="{Binding DraftRadiusMd}" Margin="0,0,44,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftRadiusMd, StringFormat={}{0:0}}" />
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Tray panel width" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="240" Maximum="720"
+                          Value="{Binding DraftFlyoutWidth}" Margin="0,0,44,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftFlyoutWidth, StringFormat={}{0:0}}" />
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Row height" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="32" Maximum="120"
+                          Value="{Binding DraftTileHeight}" Margin="0,0,44,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftTileHeight, StringFormat={}{0:0}}" />
+                </Grid>
+
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Window backdrop" />
+                <ComboBox
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.ComboBox}"
+                  ItemsSource="{Binding BackdropModes}"
+                  SelectedItem="{Binding DraftBackdrop}" />
+                <TextBlock
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="Composited gives the smoothest animation on every Windows build. Acrylic adds a blur where Windows allows it and falls back quietly where it does not." />
+              </StackPanel>
+            </Border>
+
+            <!-- Motion -->
+            <Border Style="{StaticResource Fate.Card}" Padding="18" Margin="0,14,0,0">
+              <StackPanel>
+                <Grid>
+                  <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Motion" />
+                  <ToggleButton
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource Fate.Switch}"
+                    IsChecked="{Binding DraftMotionEnabled}"
+                    AutomationProperties.Name="Motion enabled" />
+                </Grid>
+
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Overall speed" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="0.25" Maximum="2.5"
+                          Value="{Binding DraftSpeedScale}" Margin="0,0,44,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftSpeedScale, StringFormat={}{0:0.00}×}" />
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Panel entrance" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="60" Maximum="600"
+                          Value="{Binding DraftFlyoutOpenMs}" Margin="0,0,52,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftFlyoutOpenMs, StringFormat={}{0:0} ms}" />
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Travel distance" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="0" Maximum="60"
+                          Value="{Binding DraftFlyoutTravel}" Margin="0,0,52,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftFlyoutTravel, StringFormat={}{0:0} px}" />
+                </Grid>
+
+                <TextBlock Margin="0,14,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Grows from" />
+                <Grid Margin="0,5,0,0">
+                  <Slider Style="{StaticResource Fate.Slider}" Minimum="0.7" Maximum="1.0"
+                          Value="{Binding DraftFlyoutScaleFrom}" Margin="0,0,52,0" />
+                  <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                             Style="{StaticResource Fate.Text.Mono}" Text="{Binding DraftFlyoutScaleFrom, StringFormat={}{0:0.00}×}" />
+                </Grid>
+
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Fate.Text.Body}"
+                           FontWeight="Medium" Text="Easing curve" />
+                <ComboBox
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.ComboBox}"
+                  IsEditable="True"
+                  ItemsSource="{Binding EasingPresets}"
+                  Text="{Binding DraftFlyoutEasing, UpdateSourceTrigger=LostFocus}" />
+                <TextBlock
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="A preset name, or a literal cubic-bezier(x1, y1, x2, y2). fate-spring overshoots slightly so the panel settles rather than stopping dead." />
+              </StackPanel>
+            </Border>
+
+            <!-- Ornament -->
+            <Border Style="{StaticResource Fate.Card}" Padding="18" Margin="0,14,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Ornament" />
+                <TextBlock
+                  Margin="0,5,0,0"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="Each switch defaults to whatever the tier prescribes. Change one only to make a deliberate exception." />
+
+                <ItemsControl Margin="0,14,0,0" ItemsSource="{Binding Ornaments}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ThemeSwitchSlot}">
+                      <Grid Margin="0,0,0,12">
+                        <StackPanel Margin="0,0,60,0">
+                          <TextBlock Style="{StaticResource Fate.Text.Body}" Text="{Binding Label}" />
+                          <TextBlock
+                            Margin="0,2,0,0"
+                            Style="{StaticResource Fate.Text.Faint}"
+                            TextWrapping="Wrap"
+                            Text="{Binding Description}" />
+                        </StackPanel>
+                        <ToggleButton
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          Style="{StaticResource Fate.Switch}"
+                          IsChecked="{Binding Value}"
+                          AutomationProperties.Name="{Binding Label}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Diagnostics -->
+            <Border
+              Style="{StaticResource Fate.Card}"
+              Padding="18"
+              Margin="0,14,0,0"
+              Visibility="{Binding Diagnostics.Count, Converter={StaticResource AnyToVisibility}}">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="What the checker says" />
+                <TextBlock
+                  Margin="0,5,0,12"
+                  Style="{StaticResource Fate.Text.Faint}"
+                  TextWrapping="Wrap"
+                  Text="Contrast is checked against WCAG AA, and the house rule that the accent means “interactive” is enforced here too." />
+
+                <ItemsControl ItemsSource="{Binding Diagnostics}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                          Grid.Column="0"
+                          Width="6"
+                          Margin="0,2,10,2"
+                          CornerRadius="3"
+                          Background="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Style="{StaticResource Fate.Text.Mono}" Text="{Binding Field}" />
+                          <TextBlock
+                            Margin="0,2,0,0"
+                            Style="{StaticResource Fate.Text.Caption}"
+                            TextWrapping="Wrap"
+                            Text="{Binding Message}" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </ContentControl>
+  </Grid>
+</UserControl>

@@ -1,0 +1,147 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "fate",
+  "name": "FATE",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Navy and gold. Inscribed, not printed. Lit from just off the page.",
+  "homepage": "https://github.com/VagueDustin/vaguedustin-brand",
+
+  "appearance": "dark",
+  "tier": "charted",
+
+  "colors": {
+    "surfaceBase": "#070B1A",
+    "surfaceRaised": "#101736",
+    "surfaceOverlay": "#16213E",
+    "surfaceSunken": "#020617",
+    "surfaceHighest": "#1E2A4A",
+
+    "borderSubtle": "rgba(212, 175, 55, 0.10)",
+    "borderDefault": "#22325C",
+    "borderEmphasis": "#D4AF37",
+
+    "textPrimary": "#E6EAF2",
+    "textMuted": "#94A0BB",
+    "textFaint": "#76849F",
+    "textInverse": "#070B1A",
+    "textAccent": "#F2C94C",
+
+    "accentDefault": "#D4AF37",
+    "accentHover": "#F2C94C",
+    "accentPressed": "#B8902B",
+    "accentSubtle": "rgba(212, 175, 55, 0.12)",
+    "accentGlow": "rgba(212, 175, 55, 0.45)",
+
+    "statusLive": "#E8617A",
+    "statusSuccess": "#A6E26A",
+    "statusWarning": "#FFD166",
+    "statusDanger": "#E8617A",
+    "statusInfo": "#6FB1FF",
+
+    "depthWash": [
+      {
+        "centerX": 0.5,
+        "centerY": -0.1,
+        "radiusX": 0.8,
+        "radiusY": 0.5,
+        "color": "rgba(212, 175, 55, 0.06)",
+        "falloff": 1.0
+      },
+      {
+        "centerX": 0.15,
+        "centerY": -0.1,
+        "radiusX": 0.9,
+        "radiusY": 0.95,
+        "color": "rgba(42, 79, 150, 0.32)",
+        "falloff": 0.6
+      },
+      {
+        "centerX": 1.1,
+        "centerY": 0.08,
+        "radiusX": 0.75,
+        "radiusY": 1.1,
+        "color": "rgba(20, 42, 92, 0.55)",
+        "falloff": 0.55
+      }
+    ]
+  },
+
+  "typography": {
+    "displayFamily": "Cinzel",
+    "bodyFamily": "Inter",
+    "proseFamily": "Crimson Pro",
+    "monoFamily": "JetBrains Mono",
+    "trackingWordmark": 0.14,
+    "trackingLabel": 0.34,
+    "trackingDisplay": 0.02,
+    "scale": 1.0,
+    "sizeCaption": 11,
+    "sizeBody": 13,
+    "sizeSubtitle": 15,
+    "sizeTitle": 20,
+    "sizeDisplay": 28
+  },
+
+  "shape": {
+    "radiusSm": 6,
+    "radiusMd": 10,
+    "radiusLg": 16,
+    "radiusPill": 999,
+    "strokeThickness": 1,
+    "flyoutRadius": 12,
+    "flyoutWidth": 368,
+    "flyoutMaxHeight": 620,
+    "flyoutMargin": 12,
+    "tileHeight": 52
+  },
+
+  "motion": {
+    "enabled": true,
+    "speedScale": 1.0,
+    "flyoutOpenMs": 220,
+    "flyoutCloseMs": 140,
+    "hoverMs": 120,
+    "pressMs": 70,
+    "pageTransitionMs": 240,
+    "staggerStepMs": 24,
+    "staggerMaxItems": 12,
+    "flyoutEasing": "cubic-bezier(0.3, 1.5, 0.4, 1)",
+    "standardEasing": "cubic-bezier(0.2, 0.7, 0.3, 1)",
+    "flyoutTravel": 14,
+    "flyoutScaleFrom": 0.97,
+    "respectSystemReducedMotion": true
+  },
+
+  "ornament": {
+    "cornerBrackets": true,
+    "filmGrain": true,
+    "filmGrainOpacity": 0.035,
+    "glassmorphism": true,
+    "ornateDividers": false,
+    "ambientMotion": false,
+    "staggerEntrances": true,
+    "gradientDisplayFill": false,
+    "depthWash": true,
+    "panelEdge": "hairline",
+    "maxConcurrentAnimations": 3
+  },
+
+  "buttons": {
+    "style": "engraved",
+    "hoverLift": 1,
+    "pressScale": 0.985,
+    "activeGlow": true,
+    "hoverSheen": false,
+    "padding": 10
+  },
+
+  "backdrop": {
+    "mode": "composited",
+    "tintOpacity": 0.86,
+    "flyoutOpacity": 1.0,
+    "shadowBlur": 34,
+    "shadowOpacity": 0.85,
+    "shadowDepth": 10
+  }
+}

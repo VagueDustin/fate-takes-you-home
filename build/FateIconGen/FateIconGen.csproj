@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>FateTakesYouHome.IconGen</RootNamespace>
+    <AssemblyName>FateIconGen</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Description>Renders the Fate Takes You Home mark to .ico and .png. Run when the mark changes.</Description>
+  </PropertyGroup>
+
+  <!-- Linked, not referenced: the application cannot be built until this tool has produced its
+       icon, so a project reference would be a build cycle. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Shared\FateMark.cs" Link="FateMark.cs" />
+  </ItemGroup>
+
+</Project>
