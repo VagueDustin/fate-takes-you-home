@@ -56,6 +56,12 @@ First release.
 - A validator enforcing WCAG AA contrast and the house rule that the accent means "interactive".
 - Six themes: FATE, FATE Ceremonial, FATE Utility, Midnight, Daybreak and Mono.
 
+**Testing**
+
+- 186 tests, including a fake Home Assistant WebSocket server that the real client is driven
+  against — covering the handshake ordering, a rejected token being terminal, event delivery,
+  reconnection after a dropped socket, keepalive, and reply-to-command matching under concurrency.
+
 **Packaging**
 
 - Self-contained build; no .NET runtime prerequisite.

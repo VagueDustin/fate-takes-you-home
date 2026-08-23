@@ -72,7 +72,7 @@ neither can a screen reader.
 
 ## Tests
 
-`dotnet test` runs in about a second. Add tests for logic; do not add tests for XAML.
+`dotnet test` runs in a few seconds. Add tests for logic; do not add tests for XAML.
 
 What has actually caught bugs here:
 
