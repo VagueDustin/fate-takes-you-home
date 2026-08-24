@@ -40,6 +40,7 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     private Stream? _current;
     private int _connectionCount;
     private bool _disposed;
+    private long _lastCommandId;
 
     public FakeHomeAssistantServer(string expectedToken = "valid-token")
     {
@@ -225,6 +226,9 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
 
             Interlocked.Increment(ref _connectionCount);
 
+            // Ids are scoped to a connection: a reconnect legitimately starts again from 1.
+            Interlocked.Exchange(ref _lastCommandId, 0);
+
             // Home Assistant speaks first.
             await SendAsync(new JsonObject
             {
@@ -327,6 +331,32 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     {
         string type = command["type"]?.GetValue<string>() ?? string.Empty;
         long id = command["id"]?.GetValue<long>() ?? 0;
+
+        // Home Assistant refuses any identified frame whose id is not greater than the last it saw
+        // on this connection, and the real server is the only thing that used to say so — a client
+        // that let two sends race could allocate ids in order and still put them on the wire out
+        // of order, passing every test here and failing against a real house. Authentication is
+        // exempt: it is the one exchange conducted without ids.
+        if (type != "auth")
+        {
+            if (id <= Interlocked.Read(ref _lastCommandId))
+            {
+                await SendAsync(new JsonObject
+                {
+                    ["id"] = id,
+                    ["type"] = "result",
+                    ["success"] = false,
+                    ["error"] = new JsonObject
+                    {
+                        ["code"] = "id_reuse",
+                        ["message"] = "Identifier values have to increase.",
+                    },
+                }).ConfigureAwait(false);
+                return;
+            }
+
+            Interlocked.Exchange(ref _lastCommandId, id);
+        }
 
         switch (type)
         {

@@ -6,6 +6,21 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **Test connection could fail against a real server with "Identifier values have to increase".**
+  Home Assistant refuses any frame whose id is not greater than the last it saw on the connection.
+  The id was allocated outside the send lock, so two overlapping commands could take 1 and 2, swap
+  places waiting for the lock, and put 2 on the wire first — the server then refused the lower id
+  with `id_reuse`. The id is now taken inside the lock, which is the only place the number and the
+  write can be made a single step. Reported by a first run on a fresh install, where *Test
+  connection* raced the initial `subscribe_events`.
+
+### Changed
+
+- The fake Home Assistant server in the tests now enforces the real server's monotonic-id rule, so
+  a client that lets two sends race fails the suite instead of only failing against a real house.
+
 ## [0.3.0] — 2026-08-24
 
 The make-it-yours release: the app updates itself, both surfaces became arrangeable widget grids,
