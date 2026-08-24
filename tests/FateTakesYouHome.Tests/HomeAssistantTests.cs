@@ -10,6 +10,11 @@ public sealed class HaConnectionOptionsTests
     private static HaConnectionOptions For(string url) =>
         new() { BaseUrl = url, AccessToken = new string('t', 64) };
 
+    /// <remarks>
+    /// Addresses here are documentation placeholders only — <c>example.com</c> and the
+    /// RFC 5737 TEST-NET-1 range. Never paste a real instance's address into a test: it ends up
+    /// in the public history of this repository, permanently, and it describes somebody's house.
+    /// </remarks>
     [Theory]
     [InlineData("http://homeassistant.local:8123", "ws://homeassistant.local:8123/api/websocket")]
     [InlineData("https://ha.example.com", "wss://ha.example.com/api/websocket")]

@@ -52,3 +52,9 @@ secrets.json
 *.pfx
 *.snk
 appsettings.Local.json
+
+# Screenshots of a live Home Assistant instance are photographs of somebody's house: entity and
+# room names, the account behind the automations, the server address, live sensor readings. They
+# are not committable. Captures for documentation must come from fabricated data instead.
+docs/images/
+*.screenshot.png

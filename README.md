@@ -36,17 +36,16 @@ Built with WPF on .NET 8. It talks to Home Assistant over the native WebSocket A
 integration, no HACS component, nothing to install on the server side beyond a Long-Lived Access
 Token you create from your own profile page.
 
-## Screenshots
+<!--
+  Screenshots deliberately absent.
 
-<img src="docs/images/home.png" width="760" alt="The full window: pinned items and every room, on the night sky">
+  A screenshot of this application is a photograph of somebody's house: entity names, room names,
+  the account the automations belong to, the server address, and whatever the sensors happened to
+  read at the time. Shots taken against a live instance do not belong in a public repository.
 
-| The tray panel | Everything |
-| --- | --- |
-| <img src="docs/images/flyout.png" width="330" alt="The tray panel"> | <img src="docs/images/entities.png" width="430" alt="The entity browser"> |
-
-| Appearance | The layout editor |
-| --- | --- |
-| <img src="docs/images/themes.png" width="430" alt="The theme picker"> | <img src="docs/images/layout.png" width="430" alt="The layout editor"> |
+  Any screenshots added here must be captured against fabricated data — the fake Home Assistant
+  server in tests/ serves exactly this purpose — and never against a real home.
+-->
 
 ## Getting started
 
