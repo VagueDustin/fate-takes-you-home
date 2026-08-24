@@ -6,6 +6,23 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Tagging a version publishes it.** Pushing `v*` now builds, tests, packages and creates the
+  GitHub release, attaching the MSI and the portable zip the packaging job just produced — so a
+  release carries exactly what was tested rather than a rebuild that could differ. The notes come
+  from this file's section for that version.
+- `build/publish.ps1` checks the WiX extensions against the toolset's own major version before
+  building the installer, and names the fix. Left to itself the mismatch surfaces as `WIX6101`,
+  which identifies neither the offending extension nor what to do about it.
+
+### Changed
+
+- The fake Home Assistant server in the tests now enforces the real server's monotonic-id rule, so
+  a client that lets two sends race fails the suite instead of only failing against a real house.
+- The workflow's actions moved off the deprecated Node 20 runtime: `checkout@v7`,
+  `setup-dotnet@v6`, `upload-artifact@v7`.
+
 ### Fixed
 
 - **Test connection could fail against a real server with "Identifier values have to increase".**
@@ -19,13 +36,6 @@ Notable changes to Fate Takes You Home. The format follows
   version resolves to the newest published extension — WiX 7 against our pinned WiX 5 toolset —
   which fails with `WIX6101: Could not find expected package root folder wixext5`. The workflow and
   [docs/BUILDING.md](docs/BUILDING.md) now pin the extensions to the toolset's own version.
-
-### Changed
-
-- The fake Home Assistant server in the tests now enforces the real server's monotonic-id rule, so
-  a client that lets two sends race fails the suite instead of only failing against a real house.
-- The workflow's actions moved off the deprecated Node 20 runtime: `checkout@v7`,
-  `setup-dotnet@v6`, `upload-artifact@v7`.
 
 ## [0.3.0] — 2026-08-24
 

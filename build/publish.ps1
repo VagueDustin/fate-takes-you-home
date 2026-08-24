@@ -170,6 +170,29 @@ if (-not $wix) {
     return
 }
 
+# "-ext WixToolset.UI.wixext" below resolves to whichever version was added globally, and an
+# extension from a different major fails with "WIX6101: Could not find expected package root
+# folder wixext<n>" — a message that names neither the extension that is wrong nor the fix. Say it
+# here instead, while there is still context. A mismatch is only warned about: the build may still
+# be attempted, and a guard that blocks a working setup would be worse than the confusing error.
+$wixVersion = (& wix --version 2>$null | Select-Object -First 1)
+
+# "wix --version" reports "5.0.2+aa65968c1e"; the build metadata is not part of a package version,
+# so the pin we suggest has to be the three-part number on its own.
+if ($wixVersion -match '^\d+\.\d+\.\d+') {
+    $wixPin = $Matches[0]
+    $wixMajor = $wixPin.Split('.')[0]
+
+    foreach ($line in (& wix extension list -g 2>$null)) {
+        # Unparseable output is not a mismatch. If the listing format ever changes, this quietly
+        # checks nothing rather than crying wolf on every build.
+        if ($line -match '(WixToolset\.\S+\.wixext)\s+v?(\d+)\.' -and $Matches[2] -ne $wixMajor) {
+            Write-Warning "$($Matches[1]) is $($Matches[2]).x, but the toolset is WiX $wixMajor.x."
+            Write-Warning "Reinstall it pinned: wix extension add -g $($Matches[1])/$wixPin"
+        }
+    }
+}
+
 # WiX wants RTF for the licence page, and the AGPL is plain text. Wrapping it keeps a single
 # source of truth rather than a second copy that drifts.
 $licenseRtf = Join-Path $artifacts 'LICENSE.rtf'

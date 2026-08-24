@@ -21,7 +21,7 @@ No Visual Studio required. The whole thing builds from the CLI.
 
 ```bash
 dotnet build                                # everything
-dotnet test                                 # 186 tests, a few seconds
+dotnet test                                 # 227 tests, a few seconds
 dotnet run --project src/FateTakesYouHome   # run it
 ```
 

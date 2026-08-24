@@ -79,3 +79,61 @@ jobs:
             artifacts/*.zip
           if-no-files-found: error
           retention-days: 14
+
+  # Only a tag publishes, and it publishes the artifacts the package job already built rather than
+  # rebuilding them — so what a release carries is byte for byte what CI tested.
+  release:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fate-takes-you-home
+          path: artifacts
+
+      # The notes are the CHANGELOG's own section for this version. One source of truth means the
+      # release page and the file cannot end up describing the same release differently.
+      - name: Assemble the release notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+
+          # Prefix matching rather than a regex: the heading is "## [0.3.1]", and building that
+          # into a pattern turns the brackets into a character class unless they are escaped
+          # through both the shell and awk, which is a silent no-match when it goes wrong.
+          awk -v head="## [$version]" '
+            index($0, head) == 1        { inside = 1; next }
+            inside && index($0, "## [") == 1 { exit }
+            inside                      { print }
+          ' CHANGELOG.md > notes.md
+
+          if [ ! -s notes.md ]; then
+            echo "CHANGELOG.md has no section for $version, so there are no notes to publish." >&2
+            exit 1
+          fi
+
+          cat >> notes.md <<'NOTES'
+
+          ## Install
+
+          Run the MSI. It upgrades an existing install in place, keeping your pins, theme and
+          token. The portable zip needs nothing installed — unzip and run.
+
+          The MSI is unsigned, so SmartScreen will show its warning on first run.
+          NOTES
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Fate Takes You Home ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md \
+            artifacts/*.msi artifacts/*.zip
