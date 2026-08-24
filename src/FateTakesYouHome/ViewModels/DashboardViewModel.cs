@@ -12,6 +12,19 @@ namespace FateTakesYouHome.ViewModels;
 /// <summary>A count of things currently on, for one domain.</summary>
 public sealed record ActivitySummary(string Label, int Count, string IconKey);
 
+/// <summary>One room's light situation, for the dashboard's room grid.</summary>
+public sealed record RoomSummary(string Name, int LightsOn, int LightsTotal)
+{
+    public string Detail => LightsOn switch
+    {
+        0 => "Dark",
+        1 => "1 light on",
+        _ => $"{LightsOn} lights on",
+    };
+
+    public bool IsLit => LightsOn > 0;
+}
+
 /// <summary>
 /// The landing page: the pins, and a short account of what is currently on.
 /// </summary>
@@ -69,9 +82,14 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ActivitySummary> Activity { get; } = [];
 
+    /// <summary>Every room that has lights, lit rooms first.</summary>
+    public ObservableCollection<RoomSummary> Rooms { get; } = [];
+
     public bool HasPins => Pinned.Count > 0;
 
     public bool HasActivity => Activity.Count > 0;
+
+    public bool HasRooms => Rooms.Count > 0;
 
     /// <summary>The line under the page title. Mythic register is allowed here; it is a heading.</summary>
     public string Greeting
@@ -122,6 +140,18 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     /// <summary>Raised when the user asks to go and pin something.</summary>
     public event EventHandler? BrowseRequested;
 
+    /// <summary>Raised when the user clicks a room, carrying the room's name.</summary>
+    public event EventHandler<string>? RoomSelected;
+
+    [RelayCommand]
+    private void OpenRoom(RoomSummary? room)
+    {
+        if (room is not null)
+        {
+            RoomSelected?.Invoke(this, room.Name);
+        }
+    }
+
     /// <summary>Rebuilds the pin tiles and the activity counts.</summary>
     public void Rebuild()
     {
@@ -166,9 +196,23 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private void RebuildActivity()
     {
         int lights = 0, switches = 0, fans = 0, covers = 0, media = 0, locks = 0;
+        Dictionary<string, (int On, int Total)>? byRoom = null;
 
         foreach (HaEntityState state in _homeAssistant.EnumerateStates())
         {
+            // Rooms are tallied in the same pass: every light, lit or not, is attributed to its
+            // area so a room can honestly say "dark" rather than disappearing.
+            if (state.Domain == HaDomains.Light && !state.IsUnavailable
+                && _homeAssistant.AreaFor(state.EntityId) is { } area
+                && !string.IsNullOrWhiteSpace(area.Name))
+            {
+                byRoom ??= new Dictionary<string, (int, int)>(StringComparer.CurrentCultureIgnoreCase);
+                (int on, int total) = byRoom.TryGetValue(area.Name, out (int On, int Total) t)
+                    ? (t.On, t.Total)
+                    : (0, 0);
+                byRoom[area.Name] = (on + (state.IsOn ? 1 : 0), total + 1);
+            }
+
             switch (state.Domain)
             {
                 case HaDomains.Light when !state.IsUnavailable && state.IsOn:
@@ -199,6 +243,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
         _lightsOn = lights;
 
+        RebuildRooms(byRoom);
+
         if (lights == _lastLights && switches == _lastSwitches && fans == _lastFans
             && covers == _lastCovers && media == _lastMedia && locks == _lastLocks)
         {
@@ -227,6 +273,32 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
                 Activity.Add(new ActivitySummary(label, count, iconKey));
             }
         }
+    }
+
+    /// <summary>Publishes the room tallies, touching the collection only when they moved.</summary>
+    private void RebuildRooms(Dictionary<string, (int On, int Total)>? byRoom)
+    {
+        List<RoomSummary> next = byRoom is null
+            ? []
+            : byRoom
+                .Select(pair => new RoomSummary(pair.Key, pair.Value.On, pair.Value.Total))
+                .OrderByDescending(room => room.IsLit)
+                .ThenBy(room => room.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+        // Records compare by value, so this is a cheap "did anything actually change".
+        if (next.Count == Rooms.Count && next.SequenceEqual(Rooms))
+        {
+            return;
+        }
+
+        Rooms.Clear();
+        foreach (RoomSummary room in next)
+        {
+            Rooms.Add(room);
+        }
+
+        OnPropertyChanged(nameof(HasRooms));
     }
 
     private void OnEntityChanged(object? sender, EntityChangedEventArgs e)

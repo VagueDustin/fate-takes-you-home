@@ -34,15 +34,15 @@ Token you create from your own profile page.
 
 ## Screenshots
 
-<img src="docs/images/welcome.png" width="760" alt="The full window on first run">
+<img src="docs/images/home.png" width="760" alt="The full window: pinned items and every room, on the night sky">
 
-| The tray panel | Themes |
+| The tray panel | Everything |
 | --- | --- |
-| <img src="docs/images/flyout.png" width="330" alt="The tray panel"> | <img src="docs/images/themes.png" width="430" alt="The theme picker"> |
+| <img src="docs/images/flyout.png" width="330" alt="The tray panel"> | <img src="docs/images/entities.png" width="430" alt="The entity browser"> |
 
-| Settings | Help |
+| Themes | Settings |
 | --- | --- |
-| <img src="docs/images/settings.png" width="430" alt="Settings"> | <img src="docs/images/help.png" width="430" alt="The quickstart"> |
+| <img src="docs/images/themes.png" width="430" alt="The theme picker"> | <img src="docs/images/settings.png" width="430" alt="Settings"> |
 
 ## Getting started
 

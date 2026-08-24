@@ -122,14 +122,27 @@ public partial class App : Application
 
         bool launchedByWindows = HasArgument(e.Args, AutostartService.TrayArgument);
 
+        // A configured connection is onboarding, completed — whoever set up the server and token
+        // does not need the welcome tour re-offered on every launch because they skipped a
+        // "finish" click they were never told mattered.
+        if (!_settings.Current.HasCompletedOnboarding && _settings.Current.IsConfigured)
+        {
+            _settings.Current.HasCompletedOnboarding = true;
+        }
+
         if (wantsPanel)
         {
             _tray.ShowFlyout();
         }
-        else if (!_settings.Current.HasCompletedOnboarding && !launchedByWindows)
+        else if (!launchedByWindows)
         {
-            // First run gets an explanation rather than an unexplained new tray icon.
-            _tray.ShowMainWindow(MainWindowSection.Welcome);
+            // Someone started the app by hand, so show them the app: the welcome on a first
+            // run, the dashboard after that. Only the autostart's --tray goes straight to the
+            // notification area, because at sign-in an unrequested window is an intrusion.
+            _tray.ShowMainWindow(
+                _settings.Current.HasCompletedOnboarding
+                    ? MainWindowSection.Dashboard
+                    : MainWindowSection.Welcome);
         }
 
         _settings.Current.LastRunVersion = DisplayVersion;

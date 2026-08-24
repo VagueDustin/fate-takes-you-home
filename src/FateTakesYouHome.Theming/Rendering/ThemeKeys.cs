@@ -55,6 +55,12 @@ public static class ThemeKeys
     /// <summary>Hairline or gradient, depending on the ornament tier.</summary>
     public const string BrushPanelEdge = "Fate.Brush.PanelEdge";
 
+    /// <summary>
+    /// The raised surface at partial opacity, for page panels that should let the backdrop —
+    /// the starfield in particular — read through instead of walling it off.
+    /// </summary>
+    public const string BrushPanelWash = "Fate.Brush.PanelWash";
+
     /// <summary>Metallic gradient for display type. Only used when the tier allows a gradient fill.</summary>
     public const string BrushGoldGradient = "Fate.Brush.GoldGradient";
 

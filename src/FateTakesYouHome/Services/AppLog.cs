@@ -77,6 +77,13 @@ public sealed class AppLog : IDisposable
     /// <summary>Raised for every accepted entry, so the diagnostics view can update live.</summary>
     public event EventHandler<LogEntry>? EntryWritten;
 
+    /// <summary>
+    /// The most recent file-write failure, or null while appends are landing. The in-memory tail
+    /// keeps working either way — it is what the diagnostics page shows — but a log that cannot
+    /// reach disk should say so somewhere a person can see, not vanish politely.
+    /// </summary>
+    public string? FileWriteError { get; private set; }
+
     public void Debug(string message, Exception? error = null) => Write(LogLevel.Debug, message, error);
 
     public void Info(string message, Exception? error = null) => Write(LogLevel.Info, message, error);
@@ -149,10 +156,13 @@ public sealed class AppLog : IDisposable
         {
             RollIfOversized();
             File.AppendAllText(_path, text, Encoding.UTF8);
+            FileWriteError = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // A log that cannot write must not become the reason the app fails.
+            // A log that cannot write must not become the reason the app fails — but it must
+            // not vanish politely either. The state is surfaced on the diagnostics page.
+            FileWriteError = ex.Message;
         }
     }
 

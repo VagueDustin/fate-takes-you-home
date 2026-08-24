@@ -53,7 +53,20 @@
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <!-- The same night sky as the full window, so the panel is unmistakably one product.
+             Rendered once per theme to a bitmap; costs nothing per frame. -->
+        <Border
+          Grid.RowSpan="4"
+          CornerRadius="{DynamicResource Fate.Radius.Flyout}"
+          ClipToBounds="True"
+          IsHitTestVisible="False">
+          <Rectangle
+            Fill="{DynamicResource Fate.Brush.Starfield}"
+            Visibility="{DynamicResource Fate.Visibility.Starfield}" />
+        </Border>
 
         <!-- ============================================================ header -->
 
@@ -159,6 +172,46 @@
               Content="{Binding PlaceholderAction}"
               Command="{Binding ExpandCommand}" />
           </StackPanel>
+        </Grid>
+
+        <!-- ============================================================ footer -->
+
+        <Grid
+          Grid.Row="3"
+          Margin="16,2,16,12"
+          Visibility="{Binding ShowsPlaceholder, Converter={StaticResource InverseBoolToVisibility}}">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <Border Grid.Row="0" Style="{StaticResource Fate.Divider}" Margin="0,0,0,9" />
+
+          <Grid Grid.Row="1">
+            <Button
+              HorizontalAlignment="Left"
+              Command="{Binding TurnOffAllLightsCommand}"
+              AutomationProperties.Name="Turn off all lights">
+              <StackPanel Orientation="Horizontal">
+                <Path
+                  Style="{StaticResource Fate.UiIcon}"
+                  Width="13"
+                  Height="13"
+                  Margin="0,0,7,0"
+                  VerticalAlignment="Center"
+                  Data="{StaticResource Fate.Icon.Power}" />
+                <TextBlock VerticalAlignment="Center" Text="All lights off" />
+              </StackPanel>
+            </Button>
+
+            <TextBlock
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Style="{StaticResource Fate.Text.Faint}"
+              Text="{Binding LastActionMessage}"
+              TextTrimming="CharacterEllipsis"
+              Margin="10,0,0,0" />
+          </Grid>
         </Grid>
       </Grid>
     </Border>

@@ -123,6 +123,96 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
 
     public IReadOnlyList<TrayAction> TrayActions { get; } = Enum.GetValues<TrayAction>();
 
+    // -- Log viewer --------------------------------------------------------------------------
+
+    /// <summary>Formatted lines from the in-memory log tail, newest last.</summary>
+    /// <remarks>
+    /// Fed from <see cref="AppLog.Tail"/> rather than the file, so it keeps working when the file
+    /// cannot be written — which is precisely the situation it exists to make visible.
+    /// </remarks>
+    public ObservableCollection<string> LogLines { get; } = [];
+
+    /// <summary>One line saying whether log entries are reaching the disk.</summary>
+    public string LogHealth =>
+        _log.FileWriteError is { } error
+            ? $"The log file cannot be written ({error}). The entries below are kept in memory only."
+            : "Log entries are reaching the file normally.";
+
+    public bool LogFileFailing => _log.FileWriteError is not null;
+
+    [ObservableProperty]
+    private bool _isLogViewerOpen;
+
+    partial void OnIsLogViewerOpenChanged(bool value)
+    {
+        if (value)
+        {
+            RefreshLog();
+
+            if (_logRefresh is null)
+            {
+                _logRefresh = new System.Windows.Threading.DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(1),
+                };
+                _logRefresh.Tick += OnLogRefreshTick;
+            }
+
+            _logRefresh.Start();
+        }
+        else
+        {
+            _logRefresh?.Stop();
+        }
+    }
+
+    private System.Windows.Threading.DispatcherTimer? _logRefresh;
+    private int _logLinesSeen;
+    private long _logNewestSeen;
+
+    private void OnLogRefreshTick(object? sender, EventArgs e) => RefreshLog();
+
+    private void RefreshLog()
+    {
+        IReadOnlyList<LogEntry> tail = _log.Tail();
+
+        // Rebuilding a few hundred strings once a second, only while the viewer is open, is
+        // cheaper than diffing — and it stays visibly live while verbose logging streams. The
+        // ring buffer's count plateaus once full, so the newest timestamp is the change signal.
+        long newest = tail.Count > 0 ? tail[^1].Timestamp.UtcTicks : 0;
+
+        if (tail.Count == _logLinesSeen && newest == _logNewestSeen && LogLines.Count > 0)
+        {
+            return;
+        }
+
+        _logLinesSeen = tail.Count;
+        _logNewestSeen = newest;
+
+        LogLines.Clear();
+        foreach (LogEntry entry in tail)
+        {
+            LogLines.Add(entry.Format());
+        }
+
+        OnPropertyChanged(nameof(LogHealth));
+        OnPropertyChanged(nameof(LogFileFailing));
+    }
+
+    [RelayCommand]
+    private void CopyLog()
+    {
+        try
+        {
+            System.Windows.Clipboard.SetText(string.Join(Environment.NewLine, _log.Tail().Select(e => e.Format())));
+            StatusMessage = "Recent log copied to the clipboard.";
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            StatusMessage = "The clipboard is in use by another application; try again.";
+        }
+    }
+
     public bool HasPins => Pins.Count > 0;
 
     public static string SettingsFilePath => AppPaths.SettingsFile;
@@ -580,6 +670,12 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
 
         _settings.Changed -= OnSettingsChanged;
         _homeAssistant.SnapshotReloaded -= OnSnapshotReloaded;
+
+        if (_logRefresh is not null)
+        {
+            _logRefresh.Stop();
+            _logRefresh.Tick -= OnLogRefreshTick;
+        }
 
         foreach (PinnedRowViewModel row in Pins)
         {

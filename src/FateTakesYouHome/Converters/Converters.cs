@@ -174,3 +174,79 @@ public sealed class SeverityToBrushConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>Turns a <see cref="Models.TrayAction"/> into the words a person would use for it.</summary>
+/// <remarks>
+/// Raw enum names in a dropdown — "OpenMainWindow", "RunDefaultAction" — read as a debug build.
+/// The names are UI copy and belong in exactly one place, which is here.
+/// </remarks>
+public sealed class TrayActionToLabelConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value switch
+        {
+            Models.TrayAction.None => "Do nothing",
+            Models.TrayAction.ToggleFlyout => "Open the panel",
+            Models.TrayAction.OpenMainWindow => "Open the full window",
+            Models.TrayAction.RunDefaultAction => "Run the default pin",
+            _ => value?.ToString() ?? string.Empty,
+        };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Words for the entity browser's grouping choices.</summary>
+public sealed class GroupingToLabelConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value switch
+        {
+            Models.EntityGrouping.Area => "By room",
+            Models.EntityGrouping.Domain => "By kind",
+            Models.EntityGrouping.Floor => "By floor",
+            Models.EntityGrouping.None => "No grouping",
+            _ => value?.ToString() ?? string.Empty,
+        };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
+/// Resolves a theme list entry to one of its colours, for the swatch strip in the theme picker.
+/// </summary>
+/// <remarks>
+/// Themes are patches, so the entry's own document usually declares only a few colours — the
+/// swatch has to come from the fully resolved theme, inheritance and all. Resolution is a few
+/// dictionary merges; doing it per swatch keeps the picker stateless.
+/// </remarks>
+public sealed class ThemeSwatchConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not Theming.Loading.ThemeEntry entry
+            || App.Current?.Themes.Repository is not { } repository)
+        {
+            return System.Windows.Media.Brushes.Transparent;
+        }
+
+        Theming.Model.Theme theme = repository.Resolve(entry.Id);
+
+        System.Windows.Media.Color color = parameter?.ToString() switch
+        {
+            "surface" => theme.Colors.SurfaceBase,
+            "raised" => theme.Colors.SurfaceOverlay,
+            "accent" => theme.Colors.AccentDefault,
+            "text" => theme.Colors.TextPrimary,
+            _ => theme.Colors.AccentDefault,
+        };
+
+        var brush = new System.Windows.Media.SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

@@ -87,17 +87,19 @@
             </Grid.ColumnDefinitions>
 
             <!-- The icon sits in its own well so an active entity reads at a glance. -->
+            <!-- A circular well, engraved rather than boxed: a dark square tile beside every
+                 row read as a hole punched in the panel. Lit entities glow instead. -->
             <Border
               x:Name="IconWell"
               Grid.Column="0"
-              Width="38"
-              Height="38"
-              Margin="0,0,11,0"
+              Width="36"
+              Height="36"
+              Margin="0,0,12,0"
               VerticalAlignment="Center"
-              Background="{DynamicResource Fate.Brush.SurfaceSunken}"
-              BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+              Background="Transparent"
+              BorderBrush="{DynamicResource Fate.Brush.BorderDefault}"
               BorderThickness="1"
-              CornerRadius="{DynamicResource Fate.Radius.Sm}">
+              CornerRadius="18">
               <Path x:Name="Icon" Data="{Binding Glyph}" Style="{StaticResource Fate.TileIcon}" />
             </Border>
 
@@ -122,12 +124,24 @@
             <Border
               x:Name="StatusDot"
               Grid.Column="2"
-              Width="10"
-              Height="10"
-              Margin="10,0,2,0"
+              Width="9"
+              Height="9"
+              Margin="10,0,4,0"
               VerticalAlignment="Center"
-              CornerRadius="5"
+              CornerRadius="4.5"
               Background="{DynamicResource Fate.Brush.BorderDefault}" />
+
+            <!-- Momentary entities run rather than toggle; the chevron is the "press me" cue. -->
+            <Path
+              x:Name="RunCue"
+              Grid.Column="2"
+              Style="{StaticResource Fate.UiIcon}"
+              Data="{StaticResource Fate.Icon.ChevronRight}"
+              Width="13"
+              Height="13"
+              Margin="10,0,3,0"
+              VerticalAlignment="Center"
+              Visibility="Collapsed" />
           </Grid>
         </Button>
 
@@ -154,11 +168,21 @@
     </Border>
 
     <DataTemplate.Triggers>
-      <!-- Active: the accent arrives on the icon and the dot, never on the whole card. -->
+      <!-- Active: the accent arrives on the icon and the dot, never on the whole card. The
+           glow is what makes a lit lamp read as lit from across the room. -->
       <DataTrigger Binding="{Binding IsOn}" Value="True">
-        <Setter TargetName="Icon" Property="Stroke" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+        <Setter TargetName="Icon" Property="Stroke" Value="{DynamicResource Fate.Brush.AccentHover}" />
         <Setter TargetName="IconWell" Property="Background" Value="{DynamicResource Fate.Brush.AccentSubtle}" />
         <Setter TargetName="IconWell" Property="BorderBrush" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+        <Setter TargetName="IconWell" Property="Effect">
+          <Setter.Value>
+            <DropShadowEffect
+              Color="{DynamicResource Fate.Color.AccentGlow}"
+              BlurRadius="14"
+              ShadowDepth="0"
+              Opacity="0.9" />
+          </Setter.Value>
+        </Setter>
         <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource Fate.Brush.AccentDefault}" />
       </DataTrigger>
 
@@ -167,11 +191,10 @@
         <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
       </DataTrigger>
 
-      <!-- Momentary entities have no state to show as "on", so the dot becomes a chevron cue. -->
+      <!-- Momentary entities have no state to show as "on"; they get the run cue instead. -->
       <DataTrigger Binding="{Binding Kind}" Value="Momentary">
-        <Setter TargetName="StatusDot" Property="Width" Value="6" />
-        <Setter TargetName="StatusDot" Property="Height" Value="6" />
-        <Setter TargetName="StatusDot" Property="CornerRadius" Value="3" />
+        <Setter TargetName="StatusDot" Property="Visibility" Value="Collapsed" />
+        <Setter TargetName="RunCue" Property="Visibility" Value="Visible" />
       </DataTrigger>
 
       <DataTrigger Binding="{Binding Kind}" Value="Readout">
@@ -185,6 +208,7 @@
       <Trigger Property="IsMouseOver" Value="True">
         <Setter TargetName="Card" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
         <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource Fate.Brush.BorderDefault}" />
+        <Setter TargetName="RunCue" Property="Stroke" Value="{DynamicResource Fate.Brush.AccentDefault}" />
       </Trigger>
     </DataTemplate.Triggers>
   </DataTemplate>

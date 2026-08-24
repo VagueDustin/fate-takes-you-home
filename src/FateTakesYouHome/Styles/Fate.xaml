@@ -107,7 +107,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="ContentControl">
           <Border
-            Background="{DynamicResource Fate.Brush.SurfaceRaised}"
+            Background="{DynamicResource Fate.Brush.PanelWash}"
             BorderBrush="{DynamicResource Fate.Brush.PanelEdge}"
             BorderThickness="{DynamicResource Fate.Thickness.Stroke}"
             CornerRadius="{DynamicResource Fate.Radius.Lg}"
@@ -415,6 +415,116 @@
     <Setter Property="Height" Value="32" />
     <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
     <Setter Property="FontSize" Value="14" />
+  </Style>
+
+  <!--
+    Title-bar caption buttons. Frameless: a visible box around minimise/maximise/close is the
+    fastest way to make custom chrome read as a mock-up rather than a window.
+  -->
+  <Style x:Key="Fate.Button.Caption" TargetType="Button">
+    <Setter Property="Width" Value="46" />
+    <Setter Property="Height" Value="44" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Cursor" Value="Arrow" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Face" Background="Transparent">
+            <ContentPresenter
+              x:Name="Glyph"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              TextElement.Foreground="{DynamicResource Fate.Brush.TextMuted}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceOverlay}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- The close button owns its glyph so the hover trigger can recolour it: a Path does not
+       inherit TextElement.Foreground, and a muted glyph on the danger fill would be unreadable. -->
+  <Style x:Key="Fate.Button.CaptionClose" TargetType="Button" BasedOn="{StaticResource Fate.Button.Caption}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Face" Background="Transparent">
+            <Path
+              x:Name="Glyph"
+              Style="{StaticResource Fate.UiIcon}"
+              Data="{StaticResource Fate.Icon.Close}"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <!-- Red on hover is the one caption convention every Windows user has learned.
+                 The theme's danger colour stands in for the system red so it follows the theme. -->
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.StatusDanger}" />
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Fate.Brush.TextInverse}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.StatusDanger}" />
+              <Setter TargetName="Face" Property="Opacity" Value="0.85" />
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Fate.Brush.TextInverse}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- The pin control beside a browser row: quiet until it matters. Owns its glyph so the
+       checked state can gild it. -->
+  <Style x:Key="Fate.Toggle.Pin" TargetType="ToggleButton">
+    <Setter Property="Width" Value="36" />
+    <Setter Property="Height" Value="36" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToggleButton">
+          <Border
+            x:Name="Face"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="1"
+            CornerRadius="18">
+            <Path
+              x:Name="Glyph"
+              Style="{StaticResource Fate.UiIcon}"
+              Data="{StaticResource Fate.Icon.Pin}"
+              Width="15"
+              Height="15"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Stroke="{DynamicResource Fate.Brush.TextFaint}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+              <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Fate.Brush.AccentDefault}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Fate.Brush.TextPrimary}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource Fate.Brush.AccentHover}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- ==================================================================== switch -->

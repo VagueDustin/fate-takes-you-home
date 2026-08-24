@@ -43,6 +43,13 @@ public partial class MainWindow : Window
         _viewModel.Dashboard.BrowseRequested +=
             (_, _) => _viewModel.Navigate(MainWindowSection.Entities);
 
+        // A room card is a filtered view of Everything: search already knows how to match areas.
+        _viewModel.Dashboard.RoomSelected += (_, room) =>
+        {
+            _viewModel.Entities.SearchText = room;
+            _viewModel.Navigate(MainWindowSection.Entities);
+        };
+
         _viewModel.Help.TourRequested += (_, _) => StartTour();
 
         WelcomePage.GetStarted += (_, _) => _viewModel.Navigate(MainWindowSection.Settings);

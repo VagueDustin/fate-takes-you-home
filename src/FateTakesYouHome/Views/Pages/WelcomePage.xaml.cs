@@ -20,7 +20,7 @@ public partial class WelcomePage : UserControl
 
         // Rendered rather than loaded from a file: the mark is vector, and at 72px on a scaled
         // display a pre-rendered bitmap would be visibly soft.
-        Mark.Source = FateMark.Render(160);
+        Mark.Source = FateMark.Render(160, withPlate: false);
     }
 
     /// <summary>Raised when the user wants to go straight to the connection settings.</summary>

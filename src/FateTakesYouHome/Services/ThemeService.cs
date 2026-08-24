@@ -79,6 +79,35 @@ public sealed class ThemeService : IDisposable
         Repository.StartWatching();
 
         Apply(_settings.Current.ThemeId);
+
+        // A launch that loaded no theme files at all is nearly always transient — an antivirus
+        // sweep or a slow disk at sign-in — and the compiled FATE baseline covers the gap. But
+        // silently staying on the baseline for the rest of the session would mean the user's
+        // chosen theme never arrives, so say so and look again shortly.
+        if (!Repository.ListForDisplay().Any(e => e.SourcePath is not null))
+        {
+            _log.Warning(
+                $"No theme files could be loaded from {AppPaths.BundledThemes} or "
+                + $"{AppPaths.UserThemes}. Using the compiled FATE baseline and retrying shortly.");
+
+            var retry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            retry.Tick += (_, _) =>
+            {
+                retry.Stop();
+                Repository.Reload();
+
+                if (Repository.ListForDisplay().Any(e => e.SourcePath is not null))
+                {
+                    _log.Info("Theme files arrived on retry; applying the configured theme.");
+                    Apply(_settings.Current.ThemeId);
+                }
+                else
+                {
+                    _log.Warning("Theme files were still unreadable on retry.");
+                }
+            };
+            retry.Start();
+        }
     }
 
     /// <summary>Switches to a theme by id and persists the choice.</summary>

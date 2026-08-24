@@ -90,53 +90,78 @@
             VerticalAlignment="Center" />
         </StackPanel>
 
-        <TextBlock
-          Grid.Column="1"
-          HorizontalAlignment="Center"
-          VerticalAlignment="Center"
-          Style="{StaticResource Fate.Text.Caption}"
-          Text="{Binding ConnectionSummary}"
-          TextTrimming="CharacterEllipsis" />
-
         <!-- Caption buttons. Excluded from the drag region or they cannot be clicked. -->
         <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
           <Button
             x:Name="MinimiseButton"
-            Style="{StaticResource Fate.Button.Icon}"
-            Width="44"
-            Height="44"
+            Style="{StaticResource Fate.Button.Caption}"
             Click="OnMinimiseClicked"
             ToolTip="Minimise"
             AutomationProperties.Name="Minimise">
-            <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Minimise}" />
+            <Path Style="{StaticResource Fate.UiIcon}" Width="13" Height="13" Data="{StaticResource Fate.Icon.Minimise}" />
           </Button>
           <Button
             x:Name="MaximiseButton"
-            Style="{StaticResource Fate.Button.Icon}"
-            Width="44"
-            Height="44"
+            Style="{StaticResource Fate.Button.Caption}"
             Click="OnMaximiseClicked"
             ToolTip="Maximise"
             AutomationProperties.Name="Maximise">
-            <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Maximise}" />
+            <Path Style="{StaticResource Fate.UiIcon}" Width="12" Height="12" Data="{StaticResource Fate.Icon.Maximise}" />
           </Button>
           <Button
             x:Name="CloseButton"
-            Style="{StaticResource Fate.Button.Icon}"
-            Width="44"
-            Height="44"
+            Style="{StaticResource Fate.Button.CaptionClose}"
             Click="OnCloseClicked"
             ToolTip="Close"
-            AutomationProperties.Name="Close">
-            <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Close}" />
-          </Button>
+            AutomationProperties.Name="Close" />
         </StackPanel>
       </Grid>
 
-      <!-- ============================================================ connection banner -->
+      <!-- ============================================================ banners -->
+
+      <StackPanel Grid.Row="1">
+
+      <!-- Settings writes are failing: everything looks fine and nothing survives a restart,
+           which is exactly the kind of problem that must not be left to the log file. -->
+      <Border
+        Margin="16,0,16,10"
+        Padding="14,10"
+        CornerRadius="{DynamicResource Fate.Radius.Md}"
+        Background="{DynamicResource Fate.Brush.SurfaceRaised}"
+        BorderBrush="{DynamicResource Fate.Brush.StatusDanger}"
+        BorderThickness="1"
+        Visibility="{Binding ShowsSaveBanner, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <Path
+            Grid.Column="0"
+            Style="{StaticResource Fate.UiIcon}"
+            Data="{StaticResource Fate.Icon.Warning}"
+            Stroke="{DynamicResource Fate.Brush.StatusDanger}"
+            Margin="0,0,10,0"
+            VerticalAlignment="Center" />
+
+          <TextBlock
+            Grid.Column="1"
+            VerticalAlignment="Center"
+            Style="{StaticResource Fate.Text.Body}"
+            Text="{Binding SaveBannerText}"
+            TextWrapping="Wrap" />
+
+          <Button
+            Grid.Column="2"
+            Margin="12,0,0,0"
+            Content="Try again"
+            Command="{Binding RetrySaveCommand}" />
+        </Grid>
+      </Border>
 
       <Border
-        Grid.Row="1"
         Margin="16,0,16,10"
         Padding="14,10"
         CornerRadius="{DynamicResource Fate.Radius.Md}"
@@ -176,6 +201,8 @@
         </Grid>
       </Border>
 
+      </StackPanel>
+
       <!-- ============================================================ body -->
 
       <Grid Grid.Row="2" Margin="16,0,16,0">
@@ -184,15 +211,20 @@
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Navigation rail -->
-        <Border
+        <!-- Navigation rail. Deliberately not a card: the rail sits directly on the night
+             sky, so the window reads as one surface with floating panels instead of a grid of
+             nested grey boxes. -->
+        <Grid
           x:Name="NavigationRail"
           Grid.Column="0"
           Width="188"
-          Margin="0,0,16,0"
-          Padding="8"
-          Style="{StaticResource Fate.Card}">
-          <ItemsControl ItemsSource="{Binding NavigationItems}">
+          Margin="0,2,16,0">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <ItemsControl Grid.Row="0" ItemsSource="{Binding NavigationItems}">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:NavigationItem}">
                 <RadioButton
@@ -270,7 +302,49 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </Border>
+
+          <!-- Where the app stands, at the foot of the rail: connected and to what. -->
+          <Border
+            Grid.Row="1"
+            Margin="2,10,2,4"
+            Padding="10,9"
+            Background="{DynamicResource Fate.Brush.SurfaceOverlay}"
+            BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource Fate.Radius.Md}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <Border
+                Grid.Column="0"
+                Width="8"
+                Height="8"
+                Margin="0,2,8,0"
+                VerticalAlignment="Top"
+                CornerRadius="4">
+                <Border.Style>
+                  <Style TargetType="Border">
+                    <Setter Property="Background" Value="{DynamicResource Fate.Brush.StatusWarning}" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Fate.Brush.StatusSuccess}" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </Border.Style>
+              </Border>
+
+              <TextBlock
+                Grid.Column="1"
+                Style="{StaticResource Fate.Text.Caption}"
+                Text="{Binding ConnectionSummary}"
+                TextWrapping="Wrap" />
+            </Grid>
+          </Border>
+        </Grid>
 
         <!-- Pages. All present; only one visible. -->
         <Grid Grid.Column="1" x:Name="PageHost">
@@ -324,7 +398,7 @@
       <!-- ============================================================ footer -->
 
       <!-- The publisher credit the brand requires on every property. -->
-      <Grid Grid.Row="3" Margin="16,12,16,12">
+      <Grid Grid.Row="3" Margin="16,10,16,9">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />

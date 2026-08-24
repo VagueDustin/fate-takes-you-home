@@ -44,6 +44,7 @@
         <Button
           Grid.Column="1"
           VerticalAlignment="Top"
+          Style="{StaticResource Fate.Button.Primary}"
           Content="Turn off all lights"
           Command="{Binding TurnOffAllLightsCommand}" />
       </Grid>
@@ -95,25 +96,30 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <!-- ============================================================ pinned -->
+      <!-- ============================================================ pinned + rooms -->
 
-      <Grid Grid.Row="2" Margin="0,14,0,0">
-        <ScrollViewer
-          Style="{StaticResource Fate.ScrollViewer}"
-          Visibility="{Binding Pinned.Count, Converter={StaticResource AnyToVisibility}}">
+      <ScrollViewer Grid.Row="2" Margin="0,16,0,0" Style="{StaticResource Fate.ScrollViewer}">
+        <StackPanel Margin="0,0,10,0">
+
+          <!-- Pinned tiles. -->
+          <c:TrackedTextBlock
+            Style="{StaticResource Fate.Display.SectionLabel}"
+            Text="Pinned"
+            Visibility="{Binding Pinned.Count, Converter={StaticResource AnyToVisibility}}" />
+
           <ItemsControl
+            Margin="0,10,0,0"
             ItemsSource="{Binding Pinned}"
             ItemTemplate="{StaticResource Fate.Template.EntityTile}"
-            Margin="0,0,10,0"
-            VerticalAlignment="Top">
+            VerticalAlignment="Top"
+            Visibility="{Binding Pinned.Count, Converter={StaticResource AnyToVisibility}}">
             <!--
               VerticalAlignment=Top is load-bearing. A ScrollViewer arranges its content to at
               least the viewport height, and UniformGrid divides whatever height it is given evenly
-              among its rows — so without this, three pinned tiles each stretched to half the window.
+              among its rows - so without this, three pinned tiles each stretched to half the window.
             -->
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
-                <!-- Two columns on a wide window, one when narrow. -->
                 <UniformGrid Columns="2" VerticalAlignment="Top" />
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
@@ -123,31 +129,102 @@
               </Style>
             </ItemsControl.ItemContainerStyle>
           </ItemsControl>
-        </ScrollViewer>
 
-        <!-- Empty state. -->
-        <StackPanel
-          VerticalAlignment="Center"
-          HorizontalAlignment="Center"
-          MaxWidth="440"
-          Visibility="{Binding Pinned.Count, Converter={StaticResource NoneToVisibility}}">
-          <TextBlock
-            Style="{StaticResource Fate.Text.Subtitle}"
-            HorizontalAlignment="Center"
-            Text="Nothing pinned yet" />
-          <TextBlock
-            Margin="0,8,0,0"
-            Style="{StaticResource Fate.Text.Muted}"
-            TextAlignment="Center"
-            TextWrapping="Wrap"
-            Text="Pin the lights, scenes and automations you reach for most. They will appear here and in the tray panel." />
-          <Button
-            Margin="0,18,0,0"
-            HorizontalAlignment="Center"
-            Content="Browse everything"
-            Command="{Binding BrowseEntitiesCommand}" />
+          <!-- No pins yet: an invitation, not a wall. Rooms below still render. -->
+          <Border
+            Style="{StaticResource Fate.Card}"
+            Padding="18,16"
+            Visibility="{Binding Pinned.Count, Converter={StaticResource NoneToVisibility}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Nothing pinned yet" />
+              <TextBlock
+                Margin="0,6,0,0"
+                Style="{StaticResource Fate.Text.Muted}"
+                TextWrapping="Wrap"
+                Text="Pin the lights, scenes and automations you reach for most. They will appear here and in the tray panel." />
+              <Button
+                Margin="0,14,0,0"
+                HorizontalAlignment="Left"
+                Content="Browse everything"
+                Command="{Binding BrowseEntitiesCommand}" />
+            </StackPanel>
+          </Border>
+
+          <!-- Rooms: every area that has lights, lit rooms first. Click one to see the room. -->
+          <c:TrackedTextBlock
+            Margin="0,20,0,0"
+            Style="{StaticResource Fate.Display.SectionLabel}"
+            Text="Rooms"
+            Visibility="{Binding Rooms.Count, Converter={StaticResource AnyToVisibility}}" />
+
+          <ItemsControl
+            Margin="0,10,0,6"
+            ItemsSource="{Binding Rooms}"
+            Visibility="{Binding Rooms.Count, Converter={StaticResource AnyToVisibility}}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:RoomSummary}">
+                <Button
+                  Margin="0,0,10,10"
+                  Command="{Binding DataContext.OpenRoomCommand,
+                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding}"
+                  ToolTip="{Binding Name}"
+                  AutomationProperties.Name="{Binding Name}"
+                  AutomationProperties.HelpText="{Binding Detail}">
+                  <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                      <Border
+                        x:Name="Face"
+                        Width="150"
+                        Padding="14,11"
+                        Background="{DynamicResource Fate.Brush.SurfaceOverlay}"
+                        BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Fate.Radius.Md}"
+                        Cursor="Hand">
+                        <StackPanel>
+                          <TextBlock
+                            Style="{StaticResource Fate.Text.Body}"
+                            FontWeight="Medium"
+                            TextTrimming="CharacterEllipsis"
+                            Text="{Binding Name}" />
+                          <TextBlock
+                            x:Name="Detail"
+                            Margin="0,3,0,0"
+                            Style="{StaticResource Fate.Text.Caption}"
+                            Text="{Binding Detail}" />
+                        </StackPanel>
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsLit}" Value="True">
+                          <Setter TargetName="Detail" Property="Foreground"
+                                  Value="{DynamicResource Fate.Brush.TextAccent}" />
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="Face" Property="Background"
+                                  Value="{DynamicResource Fate.Brush.SurfaceHighest}" />
+                          <Setter TargetName="Face" Property="BorderBrush"
+                                  Value="{DynamicResource Fate.Brush.BorderDefault}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                          <Setter TargetName="Face" Property="BorderBrush"
+                                  Value="{DynamicResource Fate.Brush.AccentDefault}" />
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </Button.Template>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
         </StackPanel>
-      </Grid>
+      </ScrollViewer>
     </Grid>
   </ContentControl>
 </UserControl>

@@ -15,6 +15,11 @@
   <UserControl.Resources>
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
     <conv:CountToVisibilityConverter x:Key="NoneToVisibility" WhenEmpty="True" />
+    <conv:GroupingToLabelConverter x:Key="GroupingToLabel" />
+
+    <DataTemplate x:Key="GroupingItem">
+      <TextBlock Text="{Binding Converter={StaticResource GroupingToLabel}}" />
+    </DataTemplate>
 
     <ObjectDataProvider
       x:Key="GroupingValues"
@@ -30,18 +35,32 @@
       from the item's type without a template selector.
     -->
     <DataTemplate DataType="{x:Type vm:EntityGroupHeader}">
-      <Grid Margin="0,14,0,9">
+      <Grid Margin="0,16,0,9">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
         <c:TrackedTextBlock
+          Grid.Column="0"
+          VerticalAlignment="Center"
           Style="{StaticResource Fate.Display.SectionLabel}"
           Text="{Binding Name}" />
+
         <TextBlock
-          HorizontalAlignment="Right"
+          Grid.Column="1"
+          Margin="10,0,0,0"
+          VerticalAlignment="Center"
           Style="{StaticResource Fate.Text.Faint}"
           Text="{Binding Count}" />
+
+        <!-- The rule runs from the label to the edge, the way the reference rules a chart. -->
         <Border
+          Grid.Column="2"
           Height="1"
-          Margin="0,0,0,-6"
-          VerticalAlignment="Bottom"
+          Margin="14,1,0,0"
+          VerticalAlignment="Center"
           Background="{DynamicResource Fate.Brush.BorderSubtle}" />
       </Grid>
     </DataTemplate>
@@ -62,18 +81,13 @@
 
         <ToggleButton
           Grid.Column="1"
-          Width="40"
-          Height="40"
-          Margin="8,0,0,0"
-          VerticalAlignment="Top"
-          Style="{StaticResource Fate.Toggle}"
+          Margin="6,0,0,0"
+          VerticalAlignment="Center"
+          Style="{StaticResource Fate.Toggle.Pin}"
           IsChecked="{Binding IsPinned, Mode=OneWay}"
           Command="{Binding TogglePinCommand}"
-          Padding="0"
           ToolTip="Pin to the tray panel"
-          AutomationProperties.Name="Pin to the tray panel">
-          <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Pin}" />
-        </ToggleButton>
+          AutomationProperties.Name="Pin to the tray panel" />
       </Grid>
     </DataTemplate>
   </UserControl.Resources>
@@ -146,6 +160,7 @@
           Margin="10,0,0,0"
           Style="{StaticResource Fate.ComboBox}"
           ItemsSource="{Binding Source={StaticResource GroupingValues}}"
+          ItemTemplate="{StaticResource GroupingItem}"
           SelectedItem="{Binding Grouping}"
           ToolTip="How to group the results"
           AutomationProperties.Name="Group by" />

@@ -89,12 +89,17 @@ public sealed class SingleInstance : IDisposable
             return;
         }
 
+        // A real (invisible) top-level window, not a message-only one. Message-only windows are
+        // excluded from HWND_BROADCAST delivery, so a message-only listener compiles, runs, and
+        // never hears a single activation — relaunching the app appears to do nothing at all.
         var parameters = new HwndSourceParameters("FateTakesYouHome.InstanceListener")
         {
-            ParentWindow = NativeMethods.HWND_MESSAGE,
-            WindowStyle = 0,
+            WindowStyle = unchecked((int)0x80000000), // WS_POPUP: no frame, and never visible.
+            ExtendedWindowStyle = 0x00000080,         // WS_EX_TOOLWINDOW: stays off the taskbar.
             Width = 0,
             Height = 0,
+            PositionX = 0,
+            PositionY = 0,
         };
 
         _listener = new HwndSource(parameters);

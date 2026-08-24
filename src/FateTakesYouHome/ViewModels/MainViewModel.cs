@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -74,6 +75,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Help = new HelpViewModel(settings, tray);
 
         _homeAssistant.PropertyChanged += OnServicePropertyChanged;
+        _settings.SaveStateChanged += OnSaveStateChanged;
 
         NavigationItems =
         [
@@ -151,6 +153,32 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _homeAssistant.ConnectionState == HaConnectionState.Failed || !_settings.Current.IsConfigured;
 
     public bool IsConnected => _homeAssistant.ConnectionState == HaConnectionState.Connected;
+
+    // ------------------------------------------------------------------ save-failure banner
+
+    /// <summary>
+    /// True while settings writes are failing. Shown as its own banner because the failure mode
+    /// is invisible otherwise: everything appears to work, and every change is lost on exit.
+    /// </summary>
+    public bool ShowsSaveBanner => _settings.LastSaveError is not null;
+
+    public string SaveBannerText =>
+        _settings.LastSaveError is { } error
+            ? $"Changes cannot be saved right now — {error} Pins and settings will be lost when the app closes."
+            : string.Empty;
+
+    [RelayCommand]
+    private void RetrySave() => _settings.SaveNow();
+
+    private void OnSaveStateChanged(object? sender, EventArgs e)
+    {
+        // Raised from the save timer's worker thread; the banner binds on the UI thread.
+        Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            OnPropertyChanged(nameof(ShowsSaveBanner));
+            OnPropertyChanged(nameof(SaveBannerText));
+        });
+    }
 
     public string ConnectionSummary => _homeAssistant.ConnectionState switch
     {
@@ -263,6 +291,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _disposed = true;
 
         _homeAssistant.PropertyChanged -= OnServicePropertyChanged;
+        _settings.SaveStateChanged -= OnSaveStateChanged;
 
         foreach (NavigationItem item in NavigationItems)
         {

@@ -111,6 +111,30 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ReconnectAsync() => await _homeAssistant.ReconnectAsync().ConfigureAwait(true);
 
+    /// <summary>
+    /// The one whole-house action worth a permanent place in the panel: leaving. Everything else
+    /// is a pin.
+    /// </summary>
+    [RelayCommand]
+    private async Task TurnOffAllLightsAsync()
+    {
+        CommandResult result = await _homeAssistant
+            .ExecuteAsync(
+                (client, ct) => client.CallServiceAsync(
+                    HaDomains.Light,
+                    "turn_off",
+                    new Dictionary<string, object?> { ["entity_id"] = "all" },
+                    data: null,
+                    ct),
+                "Turn off all lights")
+            .ConfigureAwait(true);
+
+        LastActionMessage = result.Succeeded ? "All lights off." : result.ErrorMessage;
+    }
+
+    [ObservableProperty]
+    private string? _lastActionMessage;
+
     /// <summary>Raised when the user asks for the settings page.</summary>
     public event EventHandler? SettingsRequested;
 

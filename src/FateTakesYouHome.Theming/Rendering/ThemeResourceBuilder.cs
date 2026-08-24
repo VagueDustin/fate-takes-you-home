@@ -92,6 +92,12 @@ public static class ThemeResourceBuilder
         d[ThemeKeys.BrushPanelHighlight] = Solid(ColorParser.Parse(ThemeDefaults.PanelInnerHighlight));
         d[ThemeKeys.BrushPanelGild] = Solid(ColorParser.Parse(ThemeDefaults.PanelGildStroke));
 
+        // Derived rather than declared: every theme gets a wash that matches its raised
+        // surface, and a theme that wants a solid page can simply not use the starfield.
+        Color wash = c.SurfaceRaised;
+        wash.A = (byte)(wash.A * 0.80);
+        d[ThemeKeys.BrushPanelWash] = Solid(wash);
+
         d[ThemeKeys.BrushWindowBackground] = BuildWindowBackground(theme);
         d[ThemeKeys.BrushPanelEdge] = BuildPanelEdge(theme);
         d[ThemeKeys.BrushGoldGradient] = BuildGoldGradient(theme);

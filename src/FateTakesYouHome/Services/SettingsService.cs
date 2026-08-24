@@ -55,6 +55,16 @@ public sealed class SettingsService : IDisposable
     /// <summary>Raised after settings are replaced or reloaded from disk.</summary>
     public event EventHandler? Changed;
 
+    /// <summary>
+    /// The most recent save failure, or null while saves are landing. Raised into the UI as a
+    /// banner: a settings file that silently cannot be written means every pin, theme choice and
+    /// switch flip is quietly lost on exit, which is far worse than an ugly warning.
+    /// </summary>
+    public string? LastSaveError { get; private set; }
+
+    /// <summary>Raised (on a worker thread) whenever <see cref="LastSaveError"/> changes.</summary>
+    public event EventHandler? SaveStateChanged;
+
     /// <summary>Queues a debounced write.</summary>
     public void Save()
     {
@@ -220,10 +230,24 @@ public sealed class SettingsService : IDisposable
             string temp = _path + ".tmp";
             File.WriteAllText(temp, json);
             File.Move(temp, _path, overwrite: true);
+
+            if (LastSaveError is not null)
+            {
+                LastSaveError = null;
+                _log.Info("Settings saves are landing again.");
+                SaveStateChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            bool firstFailure = LastSaveError is null;
+            LastSaveError = ex.Message;
             _log.Error("Could not save settings.", ex);
+
+            if (firstFailure)
+            {
+                SaveStateChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 

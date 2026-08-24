@@ -26,6 +26,13 @@
       </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
 
+    <conv:TrayActionToLabelConverter x:Key="TrayActionToLabel" />
+
+    <!-- Enum values are wrapped in words wherever a person sees them. -->
+    <DataTemplate x:Key="TrayActionItem">
+      <TextBlock Text="{Binding Converter={StaticResource TrayActionToLabel}}" />
+    </DataTemplate>
+
     <Style x:Key="SettingLabel" TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Body}">
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Margin" Value="0,0,0,4" />
@@ -192,6 +199,7 @@
                 VerticalAlignment="Top"
                 Style="{StaticResource Fate.ComboBox}"
                 ItemsSource="{Binding Source={StaticResource TrayActionValues}}"
+                ItemTemplate="{StaticResource TrayActionItem}"
                 SelectedItem="{Binding DoubleClickAction}"
                 AutomationProperties.Name="Double-click action" />
             </Grid>
@@ -212,6 +220,7 @@
                 VerticalAlignment="Top"
                 Style="{StaticResource Fate.ComboBox}"
                 ItemsSource="{Binding Source={StaticResource TrayActionValues}}"
+                ItemTemplate="{StaticResource TrayActionItem}"
                 SelectedItem="{Binding MiddleClickAction}"
                 AutomationProperties.Name="Middle-click action" />
             </Grid>
@@ -276,12 +285,37 @@
                       </Grid.ColumnDefinitions>
 
                       <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                        <TextBox
-                          Style="{StaticResource Fate.TextBox}"
-                          Padding="8,6"
-                          Text="{Binding Label, UpdateSourceTrigger=LostFocus}"
-                          Tag="{Binding Placeholder}"
-                          AutomationProperties.Name="Display name" />
+                        <Grid>
+                          <TextBox
+                            x:Name="LabelBox"
+                            Style="{StaticResource Fate.TextBox}"
+                            Padding="8,6"
+                            Text="{Binding Label, UpdateSourceTrigger=LostFocus}"
+                            AutomationProperties.Name="Display name" />
+
+                          <!-- The server's name as a watermark, so an empty box still says what
+                               the pin is and reads as an invitation to rename it. -->
+                          <TextBlock
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Text="{Binding Placeholder}">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                  <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                      <Condition Binding="{Binding Label}" Value="" />
+                                      <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=LabelBox}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                  </MultiDataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>
+                          </TextBlock>
+                        </Grid>
                         <TextBlock
                           Margin="2,5,0,0"
                           Style="{StaticResource Fate.Text.Mono}"
@@ -414,6 +448,62 @@
               <Button Margin="10,0,0,0" Content="Open themes folder" Command="{Binding OpenThemesFolderCommand}" />
               <Button Margin="10,0,0,0" Content="Open logs" Command="{Binding OpenLogFolderCommand}" />
             </StackPanel>
+
+            <Border Style="{StaticResource Fate.Divider}" Margin="0,18" />
+
+            <!-- The in-memory tail. This keeps working when the log file itself cannot be
+                 written, which is the one situation where a log matters most. -->
+            <Expander IsExpanded="{Binding IsLogViewerOpen}">
+              <Expander.Header>
+                <TextBlock Style="{StaticResource Fate.Text.Body}" FontWeight="Medium" Text="Recent log" />
+              </Expander.Header>
+
+              <StackPanel Margin="0,10,0,0">
+                <Grid>
+                  <TextBlock
+                    TextWrapping="Wrap"
+                    Margin="0,0,120,0"
+                    Text="{Binding LogHealth}">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Caption}">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding LogFileFailing}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.StatusDanger}" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <Button
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Content="Copy"
+                    Command="{Binding CopyLogCommand}" />
+                </Grid>
+
+                <Border
+                  Margin="0,10,0,0"
+                  Padding="10,8"
+                  Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+                  BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource Fate.Radius.Sm}">
+                  <ScrollViewer Style="{StaticResource Fate.ScrollViewer}" MaxHeight="260">
+                    <ItemsControl ItemsSource="{Binding LogLines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock
+                            Style="{StaticResource Fate.Text.Mono}"
+                            FontSize="11"
+                            TextWrapping="Wrap"
+                            Text="{Binding}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </ScrollViewer>
+                </Border>
+              </StackPanel>
+            </Expander>
           </StackPanel>
         </Border>
       </StackPanel>

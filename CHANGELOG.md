@@ -6,6 +6,65 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-08-23
+
+The cohesion release. The 0.1 window was a grid of nested grey boxes that happened to sit on a
+starfield; this one is a single night sky with panels floating on it, and everything from the
+caption buttons to the pin control was redrawn to match. Several silent-failure paths found on a
+real install now speak up instead.
+
+### Added
+
+- **Rooms on the dashboard.** Every area that has lights, lit rooms first, each saying how many
+  are on — the honest ones say "Dark". Clicking a room opens Everything filtered to that room.
+- **A quick-action footer in the tray panel**: "All lights off", with the result reported in
+  place. The panel also gained the same starfield backdrop as the full window.
+- **A live log viewer** under Settings → Files and diagnostics, fed from the in-memory tail, with
+  a copy button. It keeps working even when the log file itself cannot be written — which is
+  exactly when it is needed — and says plainly whether entries are reaching disk.
+- **A visible warning when settings cannot be saved.** A failing settings write previously logged
+  one line and otherwise let every pin, theme choice and switch flip vanish on exit. It is now a
+  banner in the window, with a retry button, and it withdraws itself when writes land again.
+- **Colour swatches in the theme picker.** Each theme's own surface, overlay, accent and text
+  colours appear under its name, and the applied theme carries a gold check — choosing no longer
+  requires trying each one.
+
+### Changed
+
+- **The window is one surface.** Page panels are now a translucent wash over the backdrop instead
+  of opaque slabs, the navigation rail sits directly on the sky with the connection status at its
+  foot, the centred title-bar status line is gone, and the caption buttons are frameless with the
+  conventional red close hover (drawn in the theme's danger colour).
+- **Entity rows were redrawn.** The black square icon tiles became engraved circular wells; a lit
+  entity's well fills, gilds and glows. Momentary entities — scenes, scripts, buttons — show a
+  chevron run cue instead of an inert dot, and it answers hover in gold. The pin control in the
+  browser is a quiet circular toggle instead of a boxed button.
+- **Group headings in the browser** carry their count beside the name with a rule running to the
+  edge, instead of a stray number under the scrollbar.
+- **Words instead of enum names.** The tray-action dropdowns say "Open the full window" and "Run
+  the default pin" rather than `OpenMainWindow` and `RunDefaultAction`; grouping says "By room".
+  Pin rename boxes show the server's name as a watermark so an empty box still says what it is.
+- "Turn off all lights" on the dashboard is styled as the page's primary action.
+- The welcome page's mark is drawn without its dark plate, on its halo alone.
+
+### Fixed
+
+- **Relaunching the app while it was running did nothing.** The single-instance activation
+  listener was a message-only window, and Windows does not deliver `HWND_BROADCAST` messages to
+  message-only windows — so the "wake the running copy" message was shouted into a void. The
+  listener is now a hidden ordinary window; a second launch reliably opens the full window, and
+  `--panel` opens the tray panel.
+- **A plain launch now always opens the window.** Previously an onboarded user double-clicking
+  the executable got a tray icon and nothing else, which read as the app failing to start.
+- **The welcome page no longer reappears for configured installs.** A working connection now
+  counts as onboarding complete; the four-step quickstart tracked this correctly but the welcome
+  gate never learned.
+- **Zero theme files loading is no longer silent.** One real install came up at sign-in painting
+  the compiled fallback while claiming to be FATE, with nothing in the log. The condition is now
+  logged as a warning, retried after five seconds, and the fallback baseline itself resolves to
+  the true FATE values either way.
+- The theme detail pane no longer shows an empty "Based on" row for root themes.
+
 ## [0.1.1] — 2026-08-23
 
 Fixes from the first real install, against a 1057-entity Home Assistant.

@@ -13,6 +13,17 @@
 
   <UserControl.Resources>
     <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+    <conv:ThemeSwatchConverter x:Key="Swatch" />
+
+    <Style x:Key="SwatchDot" TargetType="Border">
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
+      <Setter Property="CornerRadius" Value="7.5" />
+      <Setter Property="Margin" Value="0,0,5,0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Fate.Brush.BorderDefault}" />
+      <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
     <conv:SeverityToBrushConverter x:Key="SeverityToBrush" />
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
   </UserControl.Resources>
@@ -86,13 +97,34 @@
             <DataTemplate DataType="{x:Type loading:ThemeEntry}">
               <StackPanel>
                 <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+
+                  <!-- Selection is application, so the check means "this is what you are seeing". -->
+                  <Path
+                    Grid.Column="0"
+                    Style="{StaticResource Fate.UiIcon}"
+                    Data="{StaticResource Fate.Icon.Check}"
+                    Width="12"
+                    Height="12"
+                    Margin="0,0,7,0"
+                    VerticalAlignment="Center"
+                    Stroke="{DynamicResource Fate.Brush.AccentDefault}"
+                    Visibility="{Binding IsSelected,
+                                 RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                 Converter={StaticResource BoolToVisibility}}" />
+
                   <TextBlock
+                    Grid.Column="1"
                     Style="{StaticResource Fate.Text.Body}"
                     FontWeight="Medium"
+                    TextTrimming="CharacterEllipsis"
                     Text="{Binding DisplayName}" />
-                  <TextBlock
-                    HorizontalAlignment="Right"
-                    Text="Built in">
+
+                  <TextBlock Grid.Column="2" Text="Built in" Margin="8,0,0,0" VerticalAlignment="Center">
                     <TextBlock.Style>
                       <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -105,11 +137,24 @@
                     </TextBlock.Style>
                   </TextBlock>
                 </Grid>
+
                 <TextBlock
                   Margin="0,3,0,0"
                   Style="{StaticResource Fate.Text.Caption}"
                   TextTrimming="CharacterEllipsis"
                   Text="{Binding Document.Description}" />
+
+                <!-- The theme's own colours, so choosing does not require trying. -->
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,1">
+                  <Border Style="{StaticResource SwatchDot}"
+                          Background="{Binding Converter={StaticResource Swatch}, ConverterParameter=surface}" />
+                  <Border Style="{StaticResource SwatchDot}"
+                          Background="{Binding Converter={StaticResource Swatch}, ConverterParameter=raised}" />
+                  <Border Style="{StaticResource SwatchDot}"
+                          Background="{Binding Converter={StaticResource Swatch}, ConverterParameter=accent}" />
+                  <Border Style="{StaticResource SwatchDot}"
+                          Background="{Binding Converter={StaticResource Swatch}, ConverterParameter=text}" />
+                </StackPanel>
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
@@ -199,9 +244,11 @@
                        Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.Version}" />
 
             <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,20,7"
-                       Style="{StaticResource Fate.Text.Faint}" Text="Based on" />
+                       Style="{StaticResource Fate.Text.Faint}" Text="Based on"
+                       Visibility="{Binding Selected.Document.BasedOn, Converter={StaticResource TextToVisibility}}" />
             <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,0,0,7"
-                       Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.BasedOn}" />
+                       Style="{StaticResource Fate.Text.Body}" Text="{Binding Selected.Document.BasedOn}"
+                       Visibility="{Binding Selected.Document.BasedOn, Converter={StaticResource TextToVisibility}}" />
 
             <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,20,0"
                        Style="{StaticResource Fate.Text.Faint}" Text="File" />
