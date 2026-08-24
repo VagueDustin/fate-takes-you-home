@@ -128,7 +128,7 @@ real install now speak up instead.
 
 ## [0.1.1] — 2026-08-23
 
-Fixes from the first real install, against a 1057-entity Home Assistant.
+Fixes from the first real install, against a large Home Assistant instance.
 
 ### Fixed
 
