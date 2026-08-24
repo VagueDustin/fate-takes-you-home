@@ -6,6 +6,11 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-08-24
+
+A repair release. The connection could refuse its own first command against a real server, and
+the build could not package a release at all.
+
 ### Added
 
 - **Tagging a version publishes it.** Pushing `v*` now builds, tests, packages and creates the
