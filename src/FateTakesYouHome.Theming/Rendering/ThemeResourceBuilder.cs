@@ -98,6 +98,10 @@ public static class ThemeResourceBuilder
         wash.A = (byte)(wash.A * 0.80);
         d[ThemeKeys.BrushPanelWash] = Solid(wash);
 
+        Color scrim = c.SurfaceBase;
+        scrim.A = 0x99;
+        d[ThemeKeys.BrushScrim] = Solid(scrim);
+
         d[ThemeKeys.BrushWindowBackground] = BuildWindowBackground(theme);
         d[ThemeKeys.BrushPanelEdge] = BuildPanelEdge(theme);
         d[ThemeKeys.BrushGoldGradient] = BuildGoldGradient(theme);

@@ -1,0 +1,46 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "one-dark",
+  "name": "One Dark",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Atom's classic editor dark, carried into the living room.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#21252B",
+    "surfaceRaised": "#282C34",
+    "surfaceOverlay": "#2F333D",
+    "surfaceSunken": "#1B1F24",
+    "surfaceHighest": "#383E4A",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#3E4451",
+    "borderEmphasis": "#61AFEF",
+    "textPrimary": "#D7DDE8",
+    "textMuted": "#8B93A1",
+    "textFaint": "#6B7380",
+    "textInverse": "#21252B",
+    "textAccent": "#83C2F5",
+    "accentDefault": "#61AFEF",
+    "accentHover": "#83C2F5",
+    "accentPressed": "#4D93CF",
+    "accentSubtle": "rgba(97, 175, 239, 0.14)",
+    "accentGlow": "rgba(97, 175, 239, 0.40)",
+    "depthWash": [],
+    "statusSuccess": "#98C379",
+    "statusWarning": "#E5C07B",
+    "statusDanger": "#E06C75",
+    "statusLive": "#E06C75",
+    "statusInfo": "#56B6C2"
+  },
+  "ornament": {
+    "depthWash": false
+  },
+  "buttons": {
+    "style": "ghost"
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

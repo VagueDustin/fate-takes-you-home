@@ -31,6 +31,8 @@ public partial class App : Application
     private SettingsService? _settings;
     private ThemeService? _themes;
     private HomeAssistantService? _homeAssistant;
+    private UpdateService? _updates;
+    private HotkeyService? _hotkeys;
     private AutostartService? _autostart;
     private TrayController? _tray;
     private bool _shuttingDown;
@@ -112,7 +114,16 @@ public partial class App : Application
 
         _homeAssistant = new HomeAssistantService(_log, Dispatcher);
 
-        _tray = new TrayController(_log, _settings, _themes, _homeAssistant);
+        _updates = new UpdateService(_log, _settings);
+        _updates.ExitRequested += (_, _) => RequestShutdown();
+        _updates.Start();
+
+        _hotkeys = new HotkeyService(_log);
+        _hotkeys.Pressed += OnHotkeyPressed;
+        ApplyShortcuts();
+        _settings.Changed += (_, _) => ApplyShortcuts();
+
+        _tray = new TrayController(_log, _settings, _themes, _homeAssistant, _updates);
         _tray.Start();
 
         _instance.ActivationRequested += OnActivationRequested;
@@ -147,6 +158,52 @@ public partial class App : Application
 
         _settings.Current.LastRunVersion = DisplayVersion;
         _settings.Save();
+    }
+
+    /// <summary>The system-wide shortcuts, for the settings page to re-apply and interrogate.</summary>
+    public HotkeyService Hotkeys =>
+        _hotkeys ?? throw new InvalidOperationException("Startup has not run yet.");
+
+    /// <summary>Reads the shortcut map out of settings and registers it.</summary>
+    public void ApplyShortcuts()
+    {
+        if (_hotkeys is null || _settings is null)
+        {
+            return;
+        }
+
+        var map = new Dictionary<HotkeyAction, string?>();
+
+        foreach (HotkeyAction action in Enum.GetValues<HotkeyAction>())
+        {
+            map[action] = _settings.Current.Shortcuts.TryGetValue(action.ToString(), out string? text)
+                ? text
+                : null;
+        }
+
+        _hotkeys.Apply(map);
+    }
+
+    private void OnHotkeyPressed(object? sender, HotkeyAction action)
+    {
+        switch (action)
+        {
+            case HotkeyAction.OpenPanel:
+                _tray?.ToggleFlyout();
+                break;
+
+            case HotkeyAction.OpenWindow:
+                _tray?.ShowMainWindow();
+                break;
+
+            case HotkeyAction.AllLightsOff:
+                _ = _homeAssistant?.TurnOffAllLightsAsync();
+                break;
+
+            case HotkeyAction.RunDefaultPin:
+                _ = _tray?.RunDefaultActionAsync();
+                break;
+        }
     }
 
     /// <summary>Applies the stored connection settings, or leaves the app idle when unconfigured.</summary>

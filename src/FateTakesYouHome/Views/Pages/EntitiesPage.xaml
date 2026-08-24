@@ -136,6 +136,34 @@
             VerticalAlignment="Center"
             IsHitTestVisible="False" />
 
+          <!-- One keystrokeless way out of a filter — the room click lands here, and this
+               is how you leave without knowing about the back button. -->
+          <Button
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Margin="0,0,6,0"
+            Width="26"
+            Height="26"
+            Padding="0"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{Binding ClearSearchCommand}"
+            ToolTip="Clear the search"
+            AutomationProperties.Name="Clear the search">
+            <Button.Style>
+              <Style TargetType="Button" BasedOn="{StaticResource Fate.Button}">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding SearchText}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Button.Style>
+            <Path Style="{StaticResource Fate.UiIcon}" Width="11" Height="11"
+                  Data="{StaticResource Fate.Icon.Close}" />
+          </Button>
+
           <TextBlock
             Margin="38,0,0,0"
             VerticalAlignment="Center"

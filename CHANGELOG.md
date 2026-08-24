@@ -6,6 +6,67 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-24
+
+The make-it-yours release: the app updates itself, both surfaces became arrangeable widget grids,
+the theme set tripled behind a picker that shows every theme in its own colours, and the sky
+finally moves.
+
+### Added
+
+- **Auto-update from GitHub releases.** Once a day (and on demand from Settings → Updates) the app
+  asks the public releases API whether a newer version exists. If one does, a gold banner offers
+  "Install and restart" — download, integrity check against the release's stated size, and a
+  hand-off to msiexec. Nothing ever installs without the click, and the check can be turned off.
+- **A layout editor** (the new Layout page): arrange the home screen and the tray panel like a
+  phone launcher — drag to move, pull the corner grip to resize, snap to a fluid grid. Widgets:
+  entity tiles, one-action buttons, the rooms grid, the activity counts, and **history graphs** of
+  any numeric sensor (recorder history over the WebSocket API, refreshed every ten minutes).
+  Layouts live in settings as plain JSON; "Back to standard" forgets them.
+- **Nine new built-in themes** — Light, Crimson, Terminal (green phosphor, hard corners, mono
+  everything), Cyberpunk (violet dark, hot neon), Dracula, Nord, Gruvbox, One Dark and Rosé Pine —
+  joining FATE, Daybreak, Midnight and Mono. Thirteen in the box; FATE Ceremonial and FATE Charted
+  retired from the presets (the tier system remains for custom themes).
+- **The theme picker shows the themes.** Each is a card sketching itself in its own surface, text
+  and accent colours, with the applied one carrying a check in its own accent — chosen by eye now,
+  not by name.
+- **Fonts, yours across every theme**: display, body and mono pickers on the Appearance page,
+  offering the bundled faces and everything installed on the machine.
+- **System-wide keyboard shortcuts**, recorded by pressing them: open the panel, open the window,
+  all lights off, run the default pin. Registered through RegisterHotKey, so a combination another
+  app owns is reported as taken instead of silently dead.
+- **The sky moves.** A dozen stars twinkle over the static field, and every half minute or so one
+  falls. Storyboard-driven, a handful of elements, honours reduced-motion and the theme's motion
+  switch, and stops entirely while the window is hidden.
+- **Back and forward, everywhere.** The mouse's back/forward buttons, Alt+Left/Right, and a back
+  button in the title bar all walk the page history — including the room-click filter, which used
+  to be a dead end. The search box also grew an inline clear button.
+
+### Changed
+
+- **The installer wears the house style**: navy starfield, the gold arch and wordmark on the
+  welcome and finish pages, a branded banner on the rest — drawn at build time from the same
+  palette constants as the app.
+- The window adapts to its size: the pinned grid runs one, two or three columns by available
+  width, and below 980px the navigation rail collapses to icons.
+
+### Fixed
+
+- **The installer launched the app before Finish was clicked** — the launch action was scheduled
+  after InstallFinalize, which runs while the exit dialog is still on screen, and unticking the
+  checkbox did nothing because the sequence had already read it. The launch now fires from the
+  Finish button itself, as the non-elevated user, with the path properly quoted.
+- **Midnight's tray panel wore a dark box.** The acrylic blur is applied by an accent policy that
+  paints the entire window rectangle — including the transparent 28px shadow frame around the
+  panel. In acrylic mode the frame now collapses to nothing, the WPF drop shadow retires, and DWM
+  rounds the actual window to match the panel.
+- **Clicking away did not always dismiss the panel.** Dismissal hung off window deactivation, and
+  clicking the bare desktop or taskbar activates nothing — after a quick reopen the panel held the
+  foreground and nothing short of the tray icon would close it. A low-level mouse hook now watches
+  for any press outside the panel (and outside the tray icon, whose click has its own meaning)
+  while it is open — the same mechanism the shell's own flyouts use — and exists only while the
+  panel is visible.
+
 ## [0.2.0] — 2026-08-23
 
 The cohesion release. The 0.1 window was a grid of nested grey boxes that happened to sit on a

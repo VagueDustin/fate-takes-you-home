@@ -164,12 +164,18 @@ public sealed class ThemeDefaultsTests
     /// </remarks>
     [Theory]
     [InlineData("fate.json")]
-    [InlineData("fate-ceremonial.json")]
-    [InlineData("fate-utility.json")]
-    [InlineData("fate-charted-classic.json")]
     [InlineData("midnight.json")]
     [InlineData("daybreak.json")]
     [InlineData("mono.json")]
+    [InlineData("light.json")]
+    [InlineData("crimson.json")]
+    [InlineData("terminal.json")]
+    [InlineData("cyberpunk.json")]
+    [InlineData("dracula.json")]
+    [InlineData("nord.json")]
+    [InlineData("gruvbox.json")]
+    [InlineData("one-dark.json")]
+    [InlineData("rose-pine.json")]
     public void EveryShippedThemeLoadsAndResolves(string fileName)
     {
         ThemeLoadResult result = ThemeLoader.Load(TestPaths.Theme(fileName));

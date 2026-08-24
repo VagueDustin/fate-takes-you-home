@@ -212,3 +212,6 @@ public sealed class HaEntityState
         return string.Join(' ', words.Select(w => char.ToUpperInvariant(w[0]) + w[1..]));
     }
 }
+
+/// <summary>One numeric sample from the recorder's history.</summary>
+public sealed record HaHistoryPoint(DateTimeOffset Time, double Value);

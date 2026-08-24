@@ -113,6 +113,11 @@
     M13.5,13.5 L19.5,13.5 L19.5,19.5 L13.5,19.5 Z
   </Geometry>
 
+  <!-- Three unequal panes: a layout being arranged. -->
+  <Geometry x:Key="Fate.Icon.Layout">
+    M 1.5 1.5 H 14.5 V 6 H 1.5 Z M 1.5 9 H 7 V 14.5 H 1.5 Z M 10 9 H 14.5 V 14.5 H 10 Z
+  </Geometry>
+
   <Geometry x:Key="Fate.Icon.Book">
     M4.5,4.5 L10,4.5 A2,2 0 0 1 12,6.5 L12,20 A2,2 0 0 0 10,18 L4.5,18 Z
     M19.5,4.5 L14,4.5 A2,2 0 0 0 12,6.5 L12,20 A2,2 0 0 1 14,18 L19.5,18 Z

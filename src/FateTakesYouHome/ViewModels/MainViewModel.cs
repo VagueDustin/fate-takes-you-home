@@ -55,6 +55,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private MainWindowSection _currentSection = MainWindowSection.Dashboard;
 
+    /// <summary>Where the user has been, most recent last. Compared with the mouse's back button.</summary>
+    private readonly List<NavigationSnapshot> _backStack = [];
+    private readonly List<NavigationSnapshot> _forwardStack = [];
+    private bool _traversingHistory;
+
+    /// <summary>One remembered place: a page, and the browser's search if that page was it.</summary>
+    private readonly record struct NavigationSnapshot(MainWindowSection Section, string Search);
+
     [ObservableProperty]
     private bool _isTourRunning;
 
@@ -63,19 +71,29 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SettingsService settings,
         ThemeService themes,
         HomeAssistantService homeAssistant,
-        TrayController tray)
+        TrayController tray,
+        UpdateService updates)
     {
         _settings = settings;
         _homeAssistant = homeAssistant;
+        Updates = updates;
 
         Dashboard = new DashboardViewModel(settings, homeAssistant, tray);
         Entities = new EntityBrowserViewModel(settings, homeAssistant);
         Themes = new ThemesViewModel(log, settings, themes);
-        Settings = new SettingsPageViewModel(log, settings, homeAssistant, tray);
+        Settings = new SettingsPageViewModel(log, settings, homeAssistant, tray, updates);
+        Layout = new LayoutEditorViewModel(settings, homeAssistant);
         Help = new HelpViewModel(settings, tray);
 
         _homeAssistant.PropertyChanged += OnServicePropertyChanged;
         _settings.SaveStateChanged += OnSaveStateChanged;
+        Updates.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(UpdateService.Status))
+            {
+                OnPropertyChanged(nameof(ShowsUpdateBanner));
+            }
+        };
 
         NavigationItems =
         [
@@ -92,6 +110,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 Label = "Everything",
                 IconKey = "Fate.Icon.Search",
                 Description = "Browse every entity Home Assistant knows about.",
+            },
+            new NavigationItem
+            {
+                Section = MainWindowSection.Layout,
+                Label = "Layout",
+                IconKey = "Fate.Icon.Layout",
+                Description = "Arrange the home screen and tray panel like widgets on a phone.",
             },
             new NavigationItem
             {
@@ -134,7 +159,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public SettingsPageViewModel Settings { get; }
 
+    public LayoutEditorViewModel Layout { get; }
+
     public HelpViewModel Help { get; }
+
+    /// <summary>The update checker, bound by the banner and the settings page.</summary>
+    public UpdateService Updates { get; }
+
+    private bool _updateBannerDismissed;
+
+    /// <summary>True when a newer release is known and the user has not waved it away.</summary>
+    public bool ShowsUpdateBanner =>
+        !_updateBannerDismissed
+        && Updates.Status is UpdateStatus.UpdateAvailable
+            or UpdateStatus.Downloading
+            or UpdateStatus.ReadyToInstall;
+
+    [RelayCommand]
+    private void DismissUpdateBanner()
+    {
+        _updateBannerDismissed = true;
+        OnPropertyChanged(nameof(ShowsUpdateBanner));
+    }
 
     // ------------------------------------------------------------------ connection banner
 
@@ -211,17 +257,85 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ReconnectAsync() => await _homeAssistant.ReconnectAsync().ConfigureAwait(true);
 
+    // ------------------------------------------------------------------ history
+
+    public bool CanGoBack => _backStack.Count > 0;
+
+    public bool CanGoForward => _forwardStack.Count > 0;
+
+    [RelayCommand]
+    public void GoBack()
+    {
+        if (_backStack.Count == 0)
+        {
+            return;
+        }
+
+        _forwardStack.Add(Capture());
+        NavigationSnapshot target = _backStack[^1];
+        _backStack.RemoveAt(_backStack.Count - 1);
+        Restore(target);
+    }
+
+    [RelayCommand]
+    public void GoForward()
+    {
+        if (_forwardStack.Count == 0)
+        {
+            return;
+        }
+
+        _backStack.Add(Capture());
+        NavigationSnapshot target = _forwardStack[^1];
+        _forwardStack.RemoveAt(_forwardStack.Count - 1);
+        Restore(target);
+    }
+
+    private NavigationSnapshot Capture() => new(CurrentSection, Entities.SearchText);
+
+    private void Restore(NavigationSnapshot snapshot)
+    {
+        _traversingHistory = true;
+
+        try
+        {
+            if (snapshot.Section == MainWindowSection.Entities)
+            {
+                Entities.SearchText = snapshot.Search;
+            }
+
+            CurrentSection = snapshot.Section;
+        }
+        finally
+        {
+            _traversingHistory = false;
+        }
+
+        OnPropertyChanged(nameof(CanGoBack));
+        OnPropertyChanged(nameof(CanGoForward));
+    }
+
     [RelayCommand]
     private void GoToSettings() => Navigate(MainWindowSection.Settings);
 
-    partial void OnCurrentSectionChanged(MainWindowSection value)
+    partial void OnCurrentSectionChanged(MainWindowSection oldValue, MainWindowSection newValue)
     {
+        // Every ordinary navigation is a history entry; walking the history itself is not, or
+        // back would immediately bury itself under new entries.
+        if (!_traversingHistory && oldValue != newValue)
+        {
+            _backStack.Add(new NavigationSnapshot(oldValue, Entities.SearchText));
+            _forwardStack.Clear();
+            OnPropertyChanged(nameof(CanGoBack));
+            OnPropertyChanged(nameof(CanGoForward));
+        }
+
         UpdateSelection();
 
         OnPropertyChanged(nameof(ShowsConnectionBanner));
 
         // The browser is expensive to populate; only do it when it is actually being looked at.
-        if (value == MainWindowSection.Entities)
+        if (newValue == MainWindowSection.Entities)
         {
             Entities.EnsureLoaded();
         }

@@ -15,6 +15,7 @@ public enum MainWindowSection
     Welcome,
     Dashboard,
     Entities,
+    Layout,
     Themes,
     Settings,
     Help,
@@ -40,6 +41,7 @@ public sealed class TrayController : IDisposable
     private readonly AppLog _log;
     private readonly SettingsService _settings;
     private readonly ThemeService _themes;
+    private readonly UpdateService _updates;
     private readonly HomeAssistantService _homeAssistant;
 
     /// <summary>Window within which a second tray notification is treated as the same click.</summary>
@@ -58,11 +60,13 @@ public sealed class TrayController : IDisposable
         AppLog log,
         SettingsService settings,
         ThemeService themes,
-        HomeAssistantService homeAssistant)
+        HomeAssistantService homeAssistant,
+        UpdateService updates)
     {
         _log = log;
         _settings = settings;
         _themes = themes;
+        _updates = updates;
         _homeAssistant = homeAssistant;
     }
 
@@ -188,6 +192,13 @@ public sealed class TrayController : IDisposable
         }
 
         _flyout = new FlyoutWindow(_log, _settings, _themes, _homeAssistant);
+
+        // The click-away watcher must leave the tray icon's own rectangle alone: a press there
+        // reaches ToggleFlyout by itself, and dismissing first would turn "click to close" into
+        // "click to close and immediately reopen".
+        _flyout.TrayIconRectProvider = () =>
+            _icon is not null && _icon.TryGetIconRect(out Int32Rect rect) ? rect : null;
+
         _flyout.SettingsRequested += (_, _) =>
         {
             HideFlyout();
@@ -230,7 +241,7 @@ public sealed class TrayController : IDisposable
 
         if (_mainWindow is null)
         {
-            _mainWindow = new MainWindow(_log, _settings, _themes, _homeAssistant, this);
+            _mainWindow = new MainWindow(_log, _settings, _themes, _homeAssistant, this, _updates);
             _mainWindow.Closed += (_, _) => _mainWindow = null;
         }
 

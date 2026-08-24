@@ -1,0 +1,47 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "rose-pine",
+  "name": "Rosé Pine",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Soho vibes: dusk violet, rose gold, and a lamp left on for you.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#16141F",
+    "surfaceRaised": "#191724",
+    "surfaceOverlay": "#1F1D2E",
+    "surfaceSunken": "#12101A",
+    "surfaceHighest": "#26233A",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#332F4D",
+    "borderEmphasis": "#EBBCBA",
+    "textPrimary": "#E0DEF4",
+    "textMuted": "#ABA8C4",
+    "textFaint": "#817E9C",
+    "textInverse": "#16141F",
+    "textAccent": "#F5CDCB",
+    "accentDefault": "#EBBCBA",
+    "accentHover": "#F5CDCB",
+    "accentPressed": "#C89795",
+    "accentSubtle": "rgba(235, 188, 186, 0.14)",
+    "accentGlow": "rgba(235, 188, 186, 0.40)",
+    "depthWash": [],
+    "statusSuccess": "#9CCFD8",
+    "statusWarning": "#F6C177",
+    "statusDanger": "#EB6F92",
+    "statusLive": "#EB6F92",
+    "statusInfo": "#C4A7E7"
+  },
+  "ornament": {
+    "depthWash": true,
+    "starfield": true
+  },
+  "buttons": {
+    "style": "ghost"
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

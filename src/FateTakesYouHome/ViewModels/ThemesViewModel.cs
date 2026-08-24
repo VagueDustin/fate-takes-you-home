@@ -98,6 +98,47 @@ public sealed partial class ThemeSwitchSlot : ObservableObject
 /// folder first, so the shipped themes are always recoverable.
 /// </para>
 /// </remarks>
+/// <summary>One system-wide shortcut, as a row on the appearance page.</summary>
+public sealed partial class ShortcutRow : ObservableObject
+{
+    private readonly Action _onChanged;
+    private bool _loading;
+
+    [ObservableProperty]
+    private string? _gesture;
+
+    [ObservableProperty]
+    private string? _failure;
+
+    public ShortcutRow(HotkeyAction action, string label, string description, string? gesture, Action onChanged)
+    {
+        Action = action;
+        Label = label;
+        Description = description;
+        _loading = true;
+        Gesture = gesture;
+        _loading = false;
+        _onChanged = onChanged;
+    }
+
+    public HotkeyAction Action { get; }
+
+    public string Label { get; }
+
+    public string Description { get; }
+
+    partial void OnGestureChanged(string? value)
+    {
+        if (!_loading)
+        {
+            _onChanged();
+        }
+    }
+
+    /// <summary>Reloads the failure state without re-triggering a save.</summary>
+    public void SetFailureQuietly(string? failure) => Failure = failure;
+}
+
 public sealed partial class ThemesViewModel : ObservableObject, IDisposable
 {
     private readonly AppLog _log;
@@ -180,6 +221,8 @@ public sealed partial class ThemesViewModel : ObservableObject, IDisposable
         _themes.Repository.ThemesChanged += OnRepositoryChanged;
 
         RefreshList();
+        BuildFontChoices();
+        BuildShortcutRows();
     }
 
     public ObservableCollection<ThemeEntry> Available { get; } = [];
@@ -203,6 +246,117 @@ public sealed partial class ThemesViewModel : ObservableObject, IDisposable
 
     /// <summary>Where user themes live. Shown so people can find the folder.</summary>
     public static string UserThemesPath => AppPaths.UserThemes;
+
+    // ------------------------------------------------------------------ fonts
+
+    /// <summary>Every family offered by the font pickers. "Theme default" first, bundled next.</summary>
+    public ObservableCollection<string> FontChoices { get; } = [];
+
+    public const string ThemeDefaultFont = "Theme default";
+
+    public string DisplayFontChoice
+    {
+        get => _settings.Current.FontOverrides.Display ?? ThemeDefaultFont;
+        set => SetFontOverride(v => _settings.Current.FontOverrides.Display = v, value, nameof(DisplayFontChoice));
+    }
+
+    public string BodyFontChoice
+    {
+        get => _settings.Current.FontOverrides.Body ?? ThemeDefaultFont;
+        set => SetFontOverride(v => _settings.Current.FontOverrides.Body = v, value, nameof(BodyFontChoice));
+    }
+
+    public string MonoFontChoice
+    {
+        get => _settings.Current.FontOverrides.Mono ?? ThemeDefaultFont;
+        set => SetFontOverride(v => _settings.Current.FontOverrides.Mono = v, value, nameof(MonoFontChoice));
+    }
+
+    private void SetFontOverride(Action<string?> write, string value, string propertyName)
+    {
+        write(value == ThemeDefaultFont ? null : value);
+        _settings.Save();
+        _themes.Refresh();
+        OnPropertyChanged(propertyName);
+    }
+
+    private void BuildFontChoices()
+    {
+        FontChoices.Add(ThemeDefaultFont);
+
+        // The faces that ship with the app lead the list; they are the ones themes name.
+        foreach (string bundled in new[] { "Cinzel", "Inter", "Crimson Pro", "JetBrains Mono", "Consolas" })
+        {
+            FontChoices.Add(bundled);
+        }
+
+        IOrderedEnumerable<string> system = System.Windows.Media.Fonts.SystemFontFamilies
+            .Select(family => family.Source)
+            .Where(name => !FontChoices.Contains(name))
+            .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase);
+
+        foreach (string family in system)
+        {
+            FontChoices.Add(family);
+        }
+    }
+
+    // ------------------------------------------------------------------ shortcuts
+
+    /// <summary>The mappable system-wide shortcuts.</summary>
+    public ObservableCollection<ShortcutRow> Shortcuts { get; } = [];
+
+    private void BuildShortcutRows()
+    {
+        (HotkeyAction Action, string Label, string Description)[] rows =
+        [
+            (HotkeyAction.OpenPanel, "Open the tray panel",
+                "Anywhere in Windows, even while another app has focus."),
+            (HotkeyAction.OpenWindow, "Open the full window",
+                "Brings this window up, or to the front."),
+            (HotkeyAction.AllLightsOff, "Turn off all lights",
+                "The leaving-the-house key."),
+            (HotkeyAction.RunDefaultPin, "Run the default pin",
+                "Whichever pin is marked as the default action in Settings."),
+        ];
+
+        foreach ((HotkeyAction action, string label, string description) in rows)
+        {
+            string? gesture = _settings.Current.Shortcuts.TryGetValue(action.ToString(), out string? text)
+                ? text
+                : null;
+
+            var row = new ShortcutRow(action, label, description, gesture, SaveShortcuts);
+            Shortcuts.Add(row);
+        }
+
+        RefreshShortcutFailures();
+    }
+
+    private void SaveShortcuts()
+    {
+        foreach (ShortcutRow row in Shortcuts)
+        {
+            _settings.Current.Shortcuts[row.Action.ToString()] = row.Gesture;
+        }
+
+        _settings.Save();
+        App.Current?.ApplyShortcuts();
+        RefreshShortcutFailures();
+    }
+
+    private void RefreshShortcutFailures()
+    {
+        if (App.Current is not { } app)
+        {
+            return;
+        }
+
+        foreach (ShortcutRow row in Shortcuts)
+        {
+            row.SetFailureQuietly(app.Hotkeys.FailureFor(row.Action));
+        }
+    }
 
     public bool CanEditSelected => Selected is not null;
 

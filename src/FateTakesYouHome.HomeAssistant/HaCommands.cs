@@ -220,4 +220,95 @@ public static class HaCommands
         && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+
+    /// <summary>
+    /// Reads recorder history for one entity and keeps the numeric samples.
+    /// </summary>
+    /// <remarks>
+    /// The wire format is the compressed one: per entity, a list of <c>{"s": state, "lu": epoch}</c>
+    /// pairs, with the first row sometimes arriving in the verbose long-form keys instead. Both are
+    /// handled. Non-numeric states — "unavailable", "unknown", an enum-like sensor — are skipped,
+    /// because the caller is drawing a line chart and a line through "unavailable" is nonsense.
+    /// </remarks>
+    public static async Task<IReadOnlyList<HaHistoryPoint>> GetNumericHistoryAsync(
+        this HaClient client,
+        string entityId,
+        DateTimeOffset start,
+        DateTimeOffset end,
+        CancellationToken ct = default)
+    {
+        JsonElement? result = await client
+            .SendCommandAsync(
+                new Dictionary<string, object?>
+                {
+                    ["type"] = "history/history_during_period",
+                    ["start_time"] = start.UtcDateTime.ToString("o"),
+                    ["end_time"] = end.UtcDateTime.ToString("o"),
+                    ["entity_ids"] = new[] { entityId },
+                    ["minimal_response"] = true,
+                    ["no_attributes"] = true,
+                },
+                ct)
+            .ConfigureAwait(false);
+
+        return ParseNumericHistory(result, entityId);
+    }
+
+    /// <summary>Parses the history payload. Split out so the format handling is testable.</summary>
+    public static IReadOnlyList<HaHistoryPoint> ParseNumericHistory(JsonElement? result, string entityId)
+    {
+        if (result is not { ValueKind: JsonValueKind.Object } root
+            || !root.TryGetProperty(entityId, out JsonElement rows)
+            || rows.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var points = new List<HaHistoryPoint>();
+
+        foreach (JsonElement row in rows.EnumerateArray())
+        {
+            if (row.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            string? state = row.TryGetProperty("s", out JsonElement s)
+                ? s.GetString()
+                : row.TryGetProperty("state", out JsonElement stateLong) ? stateLong.GetString() : null;
+
+            if (!double.TryParse(
+                    state,
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out double value))
+            {
+                continue;
+            }
+
+            DateTimeOffset? time = null;
+
+            if (row.TryGetProperty("lu", out JsonElement lu) && lu.ValueKind == JsonValueKind.Number)
+            {
+                time = DateTimeOffset.FromUnixTimeMilliseconds((long)(lu.GetDouble() * 1000));
+            }
+            else if (row.TryGetProperty("last_updated", out JsonElement iso)
+                     && DateTimeOffset.TryParse(iso.GetString(), out DateTimeOffset parsed))
+            {
+                time = parsed;
+            }
+            else if (row.TryGetProperty("last_changed", out JsonElement iso2)
+                     && DateTimeOffset.TryParse(iso2.GetString(), out DateTimeOffset parsed2))
+            {
+                time = parsed2;
+            }
+
+            if (time is { } stamp)
+            {
+                points.Add(new HaHistoryPoint(stamp, value));
+            }
+        }
+
+        return points;
+    }
 }

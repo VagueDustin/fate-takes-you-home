@@ -106,9 +106,11 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
         AppLog log,
         SettingsService settings,
         HomeAssistantService homeAssistant,
-        TrayController tray)
+        TrayController tray,
+        UpdateService updates)
     {
         _log = log;
+        Updates = updates;
         _settings = settings;
         _homeAssistant = homeAssistant;
         _tray = tray;
@@ -117,6 +119,26 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
         _homeAssistant.SnapshotReloaded += OnSnapshotReloaded;
 
         LoadFromSettings();
+    }
+
+    /// <summary>The update checker, for the updates card.</summary>
+    public UpdateService Updates { get; }
+
+    /// <summary>Whether the daily release check runs at all.</summary>
+    public bool CheckForUpdates
+    {
+        get => _settings.Current.CheckForUpdates;
+        set
+        {
+            if (_settings.Current.CheckForUpdates == value)
+            {
+                return;
+            }
+
+            _settings.Current.CheckForUpdates = value;
+            _settings.Save();
+            OnPropertyChanged();
+        }
     }
 
     public ObservableCollection<PinnedRowViewModel> Pins { get; } = [];

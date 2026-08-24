@@ -527,6 +527,37 @@
     </Setter>
   </Style>
 
+  <!-- A pill segment, for two-way choices like which surface the layout editor is arranging. -->
+  <Style x:Key="Fate.SegmentButton" TargetType="RadioButton">
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextMuted}" />
+    <Setter Property="FontFamily" Value="{DynamicResource Fate.Font.Body}" />
+    <Setter Property="FontSize" Value="{DynamicResource Fate.Size.Body}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border
+            x:Name="Face"
+            Padding="14,6"
+            Background="Transparent"
+            CornerRadius="{DynamicResource Fate.Radius.Pill}">
+            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Face" Property="Background" Value="{DynamicResource Fate.Brush.AccentSubtle}" />
+              <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextAccent}" />
+              <Setter Property="FontWeight" Value="SemiBold" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextPrimary}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- ==================================================================== switch -->
 
   <!-- A sliding switch, for settings. Reads as a state rather than an action. -->

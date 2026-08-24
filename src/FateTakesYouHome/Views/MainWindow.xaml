@@ -41,7 +41,13 @@
 
   <Window.Resources>
     <conv:SectionToVisibilityConverter x:Key="SectionToVisibility" />
+    <conv:IsNarrowerThanConverter x:Key="IsNarrowerThan" />
   </Window.Resources>
+
+  <Window.InputBindings>
+    <KeyBinding Modifiers="Alt" Key="Left" Command="{Binding GoBackCommand}" />
+    <KeyBinding Modifiers="Alt" Key="Right" Command="{Binding GoForwardCommand}" />
+  </Window.InputBindings>
 
   <Grid x:Name="RootLayer">
     <!--
@@ -53,6 +59,11 @@
       Fill="{DynamicResource Fate.Brush.Starfield}"
       Visibility="{DynamicResource Fate.Visibility.Starfield}"
       IsHitTestVisible="False"
+      Panel.ZIndex="-1" />
+
+    <!-- The sky breathes: a dozen twinkles and the odd meteor, over the static bitmap. -->
+    <c:StarfieldAnimation
+      Visibility="{DynamicResource Fate.Visibility.Starfield}"
       Panel.ZIndex="-1" />
 
     <Grid>
@@ -75,13 +86,34 @@
         <StackPanel
           Grid.Column="0"
           Orientation="Horizontal"
-          Margin="16,0,0,0"
-          VerticalAlignment="Center">
+          Margin="6,0,0,0"
+          VerticalAlignment="Center"
+          shell:WindowChrome.IsHitTestVisibleInChrome="True">
+          <!-- Browser-grammar back button: rooms, searches and pages all stack behind it. -->
+          <Button
+            Style="{StaticResource Fate.Button.Caption}"
+            Width="40"
+            Command="{Binding GoBackCommand}"
+            IsEnabled="{Binding CanGoBack}"
+            ToolTip="Back (Alt+Left, or the mouse's back button)"
+            AutomationProperties.Name="Back">
+            <Button.Resources>
+              <Style TargetType="Path" BasedOn="{StaticResource Fate.UiIcon}">
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding CanGoBack}" Value="False">
+                    <Setter Property="Opacity" Value="0.3" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Button.Resources>
+            <Path Width="13" Height="13" Data="{StaticResource Fate.Icon.Back}" />
+          </Button>
+
           <Image
             x:Name="TitleMark"
             Width="18"
             Height="18"
-            Margin="0,0,10,0"
+            Margin="6,0,10,0"
             RenderOptions.BitmapScalingMode="HighQuality" />
           <c:TrackedTextBlock
             Style="{StaticResource Fate.Display.Wordmark}"
@@ -120,6 +152,44 @@
       <!-- ============================================================ banners -->
 
       <StackPanel Grid.Row="1">
+
+      <!-- A newer release exists. Gold-edged: an invitation, not an alarm. -->
+      <Border
+        Margin="16,0,16,10"
+        Padding="14,10"
+        CornerRadius="{DynamicResource Fate.Radius.Md}"
+        Background="{DynamicResource Fate.Brush.SurfaceRaised}"
+        BorderBrush="{DynamicResource Fate.Brush.AccentDefault}"
+        BorderThickness="1"
+        Visibility="{Binding ShowsUpdateBanner, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <TextBlock
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Style="{StaticResource Fate.Text.Body}"
+            Text="{Binding Updates.Detail}"
+            TextWrapping="Wrap" />
+
+          <Button
+            Grid.Column="1"
+            Margin="12,0,0,0"
+            Style="{StaticResource Fate.Button.Primary}"
+            Content="Install and restart"
+            Command="{Binding Updates.InstallCommand}" />
+
+          <Button
+            Grid.Column="2"
+            Margin="8,0,0,0"
+            Content="Later"
+            Command="{Binding DismissUpdateBannerCommand}" />
+        </Grid>
+      </Border>
 
       <!-- Settings writes are failing: everything looks fine and nothing survives a restart,
            which is exactly the kind of problem that must not be left to the log file. -->
@@ -217,8 +287,21 @@
         <Grid
           x:Name="NavigationRail"
           Grid.Column="0"
-          Width="188"
           Margin="0,2,16,0">
+          <Grid.Style>
+            <Style TargetType="Grid">
+              <Setter Property="Width" Value="188" />
+              <Style.Triggers>
+                <!-- A cramped window gets an icon rail; labels return with the room for them. -->
+                <DataTrigger
+                  Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window},
+                            Converter={StaticResource IsNarrowerThan}, ConverterParameter=980}"
+                  Value="True">
+                  <Setter Property="Width" Value="58" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Grid.Style>
           <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -262,8 +345,20 @@
                             x:Name="Label"
                             Grid.Column="1"
                             VerticalAlignment="Center"
-                            Style="{StaticResource Fate.Text.Body}"
-                            Text="{Binding Label}" />
+                            Text="{Binding Label}">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Body}">
+                                <Style.Triggers>
+                                  <DataTrigger
+                                    Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window},
+                                              Converter={StaticResource IsNarrowerThan}, ConverterParameter=980}"
+                                    Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>
+                          </TextBlock>
                         </Grid>
                       </Border>
 
@@ -339,9 +434,21 @@
 
               <TextBlock
                 Grid.Column="1"
-                Style="{StaticResource Fate.Text.Caption}"
                 Text="{Binding ConnectionSummary}"
-                TextWrapping="Wrap" />
+                TextWrapping="Wrap">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Caption}">
+                    <Style.Triggers>
+                      <DataTrigger
+                        Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window},
+                                  Converter={StaticResource IsNarrowerThan}, ConverterParameter=980}"
+                        Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
             </Grid>
           </Border>
         </Grid>
@@ -368,6 +475,14 @@
                                  RelativeSource={RelativeSource AncestorType=Window},
                                  Converter={StaticResource SectionToVisibility},
                                  ConverterParameter=Entities}" />
+
+          <pages:LayoutPage
+            x:Name="LayoutPage"
+            DataContext="{Binding Layout}"
+            Visibility="{Binding DataContext.CurrentSection,
+                                 RelativeSource={RelativeSource AncestorType=Window},
+                                 Converter={StaticResource SectionToVisibility},
+                                 ConverterParameter=Layout}" />
 
           <pages:ThemesPage
             x:Name="ThemesPage"

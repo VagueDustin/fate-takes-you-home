@@ -13,6 +13,7 @@
   <UserControl.Resources>
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
     <conv:CountToVisibilityConverter x:Key="NoneToVisibility" WhenEmpty="True" />
+    <conv:WidthToColumnsConverter x:Key="WidthToColumns" />
   </UserControl.Resources>
 
   <ContentControl Style="{StaticResource Fate.Panel}">
@@ -101,6 +102,20 @@
       <ScrollViewer Grid.Row="2" Margin="0,16,0,0" Style="{StaticResource Fate.ScrollViewer}">
         <StackPanel Margin="0,0,10,0">
 
+          <!-- The arranged grid, when the user has built one in the layout editor. -->
+          <ItemsControl
+            ItemsSource="{Binding Widgets}"
+            ItemContainerStyle="{StaticResource Fate.WidgetContainer}"
+            Visibility="{Binding UsesCustomLayout, Converter={StaticResource BoolToVisibility}}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <c:WidgetCanvas Columns="6" RowHeight="84" Gap="10" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+
+          <StackPanel Visibility="{Binding UsesCustomLayout, Converter={StaticResource InverseBoolToVisibility}}">
+
           <!-- Pinned tiles. -->
           <c:TrackedTextBlock
             Style="{StaticResource Fate.Display.SectionLabel}"
@@ -120,7 +135,12 @@
             -->
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
-                <UniformGrid Columns="2" VerticalAlignment="Top" />
+                <!-- One column on a cramped window, three on a generous one. -->
+                <UniformGrid
+                  Columns="{Binding ActualWidth,
+                                    RelativeSource={RelativeSource AncestorType=UserControl},
+                                    Converter={StaticResource WidthToColumns}}"
+                  VerticalAlignment="Top" />
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemContainerStyle>
@@ -223,6 +243,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+          </StackPanel>
         </StackPanel>
       </ScrollViewer>
     </Grid>

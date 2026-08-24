@@ -63,9 +63,12 @@
           CornerRadius="{DynamicResource Fate.Radius.Flyout}"
           ClipToBounds="True"
           IsHitTestVisible="False">
-          <Rectangle
-            Fill="{DynamicResource Fate.Brush.Starfield}"
-            Visibility="{DynamicResource Fate.Visibility.Starfield}" />
+          <Grid>
+            <Rectangle
+              Fill="{DynamicResource Fate.Brush.Starfield}"
+              Visibility="{DynamicResource Fate.Visibility.Starfield}" />
+            <c:StarfieldAnimation Visibility="{DynamicResource Fate.Visibility.Starfield}" />
+          </Grid>
         </Border>
 
         <!-- ============================================================ header -->
@@ -131,23 +134,38 @@
             MaxHeight="{DynamicResource Fate.Metric.FlyoutMaxHeight}"
             Margin="0,10,0,0"
             Visibility="{Binding ShowsPlaceholder, Converter={StaticResource InverseBoolToVisibility}}">
-            <ItemsControl
-              x:Name="Tiles"
-              Margin="12,0,12,14"
-              ItemsSource="{Binding Tiles}"
-              ItemTemplate="{StaticResource Fate.Template.EntityTile}"
-              KeyboardNavigation.TabNavigation="Continue">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemContainerStyle>
-                <Style TargetType="ContentPresenter">
-                  <Setter Property="Margin" Value="0,0,0,7" />
-                </Style>
-              </ItemsControl.ItemContainerStyle>
-            </ItemsControl>
+            <Grid Margin="12,0,12,14">
+              <ItemsControl
+                x:Name="Tiles"
+                ItemsSource="{Binding Tiles}"
+                ItemTemplate="{StaticResource Fate.Template.EntityTile}"
+                KeyboardNavigation.TabNavigation="Continue"
+                Visibility="{Binding UsesCustomLayout, Converter={StaticResource InverseBoolToVisibility}}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                  <Style TargetType="ContentPresenter">
+                    <Setter Property="Margin" Value="0,0,0,7" />
+                  </Style>
+                </ItemsControl.ItemContainerStyle>
+              </ItemsControl>
+
+              <!-- The arranged grid, when one has been saved for the panel. -->
+              <ItemsControl
+                ItemsSource="{Binding Widgets}"
+                ItemContainerStyle="{StaticResource Fate.WidgetContainer}"
+                KeyboardNavigation.TabNavigation="Continue"
+                Visibility="{Binding UsesCustomLayout, Converter={StaticResource BoolToVisibility}}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <c:WidgetCanvas Columns="4" RowHeight="72" Gap="8" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+              </ItemsControl>
+            </Grid>
           </ScrollViewer>
 
           <!-- Nothing to show: say what is missing and offer the one useful next step. -->
@@ -179,7 +197,7 @@
         <Grid
           Grid.Row="3"
           Margin="16,2,16,12"
-          Visibility="{Binding ShowsPlaceholder, Converter={StaticResource InverseBoolToVisibility}}">
+          Visibility="{Binding ShowsStandardFooter, Converter={StaticResource BoolToVisibility}}">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

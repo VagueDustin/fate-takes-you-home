@@ -1,0 +1,48 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "light",
+  "name": "Light",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Paper white. Clean, cool, and quiet — for rooms with daylight and monitors turned up.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "light",
+  "colors": {
+    "surfaceBase": "#F7F7F5",
+    "surfaceRaised": "#FFFFFF",
+    "surfaceOverlay": "#FCFCFA",
+    "surfaceSunken": "#ECECE8",
+    "surfaceHighest": "#FFFFFF",
+    "borderSubtle": "rgba(20, 24, 40, 0.08)",
+    "borderDefault": "#DCDCD6",
+    "borderEmphasis": "#8A6D1F",
+    "textPrimary": "#1A1E2E",
+    "textMuted": "#565C74",
+    "textFaint": "#6E7488",
+    "textInverse": "#FFFFFF",
+    "textAccent": "#7A5C1F",
+    "accentDefault": "#8A6D1F",
+    "accentHover": "#A6852B",
+    "accentPressed": "#6B5418",
+    "accentSubtle": "rgba(138, 109, 31, 0.10)",
+    "accentGlow": "rgba(138, 109, 31, 0.25)",
+    "statusLive": "#B3103A",
+    "statusSuccess": "#2E6E1F",
+    "statusWarning": "#8A5A00",
+    "statusDanger": "#B3103A",
+    "statusInfo": "#1A5FA8",
+    "depthWash": []
+  },
+  "ornament": {
+    "depthWash": false
+  },
+  "buttons": {
+    "style": "outline",
+    "hoverLift": 0
+  },
+  "backdrop": {
+    "mode": "composited",
+    "shadowOpacity": 0.18
+  }
+}

@@ -80,6 +80,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<EntityTileViewModel> Pinned { get; } = [];
 
+    /// <summary>The customised layout, when the user has arranged one.</summary>
+    public ObservableCollection<WidgetViewModel> Widgets { get; } = [];
+
+    /// <summary>True when the home screen renders the widget grid instead of the standard view.</summary>
+    public bool UsesCustomLayout => _settings.Current.HomeWidgets is { Count: > 0 };
+
     public ObservableCollection<ActivitySummary> Activity { get; } = [];
 
     /// <summary>Every room that has lights, lit rooms first.</summary>
@@ -118,16 +124,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task TurnOffAllLightsAsync()
     {
-        CommandResult result = await _homeAssistant
-            .ExecuteAsync(
-                (client, ct) => client.CallServiceAsync(
-                    HaDomains.Light,
-                    "turn_off",
-                    new Dictionary<string, object?> { ["entity_id"] = "all" },
-                    data: null,
-                    ct),
-                "Turn off all lights")
-            .ConfigureAwait(true);
+        CommandResult result = await _homeAssistant.TurnOffAllLightsAsync().ConfigureAwait(true);
 
         LastActionMessage = result.Succeeded
             ? "All lights off."
@@ -178,10 +175,49 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         }
 
         RebuildActivity();
+        RebuildWidgets();
 
         OnPropertyChanged(nameof(HasPins));
         OnPropertyChanged(nameof(Greeting));
+        OnPropertyChanged(nameof(UsesCustomLayout));
     }
+
+    /// <summary>Rebuilds the widget grid from the saved layout, when there is one.</summary>
+    private void RebuildWidgets()
+    {
+        foreach (WidgetViewModel widget in Widgets)
+        {
+            widget.Dispose();
+        }
+
+        Widgets.Clear();
+
+        if (_settings.Current.HomeWidgets is not { Count: > 0 } specs)
+        {
+            return;
+        }
+
+        foreach (Models.WidgetSpec spec in specs)
+        {
+            spec.ClampTo(HomeGridColumns);
+
+            if (WidgetFactory.Build(spec, _homeAssistant, Rooms, Activity, PinLabelFor(spec.EntityId))
+                is { } widget)
+            {
+                Widgets.Add(widget);
+            }
+        }
+    }
+
+    /// <summary>The home grid is six columns wide; the editor and the page must agree.</summary>
+    public const int HomeGridColumns = 6;
+
+    private string? PinLabelFor(string? entityId) =>
+        entityId is null
+            ? null
+            : _settings.Current.Pinned
+                .FirstOrDefault(p => string.Equals(p.EntityId, entityId, StringComparison.OrdinalIgnoreCase))?
+                .Label;
 
     /// <summary>
     /// Recomputes the activity counts in a single pass.
@@ -349,6 +385,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         foreach (EntityTileViewModel tile in Pinned)
         {
             tile.Detach();
+        }
+
+        foreach (WidgetViewModel widget in Widgets)
+        {
+            widget.Dispose();
         }
     }
 }

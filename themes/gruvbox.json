@@ -1,0 +1,47 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "gruvbox",
+  "name": "Gruvbox",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Retro warmth: toasted paper, amber light, a terminal that smells faintly of coffee.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#221F1D",
+    "surfaceRaised": "#282828",
+    "surfaceOverlay": "#32302F",
+    "surfaceSunken": "#1D1A18",
+    "surfaceHighest": "#3C3836",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#504945",
+    "borderEmphasis": "#FABD2F",
+    "textPrimary": "#EBDBB2",
+    "textMuted": "#BDAE93",
+    "textFaint": "#928374",
+    "textInverse": "#221F1D",
+    "textAccent": "#FFD75F",
+    "accentDefault": "#FABD2F",
+    "accentHover": "#FFD75F",
+    "accentPressed": "#D79921",
+    "accentSubtle": "rgba(250, 189, 47, 0.14)",
+    "accentGlow": "rgba(250, 189, 47, 0.40)",
+    "depthWash": [],
+    "statusSuccess": "#B8BB26",
+    "statusWarning": "#FE8019",
+    "statusDanger": "#FB4934",
+    "statusLive": "#FB4934",
+    "statusInfo": "#83A598"
+  },
+  "ornament": {
+    "depthWash": false,
+    "filmGrain": true
+  },
+  "buttons": {
+    "style": "engraved"
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

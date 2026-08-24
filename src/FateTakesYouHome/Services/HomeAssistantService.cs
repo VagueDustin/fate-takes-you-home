@@ -423,6 +423,45 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
 
     // ------------------------------------------------------------------ registry lookups
 
+    /// <summary>Turns every light off — the one whole-house action wired to buttons and hotkeys.</summary>
+    public Task<CommandResult> TurnOffAllLightsAsync() =>
+        ExecuteAsync(
+            (client, ct) => client.CallServiceAsync(
+                HaDomains.Light,
+                "turn_off",
+                new Dictionary<string, object?> { ["entity_id"] = "all" },
+                data: null,
+                ct),
+            "Turn off all lights");
+
+    /// <summary>
+    /// Reads numeric history for one entity, for the sparkline widgets. Empty when disconnected,
+    /// when the recorder has nothing, or when the entity's states are not numbers.
+    /// </summary>
+    public async Task<IReadOnlyList<HaHistoryPoint>> FetchHistoryAsync(
+        string entityId, TimeSpan window, CancellationToken ct = default)
+    {
+        HaClient? client = _client;
+
+        if (client is null || ConnectionState != HaConnectionState.Connected)
+        {
+            return [];
+        }
+
+        try
+        {
+            DateTimeOffset end = DateTimeOffset.UtcNow;
+            return await client
+                .GetNumericHistoryAsync(entityId, end - window, end, ct)
+                .ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is HaCommandException or HaConnectionException or OperationCanceledException)
+        {
+            _log.Debug($"History for {entityId} was unavailable: {ex.Message}");
+            return [];
+        }
+    }
+
     /// <summary>
     /// The area an entity belongs to.
     /// </summary>

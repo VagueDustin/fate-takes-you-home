@@ -25,6 +25,7 @@
         <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Icons.xaml" />
         <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Fate.xaml" />
         <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Tiles.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/FateTakesYouHome;component/Styles/Widgets.xaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

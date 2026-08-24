@@ -104,6 +104,12 @@ public sealed class SettingsService : IDisposable
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Announces that <see cref="Current"/> was mutated in place, so views rebuild. Used by the
+    /// layout editor, whose save is a mutation rather than a replacement.
+    /// </summary>
+    public void NotifyChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
     /// <summary>Decrypts the stored token. Returns null when there is not a usable one.</summary>
     public string? GetAccessToken() => SecretProtector.Unprotect(Current.ProtectedToken);
 

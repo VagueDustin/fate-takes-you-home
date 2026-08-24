@@ -1,0 +1,59 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "terminal",
+  "name": "Terminal",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Green phosphor on black glass. The house as a machine that answers.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#020503",
+    "surfaceRaised": "#04120A",
+    "surfaceOverlay": "#06180D",
+    "surfaceSunken": "#010302",
+    "surfaceHighest": "#0A2113",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#12341F",
+    "borderEmphasis": "#33FF66",
+    "textPrimary": "#C9F5D4",
+    "textMuted": "#7FBF93",
+    "textFaint": "#578A67",
+    "textInverse": "#020503",
+    "textAccent": "#66FF8C",
+    "accentDefault": "#33FF66",
+    "accentHover": "#66FF8C",
+    "accentPressed": "#25CC4F",
+    "accentSubtle": "rgba(51, 255, 102, 0.10)",
+    "accentGlow": "rgba(51, 255, 102, 0.45)",
+    "depthWash": []
+  },
+  "typography": {
+    "displayFamily": "JetBrains Mono",
+    "bodyFamily": "JetBrains Mono",
+    "proseFamily": "JetBrains Mono",
+    "trackingWordmark": 0.1,
+    "trackingLabel": 0.22
+  },
+  "shape": {
+    "radiusSm": 0,
+    "radiusMd": 0,
+    "radiusLg": 0,
+    "flyoutRadius": 0,
+    "buttonRadius": 0
+  },
+  "ornament": {
+    "depthWash": false,
+    "starfield": true,
+    "filmGrain": true
+  },
+  "buttons": {
+    "style": "glow",
+    "activeGlow": true,
+    "hoverLift": 0
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

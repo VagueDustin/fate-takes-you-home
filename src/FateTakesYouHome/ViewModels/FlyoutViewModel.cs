@@ -41,6 +41,15 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
     /// <summary>The pinned tiles, in the user's own order.</summary>
     public ObservableCollection<EntityTileViewModel> Tiles { get; } = [];
 
+    /// <summary>The customised layout, when the user has arranged one.</summary>
+    public ObservableCollection<WidgetViewModel> Widgets { get; } = [];
+
+    /// <summary>True when the panel renders the widget grid instead of the pinned list.</summary>
+    public bool UsesCustomLayout => _settings.Current.FlyoutWidgets is { Count: > 0 };
+
+    /// <summary>The panel grid is four columns wide; the editor and the panel must agree.</summary>
+    public const int FlyoutGridColumns = 4;
+
     /// <summary>Where the panel should send the user when there is nothing pinned.</summary>
     public bool IsEmpty => Tiles.Count == 0;
 
@@ -57,7 +66,10 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
         _homeAssistant.LocationName is { Length: > 0 } name ? name : "Home Assistant";
 
     /// <summary>True while the panel has nothing useful to show and should explain itself.</summary>
-    public bool ShowsPlaceholder => !IsConfigured || !IsConnected || IsEmpty;
+    public bool ShowsPlaceholder => !IsConfigured || !IsConnected || (IsEmpty && !UsesCustomLayout);
+
+    /// <summary>The stock footer belongs to the stock layout; a custom grid brings its own actions.</summary>
+    public bool ShowsStandardFooter => !ShowsPlaceholder && !UsesCustomLayout;
 
     /// <summary>The headline for the placeholder state.</summary>
     public string PlaceholderTitle
@@ -118,16 +130,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task TurnOffAllLightsAsync()
     {
-        CommandResult result = await _homeAssistant
-            .ExecuteAsync(
-                (client, ct) => client.CallServiceAsync(
-                    HaDomains.Light,
-                    "turn_off",
-                    new Dictionary<string, object?> { ["entity_id"] = "all" },
-                    data: null,
-                    ct),
-                "Turn off all lights")
-            .ConfigureAwait(true);
+        CommandResult result = await _homeAssistant.TurnOffAllLightsAsync().ConfigureAwait(true);
 
         LastActionMessage = result.Succeeded ? "All lights off." : result.ErrorMessage;
     }
@@ -169,7 +172,42 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
             _byEntityId[pin.EntityId] = tile;
         }
 
+        RebuildWidgets();
         RaisePlaceholderProperties();
+        OnPropertyChanged(nameof(UsesCustomLayout));
+    }
+
+    private void RebuildWidgets()
+    {
+        foreach (WidgetViewModel widget in Widgets)
+        {
+            widget.Dispose();
+        }
+
+        Widgets.Clear();
+
+        if (_settings.Current.FlyoutWidgets is not { Count: > 0 } specs)
+        {
+            return;
+        }
+
+        foreach (WidgetSpec spec in specs)
+        {
+            spec.ClampTo(FlyoutGridColumns);
+
+            string? label = spec.EntityId is null
+                ? null
+                : _settings.Current.Pinned
+                    .FirstOrDefault(p => string.Equals(p.EntityId, spec.EntityId, StringComparison.OrdinalIgnoreCase))?
+                    .Label;
+
+            // Rooms and activity widgets need the dashboard's tallies, which the panel does not
+            // carry; the factory skips them here.
+            if (WidgetFactory.Build(spec, _homeAssistant, null, null, label) is { } widget)
+            {
+                Widgets.Add(widget);
+            }
+        }
     }
 
     private void OnEntityChanged(object? sender, EntityChangedEventArgs e)
@@ -222,6 +260,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
 
     private void RaisePlaceholderProperties()
     {
+        OnPropertyChanged(nameof(ShowsStandardFooter));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(IsConfigured));
         OnPropertyChanged(nameof(ShowsPlaceholder));

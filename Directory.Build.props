@@ -19,7 +19,7 @@
     <Company>VagueDustin Enterprises</Company>
     <Authors>VagueDustin Enterprises</Authors>
     <Copyright>Copyright © 2026 VagueDustin Enterprises</Copyright>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.3.0</VersionPrefix>
     <RepositoryUrl>https://github.com/VagueDustin/fate-takes-you-home</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>

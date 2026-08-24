@@ -1,0 +1,43 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "crimson",
+  "name": "Crimson",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "The classic red. Dark warm greys with a scarlet accent that means business.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#151013",
+    "surfaceRaised": "#1E171B",
+    "surfaceOverlay": "#251C21",
+    "surfaceSunken": "#0E0B0D",
+    "surfaceHighest": "#2E2329",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#3A2E33",
+    "borderEmphasis": "#E5484D",
+    "textPrimary": "#F2ECEE",
+    "textMuted": "#B8A8AE",
+    "textFaint": "#8E7E85",
+    "textInverse": "#151013",
+    "textAccent": "#F26568",
+    "accentDefault": "#E5484D",
+    "accentHover": "#F26568",
+    "accentPressed": "#C13539",
+    "accentSubtle": "rgba(229, 72, 77, 0.14)",
+    "accentGlow": "rgba(229, 72, 77, 0.40)",
+    "depthWash": []
+  },
+  "ornament": {
+    "depthWash": false,
+    "starfield": true
+  },
+  "buttons": {
+    "style": "glow",
+    "activeGlow": true
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

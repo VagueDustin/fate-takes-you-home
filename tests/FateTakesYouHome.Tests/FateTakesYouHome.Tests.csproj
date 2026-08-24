@@ -11,6 +11,10 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+
+    <!-- The app is referenced compile-only, so its runtime dependencies must be brought in by
+         hand where a test exercises a type that needs one. -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
   </ItemGroup>
 
   <ItemGroup>

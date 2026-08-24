@@ -236,9 +236,13 @@ public sealed class ThemeSwatchConverter : IValueConverter
         System.Windows.Media.Color color = parameter?.ToString() switch
         {
             "surface" => theme.Colors.SurfaceBase,
-            "raised" => theme.Colors.SurfaceOverlay,
+            "raised" => theme.Colors.SurfaceRaised,
+            "overlay" => theme.Colors.SurfaceOverlay,
             "accent" => theme.Colors.AccentDefault,
             "text" => theme.Colors.TextPrimary,
+            "muted" => theme.Colors.TextMuted,
+            "faint" => theme.Colors.TextFaint,
+            "border" => theme.Colors.BorderDefault,
             _ => theme.Colors.AccentDefault,
         };
 
@@ -246,6 +250,40 @@ public sealed class ThemeSwatchConverter : IValueConverter
         brush.Freeze();
         return brush;
     }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Turns an available width into a sensible column count for the pinned grid.</summary>
+/// <remarks>
+/// The thresholds are content-driven: a tile needs roughly 320px to breathe, so one column below
+/// 660, two on a normal window, three once the window is generously wide. This is what lets the
+/// same layout hold together from a 1280×720 laptop panel to an ultrawide.
+/// </remarks>
+public sealed class WidthToColumnsConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is double width
+            ? width switch
+            {
+                < 660 => 1,
+                < 1120 => 2,
+                _ => 3,
+            }
+            : 2;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>True when a width is below the threshold given as the parameter.</summary>
+public sealed class IsNarrowerThanConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is double width
+        && double.TryParse(parameter?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double threshold)
+        && width < threshold;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

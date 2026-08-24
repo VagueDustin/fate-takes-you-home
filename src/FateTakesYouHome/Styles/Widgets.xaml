@@ -1,0 +1,192 @@
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels">
+
+  <!--
+    Widget rendering, shared by the home screen and the tray panel.
+
+    The canvas places each widget by its cell coordinates; these templates decide what a widget
+    looks like inside its cells. Everything except the entity tile wraps itself in the standard
+    card so a customised surface still reads as one product.
+  -->
+
+  <!-- Containers carry their placement to the canvas. -->
+  <Style x:Key="Fate.WidgetContainer" TargetType="ContentPresenter">
+    <Setter Property="c:WidgetCanvas.CellX" Value="{Binding X}" />
+    <Setter Property="c:WidgetCanvas.CellY" Value="{Binding Y}" />
+    <Setter Property="c:WidgetCanvas.CellW" Value="{Binding W}" />
+    <Setter Property="c:WidgetCanvas.CellH" Value="{Binding H}" />
+  </Style>
+
+  <!-- ==================================================================== tile -->
+
+  <DataTemplate DataType="{x:Type vm:TileWidgetViewModel}">
+    <ContentControl
+      Content="{Binding Tile}"
+      ContentTemplate="{StaticResource Fate.Template.EntityTile}"
+      VerticalAlignment="Stretch"
+      Focusable="False" />
+  </DataTemplate>
+
+  <!-- ==================================================================== quick action -->
+
+  <DataTemplate DataType="{x:Type vm:QuickActionWidgetViewModel}">
+    <Button
+      Command="{Binding ExecuteCommand}"
+      Padding="0"
+      HorizontalContentAlignment="Stretch"
+      VerticalContentAlignment="Stretch"
+      ToolTip="{Binding LastResult}"
+      AutomationProperties.Name="{Binding Label}">
+      <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Path
+            Style="{StaticResource Fate.UiIcon}"
+            Width="20"
+            Height="20"
+            HorizontalAlignment="Center"
+            Stroke="{DynamicResource Fate.Brush.AccentDefault}"
+            Data="{Binding Glyph}" />
+          <TextBlock
+            Margin="8,7,8,0"
+            HorizontalAlignment="Center"
+            Style="{StaticResource Fate.Text.Body}"
+            FontWeight="Medium"
+            TextTrimming="CharacterEllipsis"
+            TextAlignment="Center"
+            Text="{Binding Label}" />
+        </StackPanel>
+      </Grid>
+    </Button>
+  </DataTemplate>
+
+  <!-- ==================================================================== rooms -->
+
+  <DataTemplate DataType="{x:Type vm:RoomsWidgetViewModel}">
+    <Border Style="{StaticResource Fate.Card}" Padding="12,10">
+      <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
+        <ItemsControl ItemsSource="{Binding Rooms}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:RoomSummary}">
+              <Border
+                Margin="0,0,8,8"
+                Padding="10,7"
+                Background="{DynamicResource Fate.Brush.SurfaceSunken}"
+                BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Fate.Radius.Sm}">
+                <StackPanel>
+                  <TextBlock
+                    Style="{StaticResource Fate.Text.Caption}"
+                    Foreground="{DynamicResource Fate.Brush.TextPrimary}"
+                    FontWeight="Medium"
+                    TextTrimming="CharacterEllipsis"
+                    Text="{Binding Name}" />
+                  <TextBlock x:Name="Detail" Margin="0,1,0,0" Style="{StaticResource Fate.Text.Faint}"
+                             Text="{Binding Detail}" />
+                </StackPanel>
+              </Border>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsLit}" Value="True">
+                  <Setter TargetName="Detail" Property="Foreground"
+                          Value="{DynamicResource Fate.Brush.TextAccent}" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DataTemplate>
+
+  <!-- ==================================================================== activity -->
+
+  <DataTemplate DataType="{x:Type vm:ActivityWidgetViewModel}">
+    <Border Style="{StaticResource Fate.Card}" Padding="12,10">
+      <ItemsControl ItemsSource="{Binding Activity}" VerticalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:ActivitySummary}">
+            <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
+              <TextBlock
+                Style="{StaticResource Fate.Text.Body}"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource Fate.Brush.TextAccent}"
+                Text="{Binding Count}" />
+              <TextBlock
+                Margin="6,0,0,0"
+                VerticalAlignment="Center"
+                Style="{StaticResource Fate.Text.Caption}"
+                Text="{Binding Label}" />
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+  </DataTemplate>
+
+  <!-- ==================================================================== sparkline -->
+
+  <DataTemplate DataType="{x:Type vm:SparklineWidgetViewModel}">
+    <Border Style="{StaticResource Fate.Card}" Padding="12,9">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+          <TextBlock
+            Style="{StaticResource Fate.Text.Caption}"
+            TextTrimming="CharacterEllipsis"
+            Margin="0,0,70,0"
+            Text="{Binding Name}" />
+          <TextBlock
+            HorizontalAlignment="Right"
+            Style="{StaticResource Fate.Text.Body}"
+            FontWeight="SemiBold"
+            Foreground="{DynamicResource Fate.Brush.TextAccent}"
+            Text="{Binding CurrentText}" />
+        </Grid>
+
+        <!-- The line, drawn in a fixed 100×40 space and stretched to whatever the cell gives. -->
+        <Polyline
+          Grid.Row="1"
+          Margin="0,6,0,4"
+          Points="{Binding Points}"
+          Stroke="{DynamicResource Fate.Brush.AccentDefault}"
+          StrokeThickness="1.6"
+          StrokeLineJoin="Round"
+          Stretch="Fill"
+          Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+
+        <TextBlock
+          Grid.Row="1"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Style="{StaticResource Fate.Text.Faint}"
+          Text="No history yet"
+          Visibility="{Binding HasData, Converter={StaticResource InverseBoolToVisibility}}" />
+
+        <Grid Grid.Row="2">
+          <TextBlock Style="{StaticResource Fate.Text.Faint}" Text="{Binding RangeText}" />
+          <TextBlock HorizontalAlignment="Right" Style="{StaticResource Fate.Text.Faint}"
+                     Text="{Binding WindowText}" />
+        </Grid>
+      </Grid>
+    </Border>
+  </DataTemplate>
+
+</ResourceDictionary>

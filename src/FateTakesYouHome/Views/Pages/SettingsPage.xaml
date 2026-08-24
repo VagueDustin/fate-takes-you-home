@@ -16,6 +16,7 @@
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
     <conv:CountToVisibilityConverter x:Key="NoneToVisibility" WhenEmpty="True" />
     <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
+    <conv:SectionToVisibilityConverter x:Key="StatusToVisibility" />
 
     <ObjectDataProvider
       x:Key="TrayActionValues"
@@ -399,6 +400,61 @@
                 Style="{StaticResource Fate.Switch}"
                 IsChecked="{Binding DisableAnimations}"
                 AutomationProperties.Name="Disable animations" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ========================================================== updates -->
+
+        <Border Style="{StaticResource Fate.Card}" Padding="20" Margin="0,14,0,0">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Fate.Text.Subtitle}" Text="Updates" />
+
+            <Grid Margin="0,16,0,0">
+              <StackPanel Margin="0,0,60,0">
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Check for updates" />
+                <TextBlock
+                  Style="{StaticResource SettingHint}"
+                  Margin="0"
+                  Text="Looks at the GitHub releases page once a day. Nothing installs until you say so." />
+              </StackPanel>
+              <ToggleButton
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Style="{StaticResource Fate.Switch}"
+                IsChecked="{Binding CheckForUpdates}"
+                AutomationProperties.Name="Check for updates" />
+            </Grid>
+
+            <Grid Margin="0,14,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Style="{StaticResource Fate.Text.Faint}"
+                TextWrapping="Wrap"
+                Margin="0,0,12,0"
+                Text="{Binding Updates.Detail}" />
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button
+                  Content="Check now"
+                  Command="{Binding Updates.CheckNowCommand}" />
+                <Button
+                  Margin="8,0,0,0"
+                  Style="{StaticResource Fate.Button.Primary}"
+                  Content="Install update"
+                  Command="{Binding Updates.InstallCommand}">
+                  <Button.Visibility>
+                    <Binding Path="Updates.Status" Converter="{StaticResource StatusToVisibility}"
+                             ConverterParameter="UpdateAvailable" />
+                  </Button.Visibility>
+                </Button>
+              </StackPanel>
             </Grid>
           </StackPanel>
         </Border>

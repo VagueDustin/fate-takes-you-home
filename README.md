@@ -25,8 +25,12 @@ panel next to itself, with the handful of things you actually touch.
   covers, thermostats, locks, media.
 - **Double click** for the full window: browse every entity Home Assistant knows about, grouped by
   room, and pin what you use.
+- **Arrange both surfaces like a phone**: the Layout page is a drag-and-resize widget grid — tiles,
+  one-action buttons, room summaries, and history graphs of any numeric sensor.
 - **It looks like the house style**, and every colour, corner and animation in it is a value you
-  can change.
+  can change. Thirteen themes ship in the box; the sky twinkles, and now and then a star falls.
+- **It keeps itself current**: a once-a-day check against this repository's releases offers new
+  versions with one click, and never installs without it.
 
 Built with WPF on .NET 8. It talks to Home Assistant over the native WebSocket API — no custom
 integration, no HACS component, nothing to install on the server side beyond a Long-Lived Access
@@ -40,9 +44,9 @@ Token you create from your own profile page.
 | --- | --- |
 | <img src="docs/images/flyout.png" width="330" alt="The tray panel"> | <img src="docs/images/entities.png" width="430" alt="The entity browser"> |
 
-| Themes | Settings |
+| Appearance | The layout editor |
 | --- | --- |
-| <img src="docs/images/themes.png" width="430" alt="The theme picker"> | <img src="docs/images/settings.png" width="430" alt="Settings"> |
+| <img src="docs/images/themes.png" width="430" alt="The theme picker"> | <img src="docs/images/layout.png" width="430" alt="The layout editor"> |
 
 ## Getting started
 
@@ -80,7 +84,10 @@ The app walks you through all four the first time it runs, and Help tracks which
 ## Themes
 
 The default theme is **FATE** — the VagueDustin house style, navy and gold, at the *charted*
-ornament tier. Five more ship with it, and you can write your own.
+ornament tier. Twelve more ship with it — Daybreak, Light, Crimson, Midnight, Mono, Terminal,
+Cyberpunk, Dracula, Nord, Gruvbox, One Dark and Rosé Pine — and you can write your own. The
+Appearance page also carries your font choices (they win over every theme) and the system-wide
+keyboard shortcuts.
 
 A theme is a **patch**, not a document. It declares only what it changes and inherits the rest, so
 the smallest useful theme is six lines:
@@ -111,6 +118,14 @@ See **[docs/THEMING.md](docs/THEMING.md)** for the whole reference.
 | *(none)* | Open the full window |
 | `--panel` | Open the tray panel |
 | `--tray` | Start into the tray with no window. What the autostart entry uses. |
+
+## Updates
+
+The app checks this repository's [Releases](https://github.com/VagueDustin/fate-takes-you-home/releases)
+once a day (Settings → Updates, where it can also be turned off or run on demand). When a newer
+version exists it offers one button: download, verify the size against the release manifest, hand
+the MSI to Windows Installer, and restart. The check is a single anonymous request; nothing about
+you or your house is sent anywhere.
 
 `--panel` works whether or not the app is already running, which is what makes it useful on a
 shortcut: put one on your desktop, open its properties, and assign a shortcut key.

@@ -29,6 +29,22 @@ public enum EntityGrouping
     None,
 }
 
+/// <summary>The user's font choices, overriding the theme's. Null means "whatever the theme says".</summary>
+public sealed class FontOverrides
+{
+    [JsonPropertyName("display")]
+    public string? Display { get; set; }
+
+    [JsonPropertyName("body")]
+    public string? Body { get; set; }
+
+    [JsonPropertyName("mono")]
+    public string? Mono { get; set; }
+
+    [JsonIgnore]
+    public bool Any => Display is not null || Body is not null || Mono is not null;
+}
+
 /// <summary>One item the user pinned to the tray flyout.</summary>
 public sealed class PinnedEntity
 {
@@ -143,6 +159,29 @@ public sealed class AppSettings
     [JsonPropertyName("verboseLogging")]
     public bool VerboseLogging { get; set; }
 
+    /// <summary>Whether to look at GitHub releases for a newer version once a day.</summary>
+    [JsonPropertyName("checkForUpdates")]
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>System-wide shortcuts, keyed by action name, as "Ctrl+Alt+H" text. Null = unset.</summary>
+    [JsonPropertyName("shortcuts")]
+    public Dictionary<string, string?> Shortcuts { get; set; } = [];
+
+    /// <summary>
+    /// Font families the user chose over whatever the theme asks for. Null entries defer to the
+    /// theme. Kept as a setting rather than a theme so a font choice survives switching themes.
+    /// </summary>
+    [JsonPropertyName("fontOverrides")]
+    public FontOverrides FontOverrides { get; set; } = new();
+
+    /// <summary>The home screen's widget layout. Null means the standard pinned-and-rooms view.</summary>
+    [JsonPropertyName("homeWidgets")]
+    public List<WidgetSpec>? HomeWidgets { get; set; }
+
+    /// <summary>The tray panel's widget layout. Null means the standard pinned list.</summary>
+    [JsonPropertyName("flyoutWidgets")]
+    public List<WidgetSpec>? FlyoutWidgets { get; set; }
+
     /// <summary>Deep copy, used so the settings page can edit without committing.</summary>
     public AppSettings Clone() => new()
     {
@@ -172,6 +211,16 @@ public sealed class AppSettings
         HasCompletedOnboarding = HasCompletedOnboarding,
         LastRunVersion = LastRunVersion,
         VerboseLogging = VerboseLogging,
+        CheckForUpdates = CheckForUpdates,
+        Shortcuts = new Dictionary<string, string?>(Shortcuts),
+        HomeWidgets = HomeWidgets?.Select(w => w.Clone()).ToList(),
+        FlyoutWidgets = FlyoutWidgets?.Select(w => w.Clone()).ToList(),
+        FontOverrides = new FontOverrides
+        {
+            Display = FontOverrides.Display,
+            Body = FontOverrides.Body,
+            Mono = FontOverrides.Mono,
+        },
     };
 
     /// <summary>True when there is enough here to attempt a connection.</summary>

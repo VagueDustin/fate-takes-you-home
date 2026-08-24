@@ -47,6 +47,7 @@ public partial class FlyoutWindow : Window
     private static readonly TimeSpan ActivationGrace = TimeSpan.FromMilliseconds(450);
 
     private HwndSource? _source;
+    private readonly ClickAwayWatcher _clickAway;
     private bool _closingForReal;
     private bool _isAnimatingOut;
     private DateTime _ignoreDeactivateUntil = DateTime.MinValue;
@@ -73,10 +74,18 @@ public partial class FlyoutWindow : Window
 
         _themes.Applied += OnThemeApplied;
 
+        _clickAway = new ClickAwayWatcher(Dispatcher);
+
         Deactivated += OnDeactivated;
         PreviewKeyDown += OnPreviewKeyDown;
         SourceInitialized += OnSourceInitialized;
     }
+
+    /// <summary>
+    /// Supplies the tray icon's rectangle, so a click on the icon is left to the icon's own
+    /// toggle handling rather than double-dismissed by the click-away watcher.
+    /// </summary>
+    public Func<Int32Rect?>? TrayIconRectProvider { get; set; }
 
     /// <summary>Raised when the user asks for the settings page.</summary>
     public event EventHandler? SettingsRequested;
@@ -126,8 +135,26 @@ public partial class FlyoutWindow : Window
         // activation. Guard the window against dismissing itself while it is still arriving.
         _ignoreDeactivateUntil = DateTime.UtcNow + ActivationGrace;
 
+        // Deactivation alone cannot dismiss the panel: clicking the bare desktop or the taskbar
+        // activates nothing, so no event ever arrives. The watcher sees the press itself.
+        if (!_settings.Current.PinFlyoutOpen)
+        {
+            _clickAway.Start(placement.Bounds, TrayIconRectProvider?.Invoke(), OnClickedAway);
+        }
+
         TakeForeground();
         PlayEntrance(placement, theme);
+    }
+
+    private void OnClickedAway()
+    {
+        if (_settings.Current.PinFlyoutOpen)
+        {
+            _clickAway.Stop();
+            return;
+        }
+
+        HideAnimated();
     }
 
     /// <summary>
@@ -244,6 +271,7 @@ public partial class FlyoutWindow : Window
         }
 
         _isAnimatingOut = true;
+        _clickAway.Stop();
 
         if (!_themes.Current.Motion.Enabled)
         {
@@ -350,12 +378,22 @@ public partial class FlyoutWindow : Window
         {
             case BackdropMode.Acrylic:
                 // The window is layered because AllowsTransparency is on, so the documented DWM
-                // backdrop will not apply. The composition attribute is the only route, and if it
-                // fails the theme's own translucent tint is already painted underneath.
-                if (!WindowEffects.TrySetAcrylic(
+                // backdrop will not apply. The composition attribute is the only route — but it
+                // paints the accent across the whole window RECTANGLE, transparent pixels
+                // included. With the shadow frame in place that meant a dark slab around the
+                // panel. So in acrylic mode the frame collapses to nothing, the WPF shadow is
+                // retired, and DWM rounds the actual window to match the panel.
+                if (WindowEffects.TrySetAcrylic(
                         handle, theme.Colors.SurfaceBase, theme.Backdrop.TintOpacity))
                 {
+                    ShadowFrame.Margin = new Thickness(0);
+                    Panel.Effect = null;
+                    WindowEffects.SetCornerPreference(handle, WindowCorner.Round);
+                }
+                else
+                {
                     _log.Debug("Acrylic was refused; keeping the composited background.");
+                    RestoreCompositedFrame(handle);
                 }
 
                 break;
@@ -365,13 +403,26 @@ public partial class FlyoutWindow : Window
                     "Mica cannot be applied to a transparent window. The panel keeps its own "
                     + "background; set backdrop.mode to \"acrylic\" for a blur.");
                 WindowEffects.ClearAcrylic(handle);
+                RestoreCompositedFrame(handle);
                 break;
 
             default:
                 WindowEffects.ClearAcrylic(handle);
+                RestoreCompositedFrame(handle);
                 break;
         }
     }
+
+    /// <summary>Puts back the shadow frame a previous acrylic application removed.</summary>
+    private void RestoreCompositedFrame(IntPtr handle)
+    {
+        ShadowFrame.Margin = new Thickness(CompositedShadowMargin);
+        Panel.SetResourceReference(EffectProperty, "Fate.Effect.PanelShadow");
+        WindowEffects.SetCornerPreference(handle, WindowCorner.Default);
+    }
+
+    /// <summary>The room the drop shadow renders into around the composited panel.</summary>
+    private const double CompositedShadowMargin = 28;
 
     private void OnThemeApplied(object? sender, ThemeAppliedEventArgs e)
     {

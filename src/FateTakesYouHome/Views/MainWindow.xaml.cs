@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using FateTakesYouHome.Branding;
 using FateTakesYouHome.Onboarding;
@@ -26,7 +27,8 @@ public partial class MainWindow : Window
         SettingsService settings,
         ThemeService themes,
         HomeAssistantService homeAssistant,
-        TrayController tray)
+        TrayController tray,
+        UpdateService updates)
     {
         _log = log;
         _settings = settings;
@@ -34,7 +36,7 @@ public partial class MainWindow : Window
 
         InitializeComponent();
 
-        _viewModel = new MainViewModel(log, settings, themes, homeAssistant, tray);
+        _viewModel = new MainViewModel(log, settings, themes, homeAssistant, tray, updates);
         DataContext = _viewModel;
 
         TitleMark.Source = FateMark.Render(32, withPlate: false);
@@ -57,6 +59,21 @@ public partial class MainWindow : Window
         WelcomePage.Dismissed += (_, _) => CompleteOnboarding(startedTour: false);
 
         Tour.Finished += OnTourFinished;
+
+        // The mouse's own back and forward buttons, honoured the way a browser would.
+        MouseDown += (_, e) =>
+        {
+            if (e.ChangedButton == MouseButton.XButton1)
+            {
+                _viewModel.GoBack();
+                e.Handled = true;
+            }
+            else if (e.ChangedButton == MouseButton.XButton2)
+            {
+                _viewModel.GoForward();
+                e.Handled = true;
+            }
+        };
         _themes.Applied += OnThemeApplied;
         SourceInitialized += OnSourceInitialized;
         StateChanged += OnStateChanged;

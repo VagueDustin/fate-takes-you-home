@@ -186,11 +186,16 @@ Set-Content -Path $licenseRtf -Encoding ASCII -Value @"
 
 $msi = Join-Path $artifacts "FateTakesYouHome-$Version-win-x64.msi"
 
+# The banner and dialog art, drawn fresh in the house style.
+$artDir = Join-Path $artifacts 'installer-art'
+& (Join-Path $PSScriptRoot 'make-installer-art.ps1') -OutDir $artDir
+
 & wix build `
     (Join-Path $repoRoot 'installer/wix/Package.wxs') `
     -define "ProductVersion=$msiVersion" `
     -define "PublishDir=$publishDir" `
     -define "LicenseRtf=$licenseRtf" `
+    -define "ArtDir=$artDir" `
     -ext WixToolset.UI.wixext `
     -ext WixToolset.Util.wixext `
     -arch x64 `

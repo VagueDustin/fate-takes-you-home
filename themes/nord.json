@@ -1,0 +1,46 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "nord",
+  "name": "Nord",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Arctic blues. Cold water, long light, nothing raising its voice.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#272C36",
+    "surfaceRaised": "#2E3440",
+    "surfaceOverlay": "#353B49",
+    "surfaceSunken": "#20242D",
+    "surfaceHighest": "#3B4252",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#434C5E",
+    "borderEmphasis": "#88C0D0",
+    "textPrimary": "#ECEFF4",
+    "textMuted": "#B7BFCC",
+    "textFaint": "#8892A4",
+    "textInverse": "#272C36",
+    "textAccent": "#A3D3E0",
+    "accentDefault": "#88C0D0",
+    "accentHover": "#A3D3E0",
+    "accentPressed": "#6DA6B8",
+    "accentSubtle": "rgba(136, 192, 208, 0.14)",
+    "accentGlow": "rgba(136, 192, 208, 0.40)",
+    "depthWash": [],
+    "statusSuccess": "#A3BE8C",
+    "statusWarning": "#EBCB8B",
+    "statusDanger": "#BF616A",
+    "statusLive": "#BF616A",
+    "statusInfo": "#81A1C1"
+  },
+  "ornament": {
+    "depthWash": false
+  },
+  "buttons": {
+    "style": "ghost"
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

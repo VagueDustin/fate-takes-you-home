@@ -61,6 +61,9 @@ public static class ThemeKeys
     /// </summary>
     public const string BrushPanelWash = "Fate.Brush.PanelWash";
 
+    /// <summary>A dimming veil behind modal overlays, derived from the base surface.</summary>
+    public const string BrushScrim = "Fate.Brush.Scrim";
+
     /// <summary>Metallic gradient for display type. Only used when the tier allows a gradient fill.</summary>
     public const string BrushGoldGradient = "Fate.Brush.GoldGradient";
 

@@ -1,0 +1,50 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "cyberpunk",
+  "name": "Cyberpunk",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "Violet dark and hot neon. The city outside the window never sleeps either.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#0B0217",
+    "surfaceRaised": "#150829",
+    "surfaceOverlay": "#1D0C36",
+    "surfaceSunken": "#070110",
+    "surfaceHighest": "#251143",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#3A1F63",
+    "borderEmphasis": "#FF2ED2",
+    "textPrimary": "#F2E9FF",
+    "textMuted": "#B49CD6",
+    "textFaint": "#8672A8",
+    "textInverse": "#0B0217",
+    "textAccent": "#FF63DF",
+    "accentDefault": "#FF2ED2",
+    "accentHover": "#FF63DF",
+    "accentPressed": "#CC1FA7",
+    "accentSubtle": "rgba(255, 46, 210, 0.14)",
+    "accentGlow": "rgba(255, 46, 210, 0.50)",
+    "depthWash": [],
+    "statusInfo": "#00E5FF"
+  },
+  "shape": {
+    "radiusSm": 3,
+    "radiusMd": 6,
+    "radiusLg": 8,
+    "flyoutRadius": 8
+  },
+  "ornament": {
+    "depthWash": true,
+    "starfield": true
+  },
+  "buttons": {
+    "style": "glow",
+    "activeGlow": true
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}

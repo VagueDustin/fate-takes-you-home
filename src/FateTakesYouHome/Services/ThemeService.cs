@@ -148,7 +148,7 @@ public sealed class ThemeService : IDisposable
 
     private void Publish(Theme theme)
     {
-        Theme effective = ApplyMotionOverrides(theme);
+        Theme effective = ApplyFontOverrides(ApplyMotionOverrides(theme));
 
         bool backdropChanged = Current is not null && Current.Backdrop.Mode != effective.Backdrop.Mode;
 
@@ -182,6 +182,58 @@ public sealed class ThemeService : IDisposable
             + $"{effective.Backdrop.Mode} backdrop.");
 
         Applied?.Invoke(this, new ThemeAppliedEventArgs(effective, backdropChanged));
+    }
+
+    /// <summary>
+    /// Swaps in the user's font choices, when they made any. A font choice is a setting rather
+    /// than a theme so it survives switching themes — someone who wants everything in Atkinson
+    /// Hyperlegible wants it in every theme, not in one.
+    /// </summary>
+    private Theme ApplyFontOverrides(Theme theme)
+    {
+        Models.FontOverrides fonts = _settings.Current.FontOverrides;
+
+        if (!fonts.Any)
+        {
+            return theme;
+        }
+
+        return new Theme
+        {
+            Id = theme.Id,
+            Name = theme.Name,
+            Author = theme.Author,
+            Version = theme.Version,
+            Description = theme.Description,
+            Homepage = theme.Homepage,
+            IsBuiltIn = theme.IsBuiltIn,
+            SourcePath = theme.SourcePath,
+            InheritanceChain = theme.InheritanceChain,
+            Appearance = theme.Appearance,
+            Tier = theme.Tier,
+            Colors = theme.Colors,
+            Shape = theme.Shape,
+            Ornament = theme.Ornament,
+            Buttons = theme.Buttons,
+            Backdrop = theme.Backdrop,
+            Motion = theme.Motion,
+            Typography = new ThemeTypography
+            {
+                DisplayFamily = fonts.Display ?? theme.Typography.DisplayFamily,
+                BodyFamily = fonts.Body ?? theme.Typography.BodyFamily,
+                ProseFamily = fonts.Body ?? theme.Typography.ProseFamily,
+                MonoFamily = fonts.Mono ?? theme.Typography.MonoFamily,
+                TrackingWordmark = theme.Typography.TrackingWordmark,
+                TrackingLabel = theme.Typography.TrackingLabel,
+                TrackingDisplay = theme.Typography.TrackingDisplay,
+                Scale = theme.Typography.Scale,
+                SizeCaption = theme.Typography.SizeCaption,
+                SizeBody = theme.Typography.SizeBody,
+                SizeSubtitle = theme.Typography.SizeSubtitle,
+                SizeTitle = theme.Typography.SizeTitle,
+                SizeDisplay = theme.Typography.SizeDisplay,
+            },
+        };
     }
 
     /// <summary>

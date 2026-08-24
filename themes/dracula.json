@@ -1,0 +1,46 @@
+{
+  "$schema": "./theme.schema.json",
+  "id": "dracula",
+  "name": "Dracula",
+  "author": "VagueDustin Enterprises",
+  "version": "1.0.0",
+  "description": "The community classic: soft violet on deep grey, with the palette everybody already knows.",
+  "basedOn": "fate",
+  "tier": "utility",
+  "appearance": "dark",
+  "colors": {
+    "surfaceBase": "#21222C",
+    "surfaceRaised": "#282A36",
+    "surfaceOverlay": "#2F313F",
+    "surfaceSunken": "#1B1C24",
+    "surfaceHighest": "#343746",
+    "borderSubtle": "rgba(255, 255, 255, 0.07)",
+    "borderDefault": "#3E4152",
+    "borderEmphasis": "#BD93F9",
+    "textPrimary": "#F8F8F2",
+    "textMuted": "#B8BAC4",
+    "textFaint": "#8A8DA0",
+    "textInverse": "#21222C",
+    "textAccent": "#D3B3FF",
+    "accentDefault": "#BD93F9",
+    "accentHover": "#D3B3FF",
+    "accentPressed": "#9F72E0",
+    "accentSubtle": "rgba(189, 147, 249, 0.14)",
+    "accentGlow": "rgba(189, 147, 249, 0.40)",
+    "depthWash": [],
+    "statusSuccess": "#50FA7B",
+    "statusWarning": "#F1FA8C",
+    "statusDanger": "#FF5555",
+    "statusLive": "#FF5555",
+    "statusInfo": "#8BE9FD"
+  },
+  "ornament": {
+    "depthWash": false
+  },
+  "buttons": {
+    "style": "ghost"
+  },
+  "backdrop": {
+    "mode": "composited"
+  }
+}
