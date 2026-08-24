@@ -15,11 +15,17 @@ Notable changes to Fate Takes You Home. The format follows
   with `id_reuse`. The id is now taken inside the lock, which is the only place the number and the
   write can be made a single step. Reported by a first run on a fresh install, where *Test
   connection* raced the initial `subscribe_events`.
+- **The build's packaging job could not install the WiX toolset.** `wix extension add` without a
+  version resolves to the newest published extension — WiX 7 against our pinned WiX 5 toolset —
+  which fails with `WIX6101: Could not find expected package root folder wixext5`. The workflow and
+  [docs/BUILDING.md](docs/BUILDING.md) now pin the extensions to the toolset's own version.
 
 ### Changed
 
 - The fake Home Assistant server in the tests now enforces the real server's monotonic-id rule, so
   a client that lets two sends race fails the suite instead of only failing against a real house.
+- The workflow's actions moved off the deprecated Node 20 runtime: `checkout@v7`,
+  `setup-dotnet@v6`, `upload-artifact@v7`.
 
 ## [0.3.0] — 2026-08-24
 

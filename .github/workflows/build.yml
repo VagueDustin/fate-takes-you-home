@@ -18,10 +18,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
 
@@ -47,18 +47,23 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
 
+      # The extensions must be pinned to the same version as the toolset. Unpinned, "extension add"
+      # takes the latest published — WiX 7 extensions against a WiX 5 toolset, which fails with
+      # "WIX6101: Could not find expected package root folder wixext5" and a non-zero exit.
       - name: Install the WiX toolset
+        env:
+          WIX_VERSION: '5.0.2'
         run: |
-          dotnet tool install --global wix --version 5.*
-          wix extension add -g WixToolset.UI.wixext
-          wix extension add -g WixToolset.Util.wixext
+          dotnet tool install --global wix --version $env:WIX_VERSION
+          wix extension add -g WixToolset.UI.wixext/$env:WIX_VERSION
+          wix extension add -g WixToolset.Util.wixext/$env:WIX_VERSION
         shell: pwsh
 
       - name: Publish and package
@@ -66,7 +71,7 @@ jobs:
         shell: pwsh
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fate-takes-you-home
           path: |

@@ -7,10 +7,13 @@
   `net8.0-windows` and use WPF.
 - **WiX 5**, only if you want the MSI:
   ```bash
-  dotnet tool install --global wix
-  wix extension add -g WixToolset.UI.wixext
-  wix extension add -g WixToolset.Util.wixext
+  dotnet tool install --global wix --version 5.0.2
+  wix extension add -g WixToolset.UI.wixext/5.0.2
+  wix extension add -g WixToolset.Util.wixext/5.0.2
   ```
+  Pin the extensions to the toolset's own version. Left unpinned they resolve to the newest
+  published — WiX 7 extensions on a WiX 5 toolset — and `wix extension add` fails with
+  `WIX6101: Could not find expected package root folder wixext5`.
 
 No Visual Studio required. The whole thing builds from the CLI.
 
