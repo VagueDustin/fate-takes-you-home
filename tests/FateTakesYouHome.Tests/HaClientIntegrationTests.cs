@@ -473,4 +473,53 @@ public sealed class HaClientIntegrationTests
         Assert.Equal("Kitchen", Assert.Single(await areas).Name);
         Assert.Equal("Test House", (await config)!.LocationName);
     }
+
+    /// <summary>
+    /// Home Assistant refuses any frame whose id is not greater than the last it saw, so taking an
+    /// id and writing the frame have to be a single atomic step.
+    /// </summary>
+    /// <remarks>
+    /// Named after the bug: the id was allocated outside the send lock, so two callers could take
+    /// 1 and 2, swap places waiting for the lock, and put 2 on the wire first. The server then
+    /// refused the lower id with "id_reuse" — which is exactly what a real install did the first
+    /// time Test connection raced the initial subscription.
+    /// </remarks>
+    [Fact]
+    public async Task OverlappingCommandsPutTheirIdsOnTheWireInOrder()
+    {
+        await using var server = new FakeHomeAssistantServer
+        {
+            States = [Light("light.a", "on")],
+        };
+
+        await using var client = new HaClient(OptionsFor(server));
+        client.Start();
+
+        await FakeHomeAssistantServer.WaitUntilAsync(
+            () => client.State == HaConnectionState.Connected, Patience);
+
+        // Two overlapping sends would catch this only now and then. Enough of them and a write
+        // that can happen out of order will.
+        Task[] inFlight = Enumerable.Range(0, 40)
+            .Select(_ => (Task)client.GetStatesAsync())
+            .ToArray();
+
+        // A regression surfaces here first: the server refuses the out-of-order frame and the
+        // command it belonged to throws.
+        await Task.WhenAll(inFlight);
+
+        long[] ids = server.Received
+            .Where(frame => frame["type"]?.GetValue<string>() != "auth")
+            .Select(frame => frame["id"]?.GetValue<long>() ?? 0)
+            .ToArray();
+
+        Assert.NotEmpty(ids);
+
+        for (int i = 1; i < ids.Length; i++)
+        {
+            Assert.True(
+                ids[i] > ids[i - 1],
+                $"Frame {i} arrived with id {ids[i]} after id {ids[i - 1]}.");
+        }
+    }
 }

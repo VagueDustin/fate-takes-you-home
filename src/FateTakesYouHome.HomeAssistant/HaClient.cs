@@ -505,20 +505,38 @@ public sealed class HaClient : IAsyncDisposable
         ClientWebSocket socket = _socket
             ?? throw new HaConnectionException("Not connected to Home Assistant.");
 
-        long id = Interlocked.Increment(ref _nextCommandId);
-        command["id"] = id;
-
         var tcs = new TaskCompletionSource<JsonElement?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _pending[id] = tcs;
+        long id;
+
+        // Home Assistant requires every frame's id to be greater than the last one it saw on this
+        // connection. Taking the number outside the lock is not enough: two senders can allocate
+        // 1 and 2, then swap places waiting for the lock, and the server sees 2 before 1 and
+        // refuses the lower one with "id_reuse". Allocating the id and writing the frame have to
+        // be a single atomic step, so both happen under the send lock.
+        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
 
         try
         {
-            await SendRawAsync(socket, command, ct).ConfigureAwait(false);
+            id = Interlocked.Increment(ref _nextCommandId);
+            command["id"] = id;
+
+            // Registered before the write, so a reply cannot arrive before there is anywhere to
+            // route it.
+            _pending[id] = tcs;
+
+            try
+            {
+                await SendLockedAsync(socket, command, ct).ConfigureAwait(false);
+            }
+            catch
+            {
+                _pending.TryRemove(id, out _);
+                throw;
+            }
         }
-        catch
+        finally
         {
-            _pending.TryRemove(id, out _);
-            throw;
+            _sendLock.Release();
         }
 
         await using CancellationTokenRegistration reg = ct.Register(static state =>
@@ -536,13 +554,35 @@ public sealed class HaClient : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Writes an unidentified frame — the authentication handshake, which is the only exchange
+    /// Home Assistant conducts without ids.
+    /// </summary>
     private async Task SendRawAsync(
+        ClientWebSocket socket, Dictionary<string, object?> payload, CancellationToken ct)
+    {
+        // ClientWebSocket permits exactly one send in flight.
+        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await SendLockedAsync(socket, payload, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _sendLock.Release();
+        }
+    }
+
+    /// <summary>Serialises a frame and writes it.</summary>
+    /// <remarks>
+    /// The caller must hold <see cref="_sendLock"/>. Identified commands allocate their id inside
+    /// that same lock, which is what keeps the ids on the wire in ascending order.
+    /// </remarks>
+    private async Task SendLockedAsync(
         ClientWebSocket socket, Dictionary<string, object?> payload, CancellationToken ct)
     {
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(payload, WireJson.Options);
 
-        // ClientWebSocket permits exactly one send in flight.
-        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             if (socket.State != WebSocketState.Open)
@@ -559,10 +599,6 @@ public sealed class HaClient : IAsyncDisposable
         catch (WebSocketException ex)
         {
             throw new HaConnectionException("Failed to send to Home Assistant.", ex);
-        }
-        finally
-        {
-            _sendLock.Release();
         }
     }
 
