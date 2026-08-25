@@ -1,3 +1,6 @@
+// Copyright © 2026 VagueDustin Enterprises
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 namespace FateTakesYouHome.HomeAssistant;
 
 /// <summary>Where the client currently is in its connection lifecycle.</summary>

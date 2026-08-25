@@ -6,6 +6,13 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Every source file carries a copyright line and `SPDX-License-Identifier: AGPL-3.0-or-later`.
+  The licence was already stated in `LICENSE`, the README and the app itself; this states it on
+  the files too, which is what matters once one of them is read outside the repository it came
+  from. No behaviour changes.
+
 ## [0.3.1] — 2026-08-24
 
 A repair release. The connection could refuse its own first command against a real server, and

@@ -1,3 +1,6 @@
+// Copyright © 2026 VagueDustin Enterprises
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 namespace FateTakesYouHome.HomeAssistant;
 
 /// <summary>Base class for every failure this client raises deliberately.</summary>

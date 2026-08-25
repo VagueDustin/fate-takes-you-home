@@ -1,3 +1,6 @@
+// Copyright © 2026 VagueDustin Enterprises
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Text.Json;
 using System.Windows.Input;
 using FateTakesYouHome.HomeAssistant;
