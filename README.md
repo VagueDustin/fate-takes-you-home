@@ -160,6 +160,7 @@ That produces a self-contained publish, a portable zip and an MSI in `artifacts/
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the code is put together and why |
 | [docs/BUILDING.md](docs/BUILDING.md) | Building, packaging, releasing |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Conventions, and what a good change looks like here |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How people are expected to treat each other here |
 | [SECURITY.md](SECURITY.md) | Threat model, token handling, reporting a problem |
 
 ## Licence

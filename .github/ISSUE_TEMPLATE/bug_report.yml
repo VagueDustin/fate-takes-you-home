@@ -1,0 +1,86 @@
+name: Bug report
+description: Something behaves differently from how it reads.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before anything else: **do not paste a screenshot of the app against your real Home
+        Assistant**, and do not paste your log without reading it first. Both carry entity names,
+        room names, your server address and whatever your sensors happened to read. Rename or
+        redact anything you would not put on a postcard.
+
+        Your access token is never written to the log, and never should be. If you find one there,
+        that is a security report — see [SECURITY.md](https://github.com/VagueDustin/fate-takes-you-home/blob/main/SECURITY.md) — not a bug report.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the tray panel
+        2. …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Help → the version is at the foot of the page.
+      placeholder: 0.3.1
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows build
+      description: Run `winver`. The build number is the part that matters for anything to do with
+        the taskbar, the tray, or window effects.
+      placeholder: Windows 11 23H2 (22631.4169)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - The tray icon or the panel
+        - The main window
+        - Connecting to Home Assistant
+        - Controlling an entity
+        - Themes or appearance
+        - The layout editor
+        - Updates or the installer
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: theme
+    attributes:
+      label: Theme
+      description: Which theme was applied. Several bugs here have turned out to be one theme's
+        backdrop mode rather than the feature they appeared in.
+      placeholder: FATE
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: >
+        Settings → Files and diagnostics → the log viewer has a copy button, or take it from
+        `%LOCALAPPDATA%\VagueDustin Enterprises\Fate Takes You Home\Logs`. **Redact your server
+        address and any entity names before pasting.**
+      render: text

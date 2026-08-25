@@ -1,0 +1,42 @@
+name: Feature request
+description: Something it should do that it does not.
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a small project with strong opinions, and most of them are written down.
+        [docs/ARCHITECTURE.md](https://github.com/VagueDustin/fate-takes-you-home/blob/main/docs/ARCHITECTURE.md) ends with *Things that look wrong
+        but are not* — several of the odder decisions already have a paragraph explaining why.
+        Worth a look before proposing they be undone.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The situation, not the solution. What you were reaching for the app to do.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: A pin, a script, a shortcut, another app — and why it did not do the job.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is a client for Home Assistant, and this belongs in the client rather than
+            in an automation on the server.
+          required: true

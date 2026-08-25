@@ -1,0 +1,32 @@
+version: 2
+
+updates:
+  # The actions are the half of the build most likely to break without anything here changing: a
+  # runtime deprecation or a major that moved on takes the workflow red on its own schedule, not
+  # ours. This repository has already lost two runs to exactly that.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+
+  # Versions are managed centrally in Directory.Packages.props, which Dependabot reads.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    groups:
+      # One pull request rather than three. These move together and are exercised by the same
+      # "dotnet test", so reviewing them apart is work without a reader.
+      test-stack:
+        patterns:
+          - xunit*
+          - Microsoft.NET.Test.Sdk
+    ignore:
+      # .NET 8 is the LTS this targets on purpose; a major bump is a decision, not an update.
+      - dependency-name: Microsoft.Extensions.DependencyInjection*
+        update-types:
+          - version-update:semver-major

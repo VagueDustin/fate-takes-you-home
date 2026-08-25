@@ -1,0 +1,16 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/VagueDustin/fate-takes-you-home/security/advisories/new
+    about: Report privately instead. Do not open a public issue for anything touching the access
+      token, the update mechanism, or the connection to Home Assistant.
+
+  - name: Home Assistant itself
+    url: https://community.home-assistant.io/
+    about: If the entity misbehaves in Home Assistant's own interface too, the problem is not here.
+
+  - name: Writing a theme
+    url: https://github.com/VagueDustin/fate-takes-you-home/blob/main/docs/THEMING.md
+    about: Every theme option, with examples. A theme is a patch, and the smallest useful one is
+      six lines.
