@@ -12,10 +12,9 @@ updates:
     labels:
       - dependencies
     cooldown:
-      # An action's major is where the breakage lives — a new runtime, a changed default. Let
-      # somebody else find it first.
+      # Only default-days here: the per-bump keys (semver-major-days and friends) are rejected for
+      # github-actions, which Dependabot does not treat as a SemVer ecosystem.
       default-days: 7
-      semver-major-days: 21
     groups:
       # Four actions across three jobs. Bumping them one pull request at a time means four CI runs
       # to learn one thing.
