@@ -6,21 +6,48 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-09-17
+
+Housekeeping. One library inside the application moved; everything else is the repository
+learning to watch itself now that anyone can read it.
+
+### Added
+
+- **The paperwork a public project needs**: a code of conduct, issue forms that ask for the
+  version and Windows build up front, and a pull request template that asks for the reasoning a
+  diff cannot carry. Both issue forms lead with the rule this repository already lived by —
+  nothing captured against a live Home Assistant instance.
+- **Dependabot watches the actions and the packages.** Updates wait out a cooldown before they are
+  offered — three days for a patch, three weeks for a major — so a release published an hour ago
+  is somebody else's problem first. Security updates ignore the cooldown by design. The actions
+  arrive as one pull request rather than four, and so do security fixes when several land at once.
+
+### Changed
+
+- **CommunityToolkit.Mvvm 8.3.2 → 8.4.2.** The only dependency here that ships inside the
+  installer, and the reason this is a release rather than a quiet push.
+- The test stack moved with it — xunit 2.9.3, `Microsoft.NET.Test.Sdk` 18.10.0 and
+  `xunit.runner.visualstudio` 4.0.0. All 227 tests were confirmed to still be *collected*, not
+  merely green: a test runner crossing a major can report success having run nothing.
+- Every source file carries a copyright line and `SPDX-License-Identifier: AGPL-3.0-or-later`.
+  The licence was already stated in `LICENSE`, the README and the app itself; this states it on
+  the files too, which is what matters once one of them is read outside the repository it came
+  from.
+
 ### Fixed
 
 - **`global.json` asked for an SDK version that does not exist.** `8.0.0` is a runtime version; no
   .NET SDK is numbered that, and once `rollForward` is set a full SDK version is required. The
-  build survived only because the workflow passes `dotnet-version` explicitly and never had to
-  read it — anything that did read it failed, including the dependency submission that keeps the
-  NuGet dependency graph current, and with it the accuracy of security alerts. Now `8.0.100`,
-  which with `latestFeature` means the same thing it always meant: any 8.0 SDK will do.
-
-### Changed
-
-- Every source file carries a copyright line and `SPDX-License-Identifier: AGPL-3.0-or-later`.
-  The licence was already stated in `LICENSE`, the README and the app itself; this states it on
-  the files too, which is what matters once one of them is read outside the repository it came
-  from. No behaviour changes.
+  build survived only because both jobs pass `dotnet-version` explicitly and never had to read the
+  file — everything that did read it failed. Now `8.0.100`, which with `latestFeature` means what
+  it always meant: any 8.0 SDK will do.
+- **The dependency graph held direct references only.** GitHub's dependency submission restores on
+  Linux, and every project here targets `net8.0-windows`, so it stopped at `NETSDK1100` having
+  recorded nothing — first behind the `global.json` error, then on its own. Since security alerts
+  are computed from that graph, an advisory against anything pulled in indirectly could not have
+  raised one. `EnableWindowsTargeting` lets the restore complete; the graph went from the seven
+  declared packages to thirty-two. The property is never read on Windows, so the shipped build is
+  unchanged.
 
 ## [0.3.1] — 2026-08-24
 
