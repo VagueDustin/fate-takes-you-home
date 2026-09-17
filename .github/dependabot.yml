@@ -8,16 +8,37 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
     labels:
       - dependencies
+    cooldown:
+      # An action's major is where the breakage lives — a new runtime, a changed default. Let
+      # somebody else find it first.
+      default-days: 7
+      semver-major-days: 21
+    groups:
+      # Four actions across three jobs. Bumping them one pull request at a time means four CI runs
+      # to learn one thing.
+      actions:
+        patterns:
+          - "*"
 
   # Versions are managed centrally in Directory.Packages.props, which Dependabot reads.
   - package-ecosystem: nuget
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
     labels:
       - dependencies
+    # A package published an hour ago has been read by nobody. Waiting means the obvious breakage
+    # is somebody else's pull request. This delays version updates only — security updates ignore
+    # cooldown entirely, which is the whole point of having both.
+    cooldown:
+      default-days: 7
+      semver-major-days: 21
+      semver-minor-days: 7
+      semver-patch-days: 3
     groups:
       # One pull request rather than three. These move together and are exercised by the same
       # "dotnet test", so reviewing them apart is work without a reader.
@@ -25,8 +46,19 @@ updates:
         patterns:
           - xunit*
           - Microsoft.NET.Test.Sdk
+      # A vulnerability rarely arrives alone, and when several land at once the useful review is
+      # of the set. Ungrouped, a bad week is one pull request per advisory.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     ignore:
       # .NET 8 is the LTS this targets on purpose; a major bump is a decision, not an update.
       - dependency-name: Microsoft.Extensions.DependencyInjection*
         update-types:
           - version-update:semver-major
+
+# Deliberately not watched: dotnet-sdk. global.json pins 8.0.0 with rollForward latestFeature,
+# which is a floor rather than a choice of SDK — any 8.0.x satisfies it, CI installs the newest
+# 8.0.x regardless, and the published build is whatever the runner had. Raising the floor would
+# narrow who can build the repository and change nothing about what ships.
