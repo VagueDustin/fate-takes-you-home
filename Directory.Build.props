@@ -11,6 +11,14 @@
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CA1416;NU1701</NoWarn>
+
+    <!-- Permits a restore of these net8.0-windows projects on a non-Windows host. Nothing here is
+         buildable off Windows and nothing tries to be; what needs it is GitHub's dependency
+         submission, which restores on Linux to record the full transitive package graph that
+         Dependabot's security alerts are computed from. Without this the restore stops at
+         NETSDK1100 and the graph is whatever could be read off the manifests, which is to say
+         direct references only. On Windows the guard never fires and the property is unread. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <!-- Product identity. Single source of truth for versioning and branding strings. -->
