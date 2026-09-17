@@ -6,6 +6,15 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **`global.json` asked for an SDK version that does not exist.** `8.0.0` is a runtime version; no
+  .NET SDK is numbered that, and once `rollForward` is set a full SDK version is required. The
+  build survived only because the workflow passes `dotnet-version` explicitly and never had to
+  read it — anything that did read it failed, including the dependency submission that keeps the
+  NuGet dependency graph current, and with it the accuracy of security alerts. Now `8.0.100`,
+  which with `latestFeature` means the same thing it always meant: any 8.0 SDK will do.
+
 ### Changed
 
 - Every source file carries a copyright line and `SPDX-License-Identifier: AGPL-3.0-or-later`.
