@@ -82,7 +82,7 @@ public sealed class AppLog : IDisposable
 
     /// <summary>
     /// The most recent file-write failure, or null while appends are landing. The in-memory tail
-    /// keeps working either way — it is what the diagnostics page shows — but a log that cannot
+    /// keeps working either way (it is what the diagnostics page shows), but a log that cannot
     /// reach disk should say so somewhere a person can see, not vanish politely.
     /// </summary>
     public string? FileWriteError { get; private set; }
@@ -163,7 +163,7 @@ public sealed class AppLog : IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // A log that cannot write must not become the reason the app fails — but it must
+            // A log that cannot write must not become the reason the app fails, but it must
             // not vanish politely either. The state is surfaced on the diagnostics page.
             FileWriteError = ex.Message;
         }

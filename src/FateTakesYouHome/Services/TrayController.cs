@@ -30,7 +30,7 @@ public enum MainWindowSection
 /// <remarks>
 /// <para>
 /// Single click opens the flyout immediately rather than waiting to see whether a double click is
-/// coming. Waiting out <c>GetDoubleClickTime</c> — around half a second — before showing anything
+/// coming. Waiting out <c>GetDoubleClickTime</c> (around half a second) before showing anything
 /// would make the primary interaction feel broken. A double click therefore opens the flyout and
 /// then supersedes it with the full window, which is the trade every good tray app makes.
 /// </para>
@@ -453,7 +453,7 @@ public sealed class TrayController : IDisposable
             HaConnectionState.Connecting => "Fate Takes You Home\nConnecting…",
             HaConnectionState.Authenticating => "Fate Takes You Home\nAuthenticating…",
             HaConnectionState.Reconnecting => "Fate Takes You Home\nReconnecting…",
-            HaConnectionState.Failed => "Fate Takes You Home\nNot connected — click for details",
+            HaConnectionState.Failed => "Fate Takes You Home\nNot connected. Click for details.",
             _ => "Fate Takes You Home\nNot connected",
         };
     }

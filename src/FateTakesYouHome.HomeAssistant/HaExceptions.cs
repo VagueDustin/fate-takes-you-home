@@ -12,7 +12,7 @@ public class HaException : Exception
 }
 
 /// <summary>
-/// The server rejected the access token. Retrying will not help — the user must supply a new one.
+/// The server rejected the access token. Retrying will not help; the user must supply a new one.
 /// </summary>
 public sealed class HaAuthenticationException : HaException
 {

@@ -7,8 +7,8 @@ namespace FateTakesYouHome.Theming.Rendering;
 /// The resource keys a theme publishes into the application's resource dictionary.
 /// </summary>
 /// <remarks>
-/// XAML binds these with <c>DynamicResource</c> so that swapping a theme — or hot-reloading an
-/// edited one — repaints the live UI without rebuilding a single view. Nothing in the application
+/// XAML binds these with <c>DynamicResource</c> so that swapping a theme (or hot-reloading an
+/// edited one) repaints the live UI without rebuilding a single view. Nothing in the application
 /// should reference a colour, duration or radius by any other means.
 /// </remarks>
 public static class ThemeKeys
@@ -59,8 +59,8 @@ public static class ThemeKeys
     public const string BrushPanelEdge = "Fate.Brush.PanelEdge";
 
     /// <summary>
-    /// The raised surface at partial opacity, for page panels that should let the backdrop —
-    /// the starfield in particular — read through instead of walling it off.
+    /// The raised surface at partial opacity, for page panels that should let the backdrop
+    /// (the starfield in particular) read through instead of walling it off.
     /// </summary>
     public const string BrushPanelWash = "Fate.Brush.PanelWash";
 

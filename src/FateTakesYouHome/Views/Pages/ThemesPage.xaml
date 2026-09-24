@@ -203,7 +203,7 @@
             Margin="0,10,0,0"
             Style="{StaticResource Fate.Text.Faint}"
             TextWrapping="Wrap"
-            Text="Themes are patches: a file only declares what it changes and inherits the rest. Drop a .json file in the themes folder and it appears here within a second — edit it while the app runs and the interface repaints as you save." />
+            Text="Themes are patches: a file only declares what it changes and inherits the rest. Drop a .json file in the themes folder and it appears here within a second. Edit it while the app runs and the interface repaints as you save." />
 
           <!-- ==================================================== fonts -->
 
@@ -265,7 +265,7 @@
             Margin="0,4,0,0"
             Style="{StaticResource Fate.Text.Faint}"
             TextWrapping="Wrap"
-            Text="System-wide keys — they work from any application. Click a box and press the combination; Escape clears it." />
+            Text="System-wide keys that work from any application. Click a box and press the combination; Escape clears it." />
 
           <ItemsControl Margin="0,14,0,0" ItemsSource="{Binding Shortcuts}" MaxWidth="760" HorizontalAlignment="Left">
             <ItemsControl.ItemTemplate>

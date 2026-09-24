@@ -46,7 +46,7 @@ Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
-## Local secrets & runtime state — never commit
+## Local secrets & runtime state (never commit)
 *.local.json
 secrets.json
 *.pfx

@@ -58,7 +58,7 @@
           FontSize="{DynamicResource Fate.Size.Subtitle}"
           LineHeight="26"
           TextWrapping="Wrap"
-          Text="Your lights, scenes and automations, one click from the taskbar — so the house is ready before you are." />
+          Text="Your lights, scenes and automations, one click from the taskbar, so the house is ready before you are." />
 
         <c:TrackedTextBlock
           Margin="0,16,0,0"

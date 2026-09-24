@@ -320,7 +320,7 @@ public sealed partial class EntityTileViewModel : ObservableObject
     /// Shows the state the user asked for, before the server has confirmed it.
     /// </summary>
     /// <remarks>
-    /// Only the derived flags are raised, not the underlying state object — the next real event
+    /// Only the derived flags are raised, not the underlying state object. The next real event
     /// overwrites this, and if the call fails the tile is refreshed from the truth.
     /// </remarks>
     private void ApplyOptimisticState(bool on)
@@ -504,7 +504,7 @@ public sealed partial class EntityTileViewModel : ObservableObject
         }
 
         return artist is { Length: > 0 }
-            ? $"{status} · {artist} — {title}"
+            ? $"{status} · {title} by {artist}"
             : $"{status} · {title}";
     }
 

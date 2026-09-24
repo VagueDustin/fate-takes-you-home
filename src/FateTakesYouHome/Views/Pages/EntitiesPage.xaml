@@ -136,7 +136,7 @@
             VerticalAlignment="Center"
             IsHitTestVisible="False" />
 
-          <!-- One keystrokeless way out of a filter — the room click lands here, and this
+          <!-- One keystrokeless way out of a filter: the room click lands here, and this
                is how you leave without knowing about the back button. -->
           <Button
             HorizontalAlignment="Right"
@@ -224,8 +224,8 @@
       <Grid Grid.Row="3" Margin="0,14,0,0">
         <!--
           One flat virtualising list, not a list of lists. WPF cannot virtualise nested items
-          controls, so the previous shape realised every one of a thousand-plus rows up front —
-          around fifteen thousand visual elements — which is what made scrolling stutter.
+          controls, so the previous shape realised every one of a thousand-plus rows up front
+          (around fifteen thousand visual elements), which is what made scrolling stutter.
 
           Recycling mode reuses the containers as they scroll rather than throwing them away, and
           CanContentScroll is required: pixel scrolling silently disables virtualisation.

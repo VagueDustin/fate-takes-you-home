@@ -4,7 +4,7 @@
 
   <!--
     Interface glyphs, on the same 24-unit grid as the entity icons so the two never look like they
-    came from different sets. All stroked outlines — see EntityGlyphs for why.
+    came from different sets. All stroked outlines; see EntityGlyphs for why.
   -->
 
   <Style x:Key="Fate.UiIcon" TargetType="Path">

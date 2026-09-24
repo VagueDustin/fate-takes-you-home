@@ -4,7 +4,7 @@
 
 # Fate Takes You Home
 
-**Your lights, scenes and automations, one click from the taskbar — so the house is ready before you are.**
+**Your lights, scenes and automations, one click from the taskbar, so the house is ready before you are.**
 
 A native Windows tray application for Home Assistant. No Chromium, no web view, no background
 server. One executable that lives beside the clock.
@@ -21,18 +21,18 @@ panel next to itself, with the handful of things you actually touch.
 
 - **Click the tray icon** and a panel slides out of it, anchored to the icon, sized to its
   contents.
-- **Everything you pinned** is in it — lights with brightness, scenes, scripts, automations,
+- **Everything you pinned** is in it: lights with brightness, scenes, scripts, automations,
   covers, thermostats, locks, media.
 - **Double click** for the full window: browse every entity Home Assistant knows about, grouped by
   room, and pin what you use.
-- **Arrange both surfaces like a phone**: the Layout page is a drag-and-resize widget grid — tiles,
+- **Arrange both surfaces like a phone**: the Layout page is a drag-and-resize widget grid with tiles,
   one-action buttons, room summaries, and history graphs of any numeric sensor.
 - **It looks like the house style**, and every colour, corner and animation in it is a value you
   can change. Thirteen themes ship in the box; the sky twinkles, and now and then a star falls.
 - **It keeps itself current**: a once-a-day check against this repository's releases offers new
   versions with one click, and never installs without it.
 
-Built with WPF on .NET 8. It talks to Home Assistant over the native WebSocket API — no custom
+Built with WPF on .NET 8. It talks to Home Assistant over the native WebSocket API. No custom
 integration, no HACS component, nothing to install on the server side beyond a Long-Lived Access
 Token you create from your own profile page.
 
@@ -43,15 +43,15 @@ Token you create from your own profile page.
   the account the automations belong to, the server address, and whatever the sensors happened to
   read at the time. Shots taken against a live instance do not belong in a public repository.
 
-  Any screenshots added here must be captured against fabricated data — the fake Home Assistant
-  server in tests/ serves exactly this purpose — and never against a real home.
+  Any screenshots added here must be captured against fabricated data (the fake Home Assistant
+  server in tests/ serves exactly this purpose) and never against a real home.
 -->
 
 ## Getting started
 
 1. **Install it.** Run the MSI from
    [Releases](https://github.com/VagueDustin/fate-takes-you-home/releases), or unzip the portable
-   build anywhere and run `FateTakesYouHome.exe`. Nothing else is required — the .NET runtime is
+   build anywhere and run `FateTakesYouHome.exe`. Nothing else is required; the .NET runtime is
    included.
 2. **Create a token.** In Home Assistant, open your profile → Security → Long-Lived Access Tokens
    → *Create Token*. Copy it; Home Assistant will not show it again.
@@ -82,9 +82,9 @@ The app walks you through all four the first time it runs, and Help tracks which
 
 ## Themes
 
-The default theme is **FATE** — the VagueDustin house style, navy and gold, at the *charted*
-ornament tier. Twelve more ship with it — Daybreak, Light, Crimson, Midnight, Mono, Terminal,
-Cyberpunk, Dracula, Nord, Gruvbox, One Dark and Rosé Pine — and you can write your own. The
+The default theme is **FATE**, the VagueDustin house style, navy and gold, at the *charted*
+ornament tier. Twelve more ship with it (Daybreak, Light, Crimson, Midnight, Mono, Terminal,
+Cyberpunk, Dracula, Nord, Gruvbox, One Dark and Rosé Pine), and you can write your own. The
 Appearance page also carries your font choices (they win over every theme) and the system-wide
 keyboard shortcuts.
 
@@ -104,7 +104,7 @@ Drop that in `%APPDATA%\VagueDustin Enterprises\Fate Takes You Home\Themes\` and
 picker within a second. Edit it while the app is running and the interface repaints as you save.
 
 Themes control colours, typography, corner radii, button style, ornament density, the window
-backdrop, and every animation duration and easing curve — including how far the panel travels as
+backdrop, and every animation duration and easing curve, including how far the panel travels as
 it opens and what curve it settles on. There is a full editor with live preview if you would rather
 not write JSON, and a contrast checker that holds a theme to WCAG AA.
 
@@ -139,7 +139,7 @@ shortcut: put one on your desktop, open its properties, and assign a shortcut ke
 
 The application never writes to its install directory, so Program Files can stay read-only for
 standard users. Your access token is encrypted with Windows data protection and is readable only
-by your Windows account — see [SECURITY.md](SECURITY.md).
+by your Windows account. See [SECURITY.md](SECURITY.md).
 
 ## Building it
 
@@ -170,7 +170,7 @@ GNU Affero General Public License, version 3 or later. See [LICENSE](LICENSE).
 The AGPL is deliberate. This is a client for a self-hosted, free-software home automation system,
 and anyone who runs a modified version as a service should publish their changes.
 
-Bundled typefaces — Inter, Cinzel and Crimson Pro — are under the SIL Open Font License 1.1 and
+The bundled typefaces (Inter, Cinzel and Crimson Pro) are under the SIL Open Font License 1.1 and
 remain so; see [their licences](src/FateTakesYouHome/Assets/Fonts/).
 
 ---

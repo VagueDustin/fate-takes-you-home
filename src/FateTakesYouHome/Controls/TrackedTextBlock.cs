@@ -15,8 +15,8 @@ namespace FateTakesYouHome.Controls;
 /// <remarks>
 /// <para>
 /// WPF has no equivalent of CSS <c>letter-spacing</c>. <see cref="System.Windows.Controls.TextBlock"/>
-/// cannot do it at all, and the usual workarounds — a <c>Run</c> per character, or padding
-/// injected into the string — break text selection, accessibility and justification.
+/// cannot do it at all, and the usual workarounds (a <c>Run</c> per character, or padding
+/// injected into the string) break text selection, accessibility and justification.
 /// </para>
 /// <para>
 /// The brand specifies <c>--tracking-wordmark: 0.14em</c> and <c>--tracking-label: 0.34em</c>, and
@@ -179,7 +179,7 @@ public sealed class TrackedTextBlock : FrameworkElement
     /// The laid-out glyphs, built once and reused by both measure and render.
     /// </summary>
     /// <remarks>
-    /// Formatting is not cheap, and WPF calls measure and render separately — and repeatedly, on
+    /// Formatting is not cheap, and WPF calls measure and render separately, and repeatedly, on
     /// any invalidation. Building the run twice per layout pass showed up as real cost once these
     /// labels appeared on every group header in a long list.
     /// </remarks>
@@ -239,7 +239,7 @@ public sealed class TrackedTextBlock : FrameworkElement
     /// Builds the glyph run if it is not already cached.
     /// </summary>
     /// <remarks>
-    /// Measure and render share the result, so the two can never disagree about advance widths —
+    /// Measure and render share the result, so the two can never disagree about advance widths,
     /// a disagreement that shows up as text clipped by exactly one character.
     /// </remarks>
     private Layout? EnsureLayout()

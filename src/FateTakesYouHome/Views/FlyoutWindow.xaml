@@ -23,7 +23,7 @@
 
   <!--
     Transparency is on so the app composites the panel itself: the rounded corners, the shadow and
-    the entrance animation are all ours. The alternative — a DWM system backdrop — cannot be
+    the entrance animation are all ours. The alternative (a DWM system backdrop) cannot be
     animated the same way, which is why "composited" is the default backdrop mode.
 
     ShadowFrame is empty margin around the panel that the drop shadow renders into. Without it the

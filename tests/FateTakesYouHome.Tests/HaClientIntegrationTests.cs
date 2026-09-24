@@ -13,8 +13,8 @@ namespace FateTakesYouHome.Tests;
 /// </summary>
 /// <remarks>
 /// Everything else in the suite tests pieces in isolation. The interesting failures in a protocol
-/// client are in the sequencing — waiting for the greeting before sending credentials, matching a
-/// reply to the right command id, coming back after the socket drops — and none of that is
+/// client are in the sequencing (waiting for the greeting before sending credentials, matching a
+/// reply to the right command id, coming back after the socket drops), and none of that is
 /// reachable without something on the other end.
 /// </remarks>
 [Trait("Category", "Integration")]
@@ -484,7 +484,7 @@ public sealed class HaClientIntegrationTests
     /// <remarks>
     /// Named after the bug: the id was allocated outside the send lock, so two callers could take
     /// 1 and 2, swap places waiting for the lock, and put 2 on the wire first. The server then
-    /// refused the lower id with "id_reuse" — which is exactly what a real install did the first
+    /// refused the lower id with "id_reuse", which is exactly what a real install did the first
     /// time Test connection raced the initial subscription.
     /// </remarks>
     [Fact]

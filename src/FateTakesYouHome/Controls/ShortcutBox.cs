@@ -13,7 +13,7 @@ namespace FateTakesYouHome.Controls;
 /// </summary>
 /// <remarks>
 /// Built on <see cref="TextBox"/> for the focus visuals and accessibility plumbing, with all
-/// typing intercepted — the text is always the formatted gesture, never keystrokes. Escape,
+/// typing intercepted: the text is always the formatted gesture, never keystrokes. Escape,
 /// Backspace and Delete clear the shortcut, which is also the documented convention everywhere
 /// else on Windows.
 /// </remarks>

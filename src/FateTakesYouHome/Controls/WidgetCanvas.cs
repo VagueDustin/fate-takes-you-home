@@ -13,7 +13,7 @@ namespace FateTakesYouHome.Controls;
 /// <para>
 /// Columns are fixed in number and fluid in size, phone-launcher style: a widget spanning two of
 /// six columns is a third of the surface whatever the window measures. Rows have a fixed height,
-/// because content — a tile row, a chart — has a natural height that should not balloon on a big
+/// because content (a tile row, a chart) has a natural height that should not balloon on a big
 /// monitor.
 /// </para>
 /// <para>

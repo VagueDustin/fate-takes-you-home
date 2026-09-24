@@ -12,7 +12,7 @@ body:
         redact anything you would not put on a postcard.
 
         Your access token is never written to the log, and never should be. If you find one there,
-        that is a security report — see [SECURITY.md](https://github.com/VagueDustin/fate-takes-you-home/blob/main/SECURITY.md) — not a bug report.
+        that is a security report (see [SECURITY.md](https://github.com/VagueDustin/fate-takes-you-home/blob/main/SECURITY.md)), not a bug report.
 
   - type: textarea
     id: what-happened

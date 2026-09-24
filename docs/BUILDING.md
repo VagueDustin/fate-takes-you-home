@@ -2,7 +2,7 @@
 
 ## What you need
 
-- **.NET 8 SDK** — `dotnet --version` should report 8.0.x or later.
+- **.NET 8 SDK**: `dotnet --version` should report 8.0.x or later.
 - **Windows 10 1809 or later** to run it. The build needs Windows too: the projects target
   `net8.0-windows` and use WPF.
 - **WiX 5**, only if you want the MSI:
@@ -12,7 +12,7 @@
   wix extension add -g WixToolset.Util.wixext/5.0.2
   ```
   Pin the extensions to the toolset's own version. Left unpinned they resolve to the newest
-  published — WiX 7 extensions on a WiX 5 toolset — and `wix extension add` fails with
+  published (WiX 7 extensions on a WiX 5 toolset), and `wix extension add` fails with
   `WIX6101: Could not find expected package root folder wixext5`.
 
 No Visual Studio required. The whole thing builds from the CLI.
@@ -58,7 +58,7 @@ it, stamps it into the assemblies, and derives the MSI's `ProductVersion` from i
 
 Windows Installer compares only the first three fields of a version and rejects pre-release
 suffixes, so `0.2.0-beta.1` becomes `0.2.0` in the MSI. Never ship two different builds under one
-MSI version — the upgrade will not trigger.
+MSI version; the upgrade will not trigger.
 
 The `UpgradeCode` GUID in `installer/wix/Package.wxs` must **never** change. It is what makes an
 install an upgrade rather than a second entry in Programs and Features.
@@ -71,7 +71,7 @@ The icon is generated from vector geometry, not stored as a mystery binary:
 dotnet run --project build/FateIconGen
 ```
 
-That rewrites `src/FateTakesYouHome/Assets/Icons/` — the multi-resolution `app.ico`, PNGs for the
+That rewrites `src/FateTakesYouHome/Assets/Icons/`: the multi-resolution `app.ico`, PNGs for the
 README and installer, and `proof-small-sizes.png`, a magnified sheet of the tray and application
 icons at 16, 20, 24 and 32 pixels.
 
@@ -115,14 +115,14 @@ step, and manual steps are the ones that stop happening.
 element it cannot find is an element a screen reader cannot find either.
 
 `capture-window.ps1` enumerates top-level windows rather than using `Process.MainWindowHandle`,
-because a tool window — which the tray panel is — is excluded from that by design.
+because a tool window (which the tray panel is) is excluded from that by design.
 
 ## Layout notes
 
-- `Directory.Build.props` — shared properties and product identity.
-- `Directory.Packages.props` — central package versions. Add a `PackageVersion` here and a bare
+- `Directory.Build.props`: shared properties and product identity.
+- `Directory.Packages.props`: central package versions. Add a `PackageVersion` here and a bare
   `PackageReference` in the project.
-- `global.json` — pins the SDK to 8.0 with `latestFeature` roll-forward.
+- `global.json`: pins the SDK to 8.0 with `latestFeature` roll-forward.
 
 `FateTakesYouHome.HomeAssistant` targets plain `net8.0` and has no Windows or WPF dependency. Keep
 it that way; that is what makes the client testable and reusable.

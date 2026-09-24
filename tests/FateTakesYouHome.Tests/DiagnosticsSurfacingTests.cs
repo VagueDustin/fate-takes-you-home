@@ -14,7 +14,7 @@ namespace FateTakesYouHome.Tests;
 /// <summary>
 /// The app must never fail silently: a settings file that cannot be written and a log that cannot
 /// reach disk both have to surface as state the UI can show. These exist because exactly that
-/// silence happened on a real install — the app ran for nineteen minutes writing nothing, and the
+/// silence happened on a real install: the app ran for nineteen minutes writing nothing, and the
 /// only symptom was a theme that quietly refused to stick.
 /// </summary>
 public sealed class DiagnosticsSurfacingTests : IDisposable
@@ -40,7 +40,7 @@ public sealed class DiagnosticsSurfacingTests : IDisposable
     {
         using var log = new AppLog(Path.Combine(_root, "logs"));
 
-        // The settings path runs through "blocker", which is a file — so creating the
+        // The settings path runs through "blocker", which is a file, so creating the
         // directory for the settings file fails with an IOException.
         string blocker = Path.Combine(_root, "blocker");
         File.WriteAllText(blocker, "in the way");

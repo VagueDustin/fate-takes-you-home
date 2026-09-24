@@ -8,7 +8,7 @@ body:
       value: |
         This is a small project with strong opinions, and most of them are written down.
         [docs/ARCHITECTURE.md](https://github.com/VagueDustin/fate-takes-you-home/blob/main/docs/ARCHITECTURE.md) ends with *Things that look wrong
-        but are not* — several of the odder decisions already have a paragraph explaining why.
+        but are not*: several of the odder decisions already have a paragraph explaining why.
         Worth a look before proposing they be undone.
 
   - type: textarea
@@ -30,7 +30,7 @@ body:
     id: alternatives
     attributes:
       label: What you tried instead
-      description: A pin, a script, a shortcut, another app — and why it did not do the job.
+      description: A pin, a script, a shortcut, another app, and why it did not do the job.
 
   - type: checkboxes
     id: scope

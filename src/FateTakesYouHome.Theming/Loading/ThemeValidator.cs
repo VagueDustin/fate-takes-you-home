@@ -26,7 +26,7 @@ public sealed record ThemeDiagnostic(
     string Field,
     string Message)
 {
-    public override string ToString() => $"{Severity}: {Field} — {Message}";
+    public override string ToString() => $"{Severity} in {Field}: {Message}";
 }
 
 /// <summary>The outcome of validating one theme document.</summary>
@@ -65,7 +65,7 @@ public static class ThemeValidator
     private static readonly Regex IdPattern =
         new("^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    /// <summary>Validates the raw document — the checks that do not need inheritance resolved.</summary>
+    /// <summary>Validates the raw document: the checks that do not need inheritance resolved.</summary>
     public static ThemeValidationResult ValidateDocument(ThemeDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -119,7 +119,7 @@ public static class ThemeValidator
         return new ThemeValidationResult { Diagnostics = findings };
     }
 
-    /// <summary>Validates a resolved theme — contrast, tier coherence, and brand rules.</summary>
+    /// <summary>Validates a resolved theme: contrast, tier coherence, and brand rules.</summary>
     public static ThemeValidationResult ValidateResolved(Theme theme)
     {
         ArgumentNullException.ThrowIfNull(theme);

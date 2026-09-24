@@ -12,8 +12,8 @@ namespace FateTakesYouHome.Tests;
 /// The easing solver.
 /// </summary>
 /// <remarks>
-/// This is the one piece of real numerical code in the project — a Newton–Raphson solve with a
-/// bisection fallback — and it runs on every frame of every animation. A curve that overshoots its
+/// This is the one piece of real numerical code in the project (a Newton–Raphson solve with a
+/// bisection fallback), and it runs on every frame of every animation. A curve that overshoots its
 /// endpoints or fails to converge shows up as a visible jolt, so the properties are pinned here
 /// rather than judged by eye.
 /// </remarks>

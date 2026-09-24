@@ -95,7 +95,7 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
     /// </summary>
     /// <remarks>
     /// Allocates. With a thousand-entity install this is far too expensive to call from an event
-    /// handler — use <see cref="EnumerateStates"/> or <see cref="CountStates"/> on any hot path.
+    /// handler; use <see cref="EnumerateStates"/> or <see cref="CountStates"/> on any hot path.
     /// </remarks>
     public IReadOnlyCollection<HaEntityState> States => _states.Values.ToArray();
 
@@ -279,7 +279,7 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
             IReadOnlyList<HaEntityState> states = await client.GetStatesAsync(ct).ConfigureAwait(false);
 
             // The registries are what turn a flat list of entity ids into rooms. Failing to read
-            // them is survivable — the UI falls back to grouping by domain — so they are gathered
+            // them is survivable (the UI falls back to grouping by domain), so they are gathered
             // individually rather than as one all-or-nothing batch.
             IReadOnlyList<HaArea> areas = await SafelyReadAsync(
                 () => client.GetAreasAsync(ct), "areas", []).ConfigureAwait(false);
@@ -426,7 +426,7 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
 
     // ------------------------------------------------------------------ registry lookups
 
-    /// <summary>Turns every light off — the one whole-house action wired to buttons and hotkeys.</summary>
+    /// <summary>Turns every light off: the one whole-house action wired to buttons and hotkeys.</summary>
     public Task<CommandResult> TurnOffAllLightsAsync() =>
         ExecuteAsync(
             (client, ct) => client.CallServiceAsync(
@@ -575,8 +575,8 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
     /// <remarks>
     /// <para>
     /// Queued at <see cref="DispatcherPriority.Background"/>, which is deliberately below both
-    /// <c>Render</c> and <c>Input</c>. This used to be <c>DataBind</c> — a <em>higher</em> priority
-    /// than rendering — and a burst of <c>state_changed</c> events from a busy server would
+    /// <c>Render</c> and <c>Input</c>. This used to be <c>DataBind</c>, a <em>higher</em> priority
+    /// than rendering, and a burst of <c>state_changed</c> events from a busy server would
     /// therefore starve the render loop and freeze the interface until the burst cleared. A house
     /// with a thousand entities produces such bursts constantly.
     /// </para>

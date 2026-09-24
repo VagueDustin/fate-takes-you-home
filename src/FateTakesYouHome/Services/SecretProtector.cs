@@ -16,7 +16,7 @@ namespace FateTakesYouHome.Services;
 /// useless if the settings file is copied elsewhere.
 /// </para>
 /// <para>
-/// This is not protection against malware already running as the user — nothing on the client side
+/// This is not protection against malware already running as the user; nothing on the client side
 /// can be. It protects against the realistic problems: a token in a synced roaming profile, a
 /// settings file pasted into a bug report, or a backup that ends up somewhere it should not.
 /// A Home Assistant Long-Lived Access Token is a bearer credential with no expiry, so leaving it
@@ -29,7 +29,7 @@ public static class SecretProtector
     /// Additional entropy mixed into the derivation.
     /// </summary>
     /// <remarks>
-    /// Constant and public — it is not a key. Its purpose is to bind the ciphertext to this
+    /// Constant and public: it is not a key. Its purpose is to bind the ciphertext to this
     /// application, so a blob encrypted by another program running as the same user cannot be
     /// swapped in and decrypted here.
     /// </remarks>

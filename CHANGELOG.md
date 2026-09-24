@@ -6,7 +6,7 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
-## [0.3.2] — 2026-09-17
+## [0.3.2] (2026-09-17)
 
 Housekeeping. One library inside the application moved; everything else is the repository
 learning to watch itself now that anyone can read it.
@@ -15,10 +15,10 @@ learning to watch itself now that anyone can read it.
 
 - **The paperwork a public project needs**: a code of conduct, issue forms that ask for the
   version and Windows build up front, and a pull request template that asks for the reasoning a
-  diff cannot carry. Both issue forms lead with the rule this repository already lived by —
+  diff cannot carry. Both issue forms lead with the rule this repository already lived by:
   nothing captured against a live Home Assistant instance.
 - **Dependabot watches the actions and the packages.** Updates wait out a cooldown before they are
-  offered — three days for a patch, three weeks for a major — so a release published an hour ago
+  offered (three days for a patch, three weeks for a major), so a release published an hour ago
   is somebody else's problem first. Security updates ignore the cooldown by design. The actions
   arrive as one pull request rather than four, and so do security fixes when several land at once.
 
@@ -26,7 +26,7 @@ learning to watch itself now that anyone can read it.
 
 - **CommunityToolkit.Mvvm 8.3.2 → 8.4.2.** The only dependency here that ships inside the
   installer, and the reason this is a release rather than a quiet push.
-- The test stack moved with it — xunit 2.9.3, `Microsoft.NET.Test.Sdk` 18.10.0 and
+- The test stack moved with it: xunit 2.9.3, `Microsoft.NET.Test.Sdk` 18.10.0 and
   `xunit.runner.visualstudio` 4.0.0. All 227 tests were confirmed to still be *collected*, not
   merely green: a test runner crossing a major can report success having run nothing.
 - Every source file carries a copyright line and `SPDX-License-Identifier: AGPL-3.0-or-later`.
@@ -39,17 +39,17 @@ learning to watch itself now that anyone can read it.
 - **`global.json` asked for an SDK version that does not exist.** `8.0.0` is a runtime version; no
   .NET SDK is numbered that, and once `rollForward` is set a full SDK version is required. The
   build survived only because both jobs pass `dotnet-version` explicitly and never had to read the
-  file — everything that did read it failed. Now `8.0.100`, which with `latestFeature` means what
+  file; everything that did read it failed. Now `8.0.100`, which with `latestFeature` means what
   it always meant: any 8.0 SDK will do.
 - **The dependency graph held direct references only.** GitHub's dependency submission restores on
   Linux, and every project here targets `net8.0-windows`, so it stopped at `NETSDK1100` having
-  recorded nothing — first behind the `global.json` error, then on its own. Since security alerts
+  recorded nothing, first behind the `global.json` error, then on its own. Since security alerts
   are computed from that graph, an advisory against anything pulled in indirectly could not have
   raised one. `EnableWindowsTargeting` lets the restore complete; the graph went from the seven
   declared packages to thirty-two. The property is never read on Windows, so the shipped build is
   unchanged.
 
-## [0.3.1] — 2026-08-24
+## [0.3.1] (2026-08-24)
 
 A repair release. The connection could refuse its own first command against a real server, and
 the build could not package a release at all.
@@ -57,7 +57,7 @@ the build could not package a release at all.
 ### Added
 
 - **Tagging a version publishes it.** Pushing `v*` now builds, tests, packages and creates the
-  GitHub release, attaching the MSI and the portable zip the packaging job just produced — so a
+  GitHub release, attaching the MSI and the portable zip the packaging job just produced, so a
   release carries exactly what was tested rather than a rebuild that could differ. The notes come
   from this file's section for that version.
 - `build/publish.ps1` checks the WiX extensions against the toolset's own major version before
@@ -76,16 +76,16 @@ the build could not package a release at all.
 - **Test connection could fail against a real server with "Identifier values have to increase".**
   Home Assistant refuses any frame whose id is not greater than the last it saw on the connection.
   The id was allocated outside the send lock, so two overlapping commands could take 1 and 2, swap
-  places waiting for the lock, and put 2 on the wire first — the server then refused the lower id
+  places waiting for the lock, and put 2 on the wire first; the server then refused the lower id
   with `id_reuse`. The id is now taken inside the lock, which is the only place the number and the
   write can be made a single step. Reported by a first run on a fresh install, where *Test
   connection* raced the initial `subscribe_events`.
 - **The build's packaging job could not install the WiX toolset.** `wix extension add` without a
-  version resolves to the newest published extension — WiX 7 against our pinned WiX 5 toolset —
+  version resolves to the newest published extension (WiX 7 against our pinned WiX 5 toolset),
   which fails with `WIX6101: Could not find expected package root folder wixext5`. The workflow and
   [docs/BUILDING.md](docs/BUILDING.md) now pin the extensions to the toolset's own version.
 
-## [0.3.0] — 2026-08-24
+## [0.3.0] (2026-08-24)
 
 The make-it-yours release: the app updates itself, both surfaces became arrangeable widget grids,
 the theme set tripled behind a picker that shows every theme in its own colours, and the sky
@@ -95,19 +95,19 @@ finally moves.
 
 - **Auto-update from GitHub releases.** Once a day (and on demand from Settings → Updates) the app
   asks the public releases API whether a newer version exists. If one does, a gold banner offers
-  "Install and restart" — download, integrity check against the release's stated size, and a
+  "Install and restart": download, integrity check against the release's stated size, and a
   hand-off to msiexec. Nothing ever installs without the click, and the check can be turned off.
 - **A layout editor** (the new Layout page): arrange the home screen and the tray panel like a
-  phone launcher — drag to move, pull the corner grip to resize, snap to a fluid grid. Widgets:
+  phone launcher: drag to move, pull the corner grip to resize, snap to a fluid grid. Widgets:
   entity tiles, one-action buttons, the rooms grid, the activity counts, and **history graphs** of
   any numeric sensor (recorder history over the WebSocket API, refreshed every ten minutes).
   Layouts live in settings as plain JSON; "Back to standard" forgets them.
-- **Nine new built-in themes** — Light, Crimson, Terminal (green phosphor, hard corners, mono
-  everything), Cyberpunk (violet dark, hot neon), Dracula, Nord, Gruvbox, One Dark and Rosé Pine —
+- **Nine new built-in themes**: Light, Crimson, Terminal (green phosphor, hard corners, mono
+  everything), Cyberpunk (violet dark, hot neon), Dracula, Nord, Gruvbox, One Dark and Rosé Pine,
   joining FATE, Daybreak, Midnight and Mono. Thirteen in the box; FATE Ceremonial and FATE Charted
   retired from the presets (the tier system remains for custom themes).
 - **The theme picker shows the themes.** Each is a card sketching itself in its own surface, text
-  and accent colours, with the applied one carrying a check in its own accent — chosen by eye now,
+  and accent colours, with the applied one carrying a check in its own accent. Chosen by eye now,
   not by name.
 - **Fonts, yours across every theme**: display, body and mono pickers on the Appearance page,
   offering the bundled faces and everything installed on the machine.
@@ -118,35 +118,35 @@ finally moves.
   falls. Storyboard-driven, a handful of elements, honours reduced-motion and the theme's motion
   switch, and stops entirely while the window is hidden.
 - **Back and forward, everywhere.** The mouse's back/forward buttons, Alt+Left/Right, and a back
-  button in the title bar all walk the page history — including the room-click filter, which used
+  button in the title bar all walk the page history, including the room-click filter, which used
   to be a dead end. The search box also grew an inline clear button.
 
 ### Changed
 
 - **The installer wears the house style**: navy starfield, the gold arch and wordmark on the
-  welcome and finish pages, a branded banner on the rest — drawn at build time from the same
+  welcome and finish pages, a branded banner on the rest, drawn at build time from the same
   palette constants as the app.
 - The window adapts to its size: the pinned grid runs one, two or three columns by available
   width, and below 980px the navigation rail collapses to icons.
 
 ### Fixed
 
-- **The installer launched the app before Finish was clicked** — the launch action was scheduled
+- **The installer launched the app before Finish was clicked.** The launch action was scheduled
   after InstallFinalize, which runs while the exit dialog is still on screen, and unticking the
   checkbox did nothing because the sequence had already read it. The launch now fires from the
   Finish button itself, as the non-elevated user, with the path properly quoted.
 - **Midnight's tray panel wore a dark box.** The acrylic blur is applied by an accent policy that
-  paints the entire window rectangle — including the transparent 28px shadow frame around the
+  paints the entire window rectangle, including the transparent 28px shadow frame around the
   panel. In acrylic mode the frame now collapses to nothing, the WPF drop shadow retires, and DWM
   rounds the actual window to match the panel.
 - **Clicking away did not always dismiss the panel.** Dismissal hung off window deactivation, and
-  clicking the bare desktop or taskbar activates nothing — after a quick reopen the panel held the
+  clicking the bare desktop or taskbar activates nothing, so after a quick reopen the panel held the
   foreground and nothing short of the tray icon would close it. A low-level mouse hook now watches
   for any press outside the panel (and outside the tray icon, whose click has its own meaning)
-  while it is open — the same mechanism the shell's own flyouts use — and exists only while the
+  while it is open (the same mechanism the shell's own flyouts use) and exists only while the
   panel is visible.
 
-## [0.2.0] — 2026-08-23
+## [0.2.0] (2026-08-23)
 
 The cohesion release. The 0.1 window was a grid of nested grey boxes that happened to sit on a
 starfield; this one is a single night sky with panels floating on it, and everything from the
@@ -156,17 +156,17 @@ real install now speak up instead.
 ### Added
 
 - **Rooms on the dashboard.** Every area that has lights, lit rooms first, each saying how many
-  are on — the honest ones say "Dark". Clicking a room opens Everything filtered to that room.
+  are on; the honest ones say "Dark". Clicking a room opens Everything filtered to that room.
 - **A quick-action footer in the tray panel**: "All lights off", with the result reported in
   place. The panel also gained the same starfield backdrop as the full window.
 - **A live log viewer** under Settings → Files and diagnostics, fed from the in-memory tail, with
-  a copy button. It keeps working even when the log file itself cannot be written — which is
-  exactly when it is needed — and says plainly whether entries are reaching disk.
+  a copy button. It keeps working even when the log file itself cannot be written (which is
+  exactly when it is needed) and says plainly whether entries are reaching disk.
 - **A visible warning when settings cannot be saved.** A failing settings write previously logged
   one line and otherwise let every pin, theme choice and switch flip vanish on exit. It is now a
   banner in the window, with a retry button, and it withdraws itself when writes land again.
 - **Colour swatches in the theme picker.** Each theme's own surface, overlay, accent and text
-  colours appear under its name, and the applied theme carries a gold check — choosing no longer
+  colours appear under its name, and the applied theme carries a gold check, so choosing no longer
   requires trying each one.
 
 ### Changed
@@ -176,7 +176,7 @@ real install now speak up instead.
   foot, the centred title-bar status line is gone, and the caption buttons are frameless with the
   conventional red close hover (drawn in the theme's danger colour).
 - **Entity rows were redrawn.** The black square icon tiles became engraved circular wells; a lit
-  entity's well fills, gilds and glows. Momentary entities — scenes, scripts, buttons — show a
+  entity's well fills, gilds and glows. Momentary entities (scenes, scripts, buttons) show a
   chevron run cue instead of an inert dot, and it answers hover in gold. The pin control in the
   browser is a quiet circular toggle instead of a boxed button.
 - **Group headings in the browser** carry their count beside the name with a rule running to the
@@ -191,7 +191,7 @@ real install now speak up instead.
 
 - **Relaunching the app while it was running did nothing.** The single-instance activation
   listener was a message-only window, and Windows does not deliver `HWND_BROADCAST` messages to
-  message-only windows — so the "wake the running copy" message was shouted into a void. The
+  message-only windows, so the "wake the running copy" message was shouted into a void. The
   listener is now a hidden ordinary window; a second launch reliably opens the full window, and
   `--panel` opens the tray panel.
 - **A plain launch now always opens the window.** Previously an onboarded user double-clicking
@@ -205,7 +205,7 @@ real install now speak up instead.
   the true FATE values either way.
 - The theme detail pane no longer shows an empty "Based on" row for root themes.
 
-## [0.1.1] — 2026-08-23
+## [0.1.1] (2026-08-23)
 
 Fixes from the first real install, against a large Home Assistant instance.
 
@@ -214,7 +214,7 @@ Fixes from the first real install, against a large Home Assistant instance.
 - **The tray panel opened and closed again immediately.** Windows only grants foreground rights to
   a process that received the last input event, and when you click a tray icon that process is
   Explorer. `SetForegroundWindow` was therefore refused, the panel appeared unfocused, and WPF
-  raised `Deactivated` — which the panel treated as a click elsewhere and dismissed itself. It now
+  raised `Deactivated`, which the panel treated as a click elsewhere and dismissed itself. It now
   takes the foreground through the documented `AttachThreadInput` route and disregards a
   deactivation for 450 ms after opening, re-asserting the foreground instead of hiding. A repeated
   tray notification is also coalesced, since some shells deliver two for one click.
@@ -222,7 +222,7 @@ Fixes from the first real install, against a large Home Assistant instance.
   `CanContentScroll` to false whatever the `ScrollViewer` says, and the custom template neither
   bound it nor named the presenter `PART_ScrollContentPresenter`. Pixel scrolling silently disables
   virtualisation, so a correctly configured `VirtualizingStackPanel` above it was still building
-  all 253 visible rows — and roughly 700 with diagnostics shown. Now 7 of 253 are realised, and
+  all 253 visible rows, and roughly 700 with diagnostics shown. Now 7 of 253 are realised, and
   working set dropped from 317 MB to 214 MB.
 - **The nested items controls could not virtualise at all.** The browser was a list of groups each
   containing a list of entities; WPF cannot virtualise that shape. It is now one flat list of
@@ -249,13 +249,13 @@ Fixes from the first real install, against a large Home Assistant instance.
   with constellations behind the full window; section labels in gold rather than grey; a
   gold-outlined pill for the selected navigation item; a distinct gold-outlined primary button; a
   real halo behind the mark; a larger, widely tracked Cinzel wordmark.
-- FATE drops corner brackets and film grain — redundant once there is a star field, and fussy
+- FATE drops corner brackets and film grain: redundant once there is a star field, and fussy
   beside it. `FATE Charted` is a new theme for anyone who wants the full bracketed tier look.
 - New `starfield` ornament switch, on by default at the ceremonial and charted tiers.
 - The entity browser logs how many rows it realised when verbose logging is on, so losing
   virtualisation again would be visible rather than merely slow.
 
-## [0.1.0] — 2026-08-23
+## [0.1.0] (2026-08-23)
 
 First release.
 
@@ -299,7 +299,7 @@ First release.
 - A full theme SDK. Themes are JSON patches that declare only what they change and inherit the
   rest, with `basedOn` inheritance, cycle detection and a published JSON Schema.
 - Control over colours, typography, shape, motion, ornament density, button style and window
-  backdrop — including animation durations, travel distance and easing curves.
+  backdrop, including animation durations, travel distance and easing curves.
 - Hot reload: edit a theme file while the app runs and the interface repaints as you save.
 - An in-app editor with live preview across the whole application, plus import and export.
 - A validator enforcing WCAG AA contrast and the house rule that the accent means "interactive".
@@ -308,7 +308,7 @@ First release.
 **Testing**
 
 - 186 tests, including a fake Home Assistant WebSocket server that the real client is driven
-  against — covering the handshake ordering, a rejected token being terminal, event delivery,
+  against, covering the handshake ordering, a rejected token being terminal, event delivery,
   reconnection after a dropped socket, keepalive, and reply-to-command matching under concurrency.
 
 **Packaging**

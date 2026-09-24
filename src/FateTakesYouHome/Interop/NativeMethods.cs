@@ -428,7 +428,7 @@ internal static class NativeMethods
         public int AccentState;
         public int AccentFlags;
 
-        /// <summary>Tint colour as AABBGGRR — note the byte order is reversed from Win32 COLORREF.</summary>
+        /// <summary>Tint colour as AABBGGRR. Note the byte order is reversed from Win32 COLORREF.</summary>
         public uint GradientColor;
 
         public int AnimationId;

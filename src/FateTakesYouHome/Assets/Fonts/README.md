@@ -11,8 +11,8 @@ to disk at runtime.
 | Crimson Pro | Regular | Long-form prose, ceremonial tier only | SIL Open Font License 1.1 |
 
 The full licence text for each family sits beside the fonts as `OFL-*.txt`. The OFL explicitly
-permits embedding in a program, including a program distributed under other terms — clause 1 of
-the licence. The fonts remain under the OFL; the application is AGPL-3.0-or-later. Keep the
+permits embedding in a program, including a program distributed under other terms (clause 1 of
+the licence). The fonts remain under the OFL; the application is AGPL-3.0-or-later. Keep the
 `OFL-*.txt` files next to the fonts, since the licence requires the notice to travel with them.
 
 ## Why static weights rather than the variable fonts
@@ -22,12 +22,12 @@ the variable builds. WPF has no variable font support: it loads such a file at i
 instance and synthesises anything else, so `FontWeight="SemiBold"` on a variable Inter would come
 out as smeared Regular. The static instances are taken from each project's own release:
 
-* Inter — `rsms/inter` release v4.1, `extras/ttf/`
-* Cinzel — `NDISCOVER/Cinzel`, `fonts/ttf/`
-* Crimson Pro — `Fonthausen/CrimsonPro`, `fonts/ttf/`
+* Inter: `rsms/inter` release v4.1, `extras/ttf/`
+* Cinzel: `NDISCOVER/Cinzel`, `fonts/ttf/`
+* Crimson Pro: `Fonthausen/CrimsonPro`, `fonts/ttf/`
 
 ## Adding a weight
 
 Drop the `.ttf` in this folder. The project file globs `Assets\Fonts\*.ttf` as resources, so no
-build change is needed — but do check the family name inside the font matches what the theme asks
+build change is needed. But do check the family name inside the font matches what the theme asks
 for, because WPF matches on the name recorded in the font, not the file name.

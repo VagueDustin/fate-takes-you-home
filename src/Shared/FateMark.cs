@@ -13,7 +13,7 @@ namespace FateTakesYouHome.Branding;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The mark is a gabled house whose doorway is an arch — a gate you pass through to get home. It
+/// The mark is a gabled house whose doorway is an arch: a gate you pass through to get home. It
 /// follows the naming pattern the brand already uses for the family (<c>Fate of Evrima</c>,
 /// <c>Fated Updates</c>), and stays legible at 16 pixels, which rules out anything finer.
 /// </para>
@@ -59,7 +59,7 @@ public static class FateMark
     /// The deliberate choice here is <em>not</em> to draw a house: a gabled roof over a door is the
     /// single most common icon on the internet, and at 16 pixels it collapses into an arrow. An
     /// arch is architecture rather than pictograph, it keeps its silhouette when it shrinks, and it
-    /// says "the way in" — which is the whole idea of the product.
+    /// says "the way in", which is the whole idea of the product.
     /// </para>
     /// <para>
     /// The ring is one closed path traced outer-arc-then-inner-arc, rather than two shapes with an

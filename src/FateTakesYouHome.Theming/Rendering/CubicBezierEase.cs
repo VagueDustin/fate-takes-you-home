@@ -18,7 +18,7 @@ namespace FateTakesYouHome.Theming.Rendering;
 /// needs one that actually solves the curve.
 /// </para>
 /// <para>
-/// The curve is parametric — x and y are both functions of an internal parameter t, and t is not
+/// The curve is parametric: x and y are both functions of an internal parameter t, and t is not
 /// the animation's progress. Evaluating it therefore means solving x(t) = progress first, which is
 /// done with Newton–Raphson and a bisection fallback for the flat regions where the derivative
 /// approaches zero.

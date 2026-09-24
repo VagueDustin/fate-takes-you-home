@@ -11,7 +11,7 @@ namespace FateTakesYouHome.Theming.Model;
 /// Parses the colour notations a theme author is likely to type.
 /// </summary>
 /// <remarks>
-/// Hex is read in <em>CSS order</em> — <c>#RRGGBBAA</c>, alpha last — rather than WPF's
+/// Hex is read in <em>CSS order</em> (<c>#RRGGBBAA</c>, alpha last) rather than WPF's
 /// <c>#AARRGGBB</c>. Theme authors copy values out of the brand repo's CSS, and silently reading
 /// <c>#D4AF37</c>-adjacent values in the wrong channel order is the kind of bug nobody finds for
 /// a month.
@@ -123,7 +123,7 @@ public static class ColorParser
                 b = Byte(digits[4..6]);
                 break;
 
-            case 8: // #RRGGBBAA — CSS order, alpha last.
+            case 8: // #RRGGBBAA: CSS order, alpha last.
                 r = Byte(digits[..2]);
                 g = Byte(digits[2..4]);
                 b = Byte(digits[4..6]);

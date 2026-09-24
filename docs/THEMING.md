@@ -56,7 +56,7 @@ Two consequences worth knowing:
 ```
 
 Drop a `.json` file there and it appears in the picker within about a second. Edit one while the
-app is running and the interface repaints as you save — no restart, no reload button.
+app is running and the interface repaints as you save. No restart, no reload button.
 
 The themes that ship with the app live in `Themes\` inside the installation directory and are
 read-only. A file in your own folder with the same `id` **replaces** the built-in one entirely;
@@ -119,7 +119,7 @@ FATE ships at **charted**: a precision instrument rather than a ceremony, but no
 
 Semantic roles, not raw values. Nothing in the application references a colour any other way.
 
-**Surfaces** — from furthest back to furthest forward:
+**Surfaces**, from furthest back to furthest forward:
 
 | Role | Used for |
 | --- | --- |
@@ -137,7 +137,7 @@ Semantic roles, not raw values. Nothing in the application references a colour a
 | `borderDefault` | The normal visible edge |
 | `borderEmphasis` | Corner brackets, focused fields |
 
-**Text** — pick one temperature and stay in it; never mix cool and warm foregrounds in one theme:
+**Text**: pick one temperature and stay in it; never mix cool and warm foregrounds in one theme:
 
 | Role | Used for |
 | --- | --- |
@@ -147,7 +147,7 @@ Semantic roles, not raw values. Nothing in the application references a colour a
 | `textInverse` | Text on top of a filled accent surface |
 | `textAccent` | Text that carries the accent |
 
-**Accent** — the accent means *interactive or brand*, and nothing else:
+**Accent**: the accent means *interactive or brand*, and nothing else:
 
 | Role | Used for |
 | --- | --- |
@@ -157,13 +157,13 @@ Semantic roles, not raw values. Nothing in the application references a colour a
 | `accentSubtle` | Translucent accent for active fills |
 | `accentGlow` | The halo behind an active control |
 
-**Status** — never the accent, or a badge starts reading as a button:
+**Status**: never the accent, or a badge starts reading as a button:
 
 `statusLive`, `statusSuccess`, `statusWarning`, `statusDanger`, `statusInfo`.
 
 `statusLive` is red by industry convention. Do not brand it.
 
-**`depthWash`** — an array of radial layers painted over `surfaceBase`, back to front. A flat fill
+**`depthWash`** is an array of radial layers painted over `surfaceBase`, back to front. A flat fill
 is forbidden by the house style; this is how the depth is produced.
 
 ```json
@@ -180,7 +180,7 @@ is forbidden by the house style; this is how the depth is produced.
 | `color` | Colour at the centre; it fades to fully transparent |
 | `falloff` | Where the fade reaches zero, 0–1 along the radius |
 
-The array **replaces** the inherited stack wholesale rather than merging item by item — merging two
+The array **replaces** the inherited stack wholesale rather than merging item by item, because merging two
 gradient stacks of different lengths produces something that is neither. `"depthWash": []` gives a
 flat fill.
 
@@ -202,7 +202,7 @@ Inter, Cinzel and Crimson Pro are embedded in the executable; nothing is install
 Naming any other family resolves against installed fonts, with a readable fallback if it is
 missing.
 
-Letter spacing is real, not simulated — see [Limits](#limits).
+Letter spacing is real, not simulated. See [Limits](#limits).
 
 ### `shape`
 
@@ -244,7 +244,7 @@ Letter spacing is real, not simulated — see [Limits](#limits).
 | `linear`, `ease-in`, `ease-out`, `ease-in-out` | the usual |
 
 Y control points may exceed 0–1, which is what produces an overshoot. X control points are clamped
-to 0–1, as CSS also requires — outside that the curve is not a function of time.
+to 0–1, as CSS also requires; outside that, the curve is not a function of time.
 
 `flyoutTravel` is applied in whichever direction the taskbar is: the panel always emerges *out of*
 the bar, whether that is the bottom, top, left or right of the screen.
@@ -259,7 +259,7 @@ deliberate exception.
 `panelEdge` (`hairline` | `gradient`), `maxConcurrentAnimations` (1–32).
 
 `maxConcurrentAnimations` is enforced. Past the budget, animations apply instantly rather than
-queueing — a late animation looks worse than none, and the point of the cap is that the interface
+queueing: a late animation looks worse than none, and the point of the cap is that the interface
 stays calm.
 
 ### `buttons`
@@ -301,7 +301,7 @@ serves all six.
 | --- | --- |
 | `composited` | The app paints everything. Identical on every Windows build, and the only mode with full control of the entrance animation. **The default, and the one to use unless you have a reason.** |
 | `acrylic` | Windows 11 blur behind the panel. Falls back to composited where Windows refuses. |
-| `mica` | Windows 11 mica. Applies to the **full window only** — see [Limits](#limits). |
+| `mica` | Windows 11 mica. Applies to the **full window only** (see [Limits](#limits)). |
 | `solid` | Opaque fill. Cheapest. |
 
 Changing the mode rebuilds the flyout window, because a WPF window's transparency is fixed once its
@@ -320,7 +320,7 @@ handle exists. You will see the panel disappear and come back; that is expected.
 | Percentages | `rgb(100%, 0%, 50%)` |
 | Named | `transparent`, `red` |
 
-**Hex alpha is read in CSS order — `#RRGGBBAA`, alpha last.** WPF's own parser reads `#AARRGGBB`,
+**Hex alpha is read in CSS order: `#RRGGBBAA`, alpha last.** WPF's own parser reads `#AARRGGBB`,
 alpha first. This deliberately differs from WPF because theme authors copy values out of CSS, and
 reading them in the wrong channel order would turn a 10%-opacity gold into an almost-black blue
 with no error.
@@ -353,14 +353,14 @@ foreground; that specific regression has a test named after it.
 ## The editor
 
 **Themes → Edit** (or **Duplicate**, for a built-in). Every change previews live against the whole
-running application — this is the only honest way to judge a colour, because a swatch in a form
+running application. This is the only honest way to judge a colour, because a swatch in a form
 tells you nothing about how it reads on a panel next to everything else.
 
 Nothing is written until **Save**. **Discard** repaints whatever is actually selected. The editor
 covers the fields people change most; anything it does not expose is available by editing the file,
 and the file and the editor stay in step because both go through the same document.
 
-The editor also does **Import** and **Export**, which are just file copies — a theme is one
+The editor also does **Import** and **Export**, which are just file copies: a theme is one
 self-contained JSON file with no assets.
 
 ## Recipes
@@ -414,7 +414,7 @@ Worth knowing before you spend an afternoon on something that cannot work.
   composite and animate it; the documented DWM backdrop has nothing to draw behind a layered
   window. `acrylic` works there through a different route. `mica` applies to the full window.
 - **Letter spacing is drawn, not faked.** WPF has no `letter-spacing`, so tracked text is rendered
-  glyph by glyph. It is used for wordmarks and section labels — short strings — and is not suitable
+  glyph by glyph. It is used for wordmarks and section labels (short strings) and is not suitable
   for a paragraph.
 - **Animation durations are read at the moment an animation starts.** A theme change takes effect
   on the next interaction, not mid-flight.

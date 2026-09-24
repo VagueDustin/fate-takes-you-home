@@ -48,7 +48,7 @@ public sealed class ThemeDocument
 
     /// <summary>
     /// Whether this is a dark or light theme. Drives the window title bar, the caption buttons and
-    /// the default backdrop tint — things Windows must be told about explicitly.
+    /// the default backdrop tint: things Windows must be told about explicitly.
     /// </summary>
     [JsonPropertyName("appearance")]
     public ThemeAppearance? Appearance { get; set; }
@@ -102,7 +102,7 @@ public enum ThemeAppearance
 /// The ornament tier, as defined by the VagueDustin brand contract.
 /// </summary>
 /// <remarks>
-/// The tier is not decoration on top of the theme — it is what lets one design language serve both
+/// The tier is not decoration on top of the theme; it is what lets one design language serve both
 /// a ceremonial game portal and a restrained utility panel. Picking a tier sets sensible defaults
 /// for every individual ornament switch; the switches then allow deliberate exceptions.
 /// </remarks>

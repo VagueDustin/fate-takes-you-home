@@ -30,7 +30,7 @@ public enum WindowCorner
 /// <remarks>
 /// Every method here returns a bool rather than throwing. These are all presentation niceties on
 /// APIs whose availability varies by Windows build, and none of them is worth failing a window
-/// over — the caller falls back to painting the surface itself.
+/// over; the caller falls back to painting the surface itself.
 /// </remarks>
 public static class WindowEffects
 {
@@ -107,7 +107,7 @@ public static class WindowEffects
     /// Requests a mica or acrylic system backdrop.
     /// </summary>
     /// <remarks>
-    /// Only works on a window that is <em>not</em> layered — that is, one created with
+    /// Only works on a window that is <em>not</em> layered, that is, one created with
     /// <c>AllowsTransparency="False"</c>. A WPF window with transparency enabled is composited by
     /// WPF itself and the DWM has nothing to draw behind.
     /// </remarks>
@@ -261,7 +261,7 @@ public static class WindowEffects
     /// <para>
     /// Windows only lets a process call <c>SetForegroundWindow</c> if it owns the current
     /// foreground window or received the last input event. When somebody clicks a tray icon,
-    /// neither is true of us — the click went to Explorer. The plain call is therefore refused,
+    /// neither is true of us: the click went to Explorer. The plain call is therefore refused,
     /// the window appears without focus, and WPF immediately raises <c>Deactivated</c>. That is
     /// the flyout that opens for a split second and closes again.
     /// </para>

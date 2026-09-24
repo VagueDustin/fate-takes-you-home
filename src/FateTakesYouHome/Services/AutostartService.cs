@@ -20,7 +20,7 @@ namespace FateTakesYouHome.Services;
 /// <para>
 /// Windows also records its own enabled/disabled state for Run entries in
 /// <c>StartupApproved\Run</c>. If somebody disables the app there, the registry value still exists
-/// but Windows ignores it — so <see cref="IsEnabled"/> checks both.
+/// but Windows ignores it, so <see cref="IsEnabled"/> checks both.
 /// </para>
 /// </remarks>
 public sealed class AutostartService
@@ -114,7 +114,7 @@ public sealed class AutostartService
     /// Rewrites the registration when the executable has moved.
     /// </summary>
     /// <remarks>
-    /// Running a portable copy after installing properly — or the reverse — otherwise leaves the
+    /// Running a portable copy after installing properly (or the reverse) otherwise leaves the
     /// Run key pointing at a path that no longer exists, and the app silently stops starting.
     /// </remarks>
     public void RepairIfStale()

@@ -12,7 +12,7 @@ namespace FateTakesYouHome.Views.Pages;
 /// </summary>
 /// <remarks>
 /// Deliberately not a wizard. A wizard implies the app is unusable until it is finished, and this
-/// one works fine in a degraded way with no connection at all — so the page offers three exits and
+/// one works fine in a degraded way with no connection at all, so the page offers three exits and
 /// gets out of the way.
 /// </remarks>
 public partial class WelcomePage : UserControl

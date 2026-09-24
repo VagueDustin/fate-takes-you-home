@@ -41,8 +41,8 @@ public partial class EntitiesPage : UserControl
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Virtualisation is easy to lose by accident — overriding the items panel, or letting
-    /// <c>CanContentScroll</c> fall back to false, both switch it off silently — and the only
+    /// Virtualisation is easy to lose by accident (overriding the items panel, or letting
+    /// <c>CanContentScroll</c> fall back to false, both switch it off silently), and the only
     /// symptom is that the interface gets slow on somebody else's much larger install. This turns
     /// that into a number in the log.
     /// </para>
@@ -63,7 +63,7 @@ public partial class EntitiesPage : UserControl
 
         if (panel is null)
         {
-            app.Log.Debug("Entity browser: no virtualising panel found — the list is not virtualised.");
+            app.Log.Debug("Entity browser: no virtualising panel found, so the list is not virtualised.");
             return;
         }
 

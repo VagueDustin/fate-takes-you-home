@@ -21,7 +21,7 @@ namespace FateTakesYouHome.Views;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The window is created once and reused. It is never actually closed until the application exits —
+/// The window is created once and reused. It is never actually closed until the application exits;
 /// hiding it and showing it again is what keeps the panel appearing instantly, and rebuilding a
 /// WPF window costs enough to be visible at this size.
 /// </para>
@@ -29,7 +29,7 @@ namespace FateTakesYouHome.Views;
 /// Positioning goes through <c>SetWindowPos</c> in physical pixels rather than
 /// <c>Window.Left</c>/<c>Top</c>. On a mixed-DPI desktop those properties are interpreted against
 /// the window's current monitor, so setting them to move a window <em>to</em> a different monitor
-/// puts it in the wrong place — the bug where a flyout lands half off the screen.
+/// puts it in the wrong place: the bug where a flyout lands half off the screen.
 /// </para>
 /// </remarks>
 public partial class FlyoutWindow : Window
@@ -166,7 +166,7 @@ public partial class FlyoutWindow : Window
     /// <remarks>
     /// Placement is computed for the <em>visible panel</em>, not for the window. The window is
     /// larger by the shadow frame on every side, and treating that empty margin as part of the
-    /// panel would push the panel a shadow-width away from the taskbar — a theme asking for a
+    /// panel would push the panel a shadow-width away from the taskbar, so a theme asking for a
     /// 12px gap would silently get 28. The window rectangle is derived afterwards by growing the
     /// panel placement, so the shadow simply overhangs, which is exactly what a shadow should do.
     /// </remarks>
@@ -302,7 +302,7 @@ public partial class FlyoutWindow : Window
     /// Dismisses the panel when focus genuinely moves elsewhere.
     /// </summary>
     /// <remarks>
-    /// A deactivation arriving during the grace window is not the user clicking away — it is
+    /// A deactivation arriving during the grace window is not the user clicking away; it is
     /// Explorer still holding the foreground from the tray click. Hiding on it is what made the
     /// panel flash and vanish. Inside the window the foreground is re-asserted instead.
     /// </remarks>
@@ -381,7 +381,7 @@ public partial class FlyoutWindow : Window
         {
             case BackdropMode.Acrylic:
                 // The window is layered because AllowsTransparency is on, so the documented DWM
-                // backdrop will not apply. The composition attribute is the only route — but it
+                // backdrop will not apply. The composition attribute is the only route, but it
                 // paints the accent across the whole window RECTANGLE, transparent pixels
                 // included. With the shadow frame in place that meant a dark slab around the
                 // panel. So in acrylic mode the frame collapses to nothing, the WPF shadow is

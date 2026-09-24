@@ -11,7 +11,7 @@
     if you find yourself wanting one, it belongs in the theme instead.
 
     Motion is deliberately absent here. A WPF Storyboard inside a sealed template is frozen, which
-    makes a theme-driven duration impossible in markup — animations live in ThemedMotion and the
+    makes a theme-driven duration impossible in markup; animations live in ThemedMotion and the
     control code that calls it.
   -->
 
@@ -73,7 +73,7 @@
   </Style>
 
   <!--
-    Wide small caps in gold. The single most recognisable piece of the house style — and it has to
+    Wide small caps in gold. The single most recognisable piece of the house style, and it has to
     be the accent, not a grey: in the reference product these labels are what carries the eye down
     the page, and a faint grey version reads as a disclaimer instead of a heading.
   -->
@@ -339,7 +339,7 @@
   <!--
     The primary action.
 
-    Gold outline, gold text, a dark fill, and a halo on hover — the treatment the reference product
+    Gold outline, gold text, a dark fill, and a halo on hover: the treatment the reference product
     uses for its one important button on a page. Deliberately distinct from the default button,
     because previously every button on a page looked identical and nothing led the eye.
   -->
@@ -838,7 +838,7 @@
 
               CanContentScroll: the presenter defaults to false regardless of what the ScrollViewer
               is set to, and false means pixel scrolling, and pixel scrolling silently disables
-              virtualisation. A thousand-row list then realises every single row — which is exactly
+              virtualisation. A thousand-row list then realises every single row, which is exactly
               what happened here, with a VirtualizingStackPanel correctly configured above it.
             -->
             <ScrollContentPresenter
@@ -901,7 +901,7 @@
       * CanContentScroll must be True. Pixel scrolling silently disables virtualisation, which is
         the single most common way a WPF list ends up realising ten thousand elements.
       * VirtualizationMode Recycling reuses containers instead of discarding and rebuilding them.
-      * The items panel must not be overridden — ListBox already uses a VirtualizingStackPanel,
+      * The items panel must not be overridden: ListBox already uses a VirtualizingStackPanel,
         and replacing it with a plain StackPanel turns virtualisation off with no warning.
   -->
   <Style x:Key="Fate.ListBox.Virtualised" TargetType="ListBox">

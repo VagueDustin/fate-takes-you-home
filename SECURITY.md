@@ -26,12 +26,12 @@ application-specific entropy, and stored as a Base64 blob in `settings.json`. So
 - A settings file pasted into a bug report, or swept up in a backup or a synced roaming profile,
   does not leak the token.
 
-If Windows data protection is unavailable — which happens in some sandboxed contexts — the token is
+If Windows data protection is unavailable (which happens in some sandboxed contexts), the token is
 **not stored at all**. Holding nothing is better than holding a credential in plain text.
 
 **In memory** it is held as a `string`, which is honest about its limits: .NET strings are immutable
 and unpinned, so the value may persist in the managed heap until collection. `SecureString` would be
-theatre here — it has to be decrypted to be sent over the socket, and Microsoft's own guidance is
+theatre here: it has to be decrypted to be sent over the socket, and Microsoft's own guidance is
 not to use it for new work.
 
 **In the UI** it is never a bindable property. The password box pushes the value straight to the
@@ -49,7 +49,7 @@ application does. Nothing client-side can prevent that, and any product claiming
 selling you something. What the encryption buys is protection against the realistic problems: other
 accounts, copied files, synced profiles and backups.
 
-If a token is exposed, revoke it in Home Assistant — profile → Security → Long-Lived Access Tokens —
+If a token is exposed, revoke it in Home Assistant (profile → Security → Long-Lived Access Tokens)
 and create a new one. Revocation is immediate.
 
 ## Transport
@@ -71,7 +71,7 @@ believed. Only use it on a network you control, for a certificate you issued you
 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` | The autostart entry, only when you enable it |
 
 Nothing is written to the installation directory, so Program Files can stay read-only for standard
-users. The application manifest requests `asInvoker` and the app never elevates — which is also why
+users. The application manifest requests `asInvoker` and the app never elevates, which is also why
 the autostart setting can be toggled from inside it without an administrator prompt.
 
 ## Third-party code

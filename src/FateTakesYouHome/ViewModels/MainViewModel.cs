@@ -17,7 +17,7 @@ namespace FateTakesYouHome.ViewModels;
 /// <remarks>
 /// Selection is the navigation. Binding the radio button's <c>IsChecked</c> two-way to this and
 /// acting on the change means a keyboard arrow, a screen reader, or an automation client all
-/// navigate — whereas hanging navigation off the click command would only work for a mouse, and
+/// navigate, whereas hanging navigation off the click command would only work for a mouse, and
 /// would let the highlight drift away from the page actually being shown.
 /// </remarks>
 public sealed partial class NavigationItem : ObservableObject
@@ -45,7 +45,7 @@ public sealed partial class NavigationItem : ObservableObject
 /// </summary>
 /// <remarks>
 /// Page view models are created eagerly and kept alive. There are six of them, they are cheap, and
-/// keeping them means scroll position and half-finished edits survive a trip to another page —
+/// keeping them means scroll position and half-finished edits survive a trip to another page,
 /// which matters most on the settings page, where losing a half-typed URL would be maddening.
 /// </remarks>
 public sealed partial class MainViewModel : ObservableObject, IDisposable
@@ -213,7 +213,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public string SaveBannerText =>
         _settings.LastSaveError is { } error
-            ? $"Changes cannot be saved right now — {error} Pins and settings will be lost when the app closes."
+            ? $"Changes cannot be saved right now. {error} Pins and settings will be lost when the app closes."
             : string.Empty;
 
     [RelayCommand]

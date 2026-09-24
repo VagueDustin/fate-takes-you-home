@@ -29,7 +29,7 @@ You need two things: **the address of your instance** and **a Long-Lived Access 
 1. In Home Assistant, click your user name at the bottom of the sidebar.
 2. Go to the **Security** tab.
 3. Scroll to **Long-Lived Access Tokens** and choose **Create Token**.
-4. Name it something you will recognise later — "Fate Takes You Home" — and copy the value.
+4. Name it something you will recognise later, such as "Fate Takes You Home", and copy the value.
 
 Home Assistant shows the token exactly once. If you lose it, delete that entry and make another.
 
@@ -69,8 +69,8 @@ press anything:
 3. Subscribes to `state_changed`.
 4. Reads the full state machine and the registries.
 
-If the socket drops, it reconnects with **exponential backoff** — 2 seconds, then 4, 8, 16, up to a
-two-minute ceiling — so a server that is rebooting is waited out rather than hammered.
+If the socket drops, it reconnects with **exponential backoff** (2 seconds, then 4, 8, 16, up to a
+two-minute ceiling), so a server that is rebooting is waited out rather than hammered.
 
 An **application-level ping** runs every 30 seconds. A TCP connection can stay open long after the
 thing at the other end is gone; a missed pong is what actually detects that, and it fails the
@@ -97,7 +97,7 @@ delivered, and patching around that would leave tiles quietly lying about the st
 | `auth/current_user` | Confirms which account the token belongs to, for the connection test |
 
 The registries are what turn a flat list of entity ids into rooms. If they cannot be read the app
-carries on and groups by domain instead — that is a degraded experience, not a failure.
+carries on and groups by domain instead. That is a degraded experience, not a failure.
 
 An entity's area is resolved the way Home Assistant's own UI resolves it: the entity's own area
 assignment wins, and otherwise it inherits the area of its device.
@@ -123,7 +123,7 @@ Intent is mapped to the right service per domain, which is not always the obviou
 and almost always what somebody pressing a button by hand means. Enabling and disabling an
 automation is separate, and does not fire it.
 
-Slider changes are **debounced** — the call goes out once you stop dragging, not once per frame —
+Slider changes are **debounced**: the call goes out once you stop dragging, not once per frame,
 and incoming echoes are ignored briefly afterwards, so the thumb does not jump backwards under your
 finger while a light ramps.
 
@@ -137,7 +137,7 @@ The browser shows entities that are:
 - not a **config or diagnostic** entity, unless *Show diagnostic entities* is on,
 - not **unavailable**, unless *Show unavailable* is on.
 
-Search matches the friendly name, the entity id, **and the area name** — so "kitchen" finds the
+Search matches the friendly name, the entity id, **and the area name**, so "kitchen" finds the
 ceiling light even if nobody ever named it after the room it is in.
 
 ## Troubleshooting
@@ -155,7 +155,7 @@ proxy_set_header Connection "upgrade";
 ```
 
 **"Home Assistant rejected the access token."**
-Revoked, or its user was deleted. Create a new one. Also check you pasted the whole thing — tokens
+Revoked, or its user was deleted. Create a new one. Also check you pasted the whole thing; tokens
 are long and easy to truncate.
 
 **The connection keeps dropping every minute or so.**
@@ -167,7 +167,7 @@ proxy_send_timeout 3600s;
 ```
 
 **Nothing appears after connecting.**
-Check the log — Help → Open the log. If it says how many entities it loaded, the connection is fine
+Check the log (Help → Open the log). If it says how many entities it loaded, the connection is fine
 and the filters are hiding things: turn on *Show unavailable* and *Show diagnostic entities*.
 
 **It works in a browser but not from the app.**
