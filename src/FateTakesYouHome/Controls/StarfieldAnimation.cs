@@ -18,14 +18,14 @@ namespace FateTakesYouHome.Controls;
 /// <para>
 /// The bitmap underneath carries the four hundred stars; animating those would mean repainting
 /// the whole backdrop every frame. This layer animates about a dozen extra points of light with
-/// plain opacity storyboards — cheap enough that the render thread composites them without waking
-/// the UI thread — and one streak every half minute or so.
+/// plain opacity storyboards (cheap enough that the render thread composites them without waking
+/// the UI thread) and one streak every half minute or so.
 /// </para>
 /// <para>
 /// It obeys the same switches as everything else: the theme's starfield ornament decides whether
 /// it exists (bind <c>Visibility</c> to the theme key), and the resolved motion setting decides
 /// whether it moves. When motion is off the twinkles freeze at their resting glow and the
-/// shooting stars simply never arrive — the sky is still there, just becalmed.
+/// shooting stars simply never arrive; the sky is still there, just becalmed.
 /// </para>
 /// </remarks>
 public sealed class StarfieldAnimation : Grid
@@ -218,8 +218,8 @@ public sealed class StarfieldAnimation : Grid
 
         _streak ??= BuildStreak();
 
-        // The streak burns in the theme's own light. Resolved per launch — they are half a
-        // minute apart — so a theme change between meteors just works.
+        // The streak burns in the theme's own light. Resolved per launch (they are half a
+        // minute apart), so a theme change between meteors just works.
         Color head = TryFindResource(Theming.Rendering.ThemeKeys.ColorTextPrimary) is Color c
             ? c
             : Colors.White;

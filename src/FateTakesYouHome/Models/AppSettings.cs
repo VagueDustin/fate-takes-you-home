@@ -74,7 +74,7 @@ public sealed class PinnedEntity
 /// Everything the application persists.
 /// </summary>
 /// <remarks>
-/// The access token is never held here in plain text — <see cref="ProtectedToken"/> is a DPAPI
+/// The access token is never held here in plain text; <see cref="ProtectedToken"/> is a DPAPI
 /// blob. See <see cref="Services.SecretProtector"/>.
 /// </remarks>
 public sealed class AppSettings

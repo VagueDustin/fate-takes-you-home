@@ -185,7 +185,7 @@ public sealed class SettingsService : IDisposable
         }
         catch (JsonException ex)
         {
-            // Keep the broken file rather than overwriting it — it may be the only copy of
+            // Keep the broken file rather than overwriting it; it may be the only copy of
             // somebody's pin list, and it can be repaired by hand.
             string quarantine = _path + ".invalid";
 

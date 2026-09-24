@@ -12,8 +12,8 @@ namespace FateTakesYouHome.Views.Pages;
 /// </summary>
 /// <remarks>
 /// The token is handled in code rather than bound. <see cref="PasswordBox.Password"/> is
-/// deliberately not a dependency property — binding it would put the credential in the binding
-/// engine and keep a managed copy alive — so the value is pushed straight to the view model, which
+/// deliberately not a dependency property. Binding it would put the credential in the binding
+/// engine and keep a managed copy alive, so the value is pushed straight to the view model, which
 /// encrypts it before anything persistent sees it.
 /// </remarks>
 public partial class SettingsPage : UserControl

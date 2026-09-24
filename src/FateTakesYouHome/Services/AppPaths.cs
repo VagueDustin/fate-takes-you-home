@@ -10,7 +10,7 @@ namespace FateTakesYouHome.Services;
 /// </summary>
 /// <remarks>
 /// Nothing is written inside the install directory. The application runs as the invoking user with
-/// no elevation, and <c>C:\Program Files</c> is not writable by a standard user — an app that tries
+/// no elevation, and <c>C:\Program Files</c> is not writable by a standard user. An app that tries
 /// either silently fails or, worse, gets redirected by UAC virtualisation into a shadow folder the
 /// user can never find.
 /// </remarks>

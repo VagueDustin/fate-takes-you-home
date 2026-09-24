@@ -11,11 +11,11 @@ namespace FateTakesYouHome.Interop;
 /// Converts WPF bitmaps into Win32 icon handles.
 /// </summary>
 /// <remarks>
-/// The obvious route — <c>System.Drawing.Icon</c> — would pull in <c>System.Drawing.Common</c> for
+/// The obvious route, <c>System.Drawing.Icon</c>, would pull in <c>System.Drawing.Common</c> for
 /// one function, so the ICONIMAGE payload is assembled by hand instead. It is a fixed layout:
 /// a <c>BITMAPINFOHEADER</c> whose height is doubled, the colour bitmap bottom-up, then a 1-bit
 /// AND mask. With a 32-bit colour bitmap the alpha channel does the masking, so the mask is left
-/// blank — but it must still be present and correctly padded or the icon comes out garbled.
+/// blank, but it must still be present and correctly padded or the icon comes out garbled.
 /// </remarks>
 internal static class IconInterop
 {

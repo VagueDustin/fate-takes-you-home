@@ -35,6 +35,6 @@
 
   <!-- Note: the WindowsDesktop SDK deliberately removes System.IO from the implicit usings for
        WPF projects, because System.IO.Path collides with System.Windows.Shapes.Path. Do not add
-       it back globally — WPF files declare "using System.IO;" individually where they need it. -->
+       it back globally; WPF files declare "using System.IO;" individually where they need it. -->
 
 </Project>

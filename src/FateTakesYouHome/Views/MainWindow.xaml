@@ -25,8 +25,8 @@
   TextOptions.TextFormattingMode="Ideal">
 
   <!--
-    Custom chrome rather than the system title bar. WindowChrome keeps every native behaviour —
-    snapping, aero shake, the system menu, resize borders — while letting the caption be drawn in
+    Custom chrome rather than the system title bar. WindowChrome keeps every native behaviour
+    (snapping, aero shake, the system menu, resize borders) while letting the caption be drawn in
     the theme, which is the difference between a themed app and an app with a themed body and a
     grey hat.
   -->
@@ -52,7 +52,7 @@
   <Grid x:Name="RootLayer">
     <!--
       The night sky. Rendered once to a bitmap when the theme is applied and drawn as a plain
-      image, so it costs nothing per frame. This is the atmosphere the house look depends on — a
+      image, so it costs nothing per frame. This is the atmosphere the house look depends on: a
       flat navy fill reads as a form, not as depth.
     -->
     <Rectangle

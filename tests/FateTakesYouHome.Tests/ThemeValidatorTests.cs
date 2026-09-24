@@ -287,7 +287,7 @@ public sealed class ThemeResourceBuilderTests
 
         System.Windows.ResourceDictionary resources = ThemeResourceBuilder.Build(theme);
 
-        // A missing key is not a compile error — XAML asks for it by string — so the whole set is
+        // A missing key is not a compile error (XAML asks for it by string), so the whole set is
         // checked here. A DynamicResource that resolves to nothing renders as a silent blank.
         foreach (string key in AllKeys())
         {

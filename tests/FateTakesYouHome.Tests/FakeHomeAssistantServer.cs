@@ -19,7 +19,7 @@ namespace FateTakesYouHome.Tests;
 /// <para>
 /// Built on a raw <see cref="TcpListener"/> with a hand-written WebSocket handshake and framing.
 /// <c>HttpListener</c> would be less code but needs a URL ACL registration on Windows for anything
-/// but an elevated process, which would make the test suite fail on a normal developer machine —
+/// but an elevated process, which would make the test suite fail on a normal developer machine,
 /// and a test that only runs as administrator is a test that stops being run.
 /// </para>
 /// <para>
@@ -81,8 +81,8 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     /// When set, every <c>call_service</c> is refused with this message.
     /// </summary>
     /// <remarks>
-    /// Home Assistant refuses service calls for ordinary reasons — an entity that has gone away, a
-    /// service that does not exist on that platform — and the client has to surface the server's
+    /// Home Assistant refuses service calls for ordinary reasons (an entity that has gone away, a
+    /// service that does not exist on that platform), and the client has to surface the server's
     /// own wording rather than a generic failure.
     /// </remarks>
     public string? RefuseServiceCallsWith { get; set; }
@@ -336,7 +336,7 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
         long id = command["id"]?.GetValue<long>() ?? 0;
 
         // Home Assistant refuses any identified frame whose id is not greater than the last it saw
-        // on this connection, and the real server is the only thing that used to say so — a client
+        // on this connection, and the real server is the only thing that used to say so. A client
         // that let two sends race could allocate ids in order and still put them on the wire out
         // of order, passing every test here and failing against a real house. Authentication is
         // exempt: it is the one exchange conducted without ids.

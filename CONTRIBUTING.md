@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking. This is a small project with strong opinions, most of which are written down —
+Thanks for looking. This is a small project with strong opinions, most of which are written down,
 so the fastest way to make a change that lands is to read the reasoning first.
 
 ## Before you start
@@ -38,7 +38,7 @@ Full detail in [docs/BUILDING.md](docs/BUILDING.md).
 - **XML docs on public members**, and on anything non-obvious regardless of visibility. `<remarks>`
   is where the reasoning goes.
 - **British spelling** in prose and in our own identifiers (`Colour`), except where a framework or
-  protocol forces otherwise — `System.Windows.Media.Color`, `color_temp`.
+  protocol forces otherwise (`System.Windows.Media.Color`, `color_temp`).
 
 ## Design rules
 
@@ -48,7 +48,7 @@ These are the ones that come up:
   `ThemeDefaults.cs` is the analogue of the brand repo's `primitives.ts` and is the only legal home
   for a hex in this codebase.
 - **The accent means interactive or brand.** Never status. Status uses the `status*` roles, and
-  "live" is red — industry convention, not a branding decision.
+  "live" is red. That is industry convention, not a branding decision.
 - **Stay in one ornament tier.** FATE is *charted*. Ceremonial devices in a utility build read as
   noise; utility restraint in a ceremonial build reads as unfinished.
 - **Honour reduced motion.** Every animation here is decorative, so there is never a reason not to.
@@ -76,7 +76,7 @@ neither can a screen reader.
 
 What has actually caught bugs here:
 
-- Anything with arithmetic — placement, easing, contrast, colour parsing.
+- Anything with arithmetic: placement, easing, contrast, colour parsing.
 - Anything that parses a file somebody might hand-edit.
 - Anything with a rule that is easy to state and easy to break silently, like "the compiled
   defaults and the shipped JSON must agree".
@@ -90,7 +90,7 @@ A test name should say what the behaviour is, not what the method is called:
 - One concern per commit where you can manage it.
 - In the pull request, say what changed and **why the obvious alternative was not it**. That is the
   part a reviewer cannot reconstruct.
-- Screenshots for anything visual — before and after, if you are changing something that existed.
+- Screenshots for anything visual, before and after if you are changing something that existed.
 
 ## Licence
 

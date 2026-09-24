@@ -558,7 +558,7 @@ public sealed class HaClient : IAsyncDisposable
     }
 
     /// <summary>
-    /// Writes an unidentified frame — the authentication handshake, which is the only exchange
+    /// Writes an unidentified frame: the authentication handshake, which is the only exchange
     /// Home Assistant conducts without ids.
     /// </summary>
     private async Task SendRawAsync(

@@ -45,7 +45,7 @@ public sealed record UpdateInfo(Version Version, string InstallerUrl, long Insta
 /// </summary>
 /// <remarks>
 /// <para>
-/// The check is a single anonymous GET against the public releases API — no token, no telemetry,
+/// The check is a single anonymous GET against the public releases API: no token, no telemetry,
 /// nothing sent beyond the request itself. It runs shortly after startup and once a day after
 /// that, and can be turned off in Settings. Nothing installs without the user clicking the
 /// button: an app that replaces itself unasked is indistinguishable from malware to the person
@@ -53,7 +53,7 @@ public sealed record UpdateInfo(Version Version, string InstallerUrl, long Insta
 /// </para>
 /// <para>
 /// The handoff is <c>msiexec /i package.msi /passive</c>. The MSI's own upgrade logic closes the
-/// running copy, replaces it in place and relaunches nothing — so this service asks the app to
+/// running copy, replaces it in place and relaunches nothing, so this service asks the app to
 /// exit first and lets the installer's exit-dialog behaviour stay out of it.
 /// </para>
 /// </remarks>

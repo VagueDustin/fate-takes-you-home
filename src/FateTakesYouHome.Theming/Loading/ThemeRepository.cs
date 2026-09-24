@@ -50,7 +50,7 @@ public sealed class ThemesChangedEventArgs : EventArgs
 /// <para>
 /// Two sources are merged: the read-only themes shipped beside the executable, and the user's own
 /// folder under <c>%APPDATA%</c>. A user theme with the same id as a built-in one shadows it, which
-/// is how somebody customises FATE without losing the ability to get it back — deleting their file
+/// is how somebody customises FATE without losing the ability to get it back: deleting their file
 /// restores the original.
 /// </para>
 /// <para>
@@ -210,7 +210,7 @@ public sealed class ThemeRepository : IDisposable
         return ThemeResolver.Resolve(entry.Document, LookupDocument);
     }
 
-    /// <summary>Resolves a document that is not in the repository — used for live editor previews.</summary>
+    /// <summary>Resolves a document that is not in the repository, used for live editor previews.</summary>
     public Theme ResolveDraft(ThemeDocument draft) =>
         ThemeResolver.Resolve(draft, LookupDocument);
 

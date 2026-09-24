@@ -67,7 +67,7 @@
               AutomationProperties.Name="Server address" />
             <TextBlock
               Style="{StaticResource SettingHint}"
-              Text="For example http://homeassistant.local:8123 — include https only if you have TLS set up." />
+              Text="For example http://homeassistant.local:8123. Include https only if you have TLS set up." />
 
             <TextBlock Style="{StaticResource SettingLabel}" Margin="0,16,0,4" Text="Long-Lived Access Token" />
             <PasswordBox

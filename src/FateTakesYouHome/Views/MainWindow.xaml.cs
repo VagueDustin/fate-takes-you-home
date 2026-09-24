@@ -134,7 +134,7 @@ public partial class MainWindow : Window
             {
                 Title = "Find what you want to control",
                 Body = "Everything Home Assistant knows about, grouped by room. Search matches the "
-                     + "name, the entity id and the area — so “kitchen” finds the ceiling light "
+                     + "name, the entity id and the area, so “kitchen” finds the ceiling light "
                      + "even if nobody named it after the room.",
                 Prepare = () => _viewModel.Navigate(MainWindowSection.Entities),
                 Target = () => EntitiesPage.SearchBox,

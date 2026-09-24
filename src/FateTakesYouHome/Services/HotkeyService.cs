@@ -106,12 +106,12 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
 /// <remarks>
 /// <para>
 /// <c>RegisterHotKey</c> is the supported API for this: no keyboard hook, no polling, and Windows
-/// itself refuses a combination another application already owns — which is surfaced per shortcut
+/// itself refuses a combination another application already owns, which is surfaced per shortcut
 /// so the settings page can say "taken" instead of silently not working.
 /// </para>
 /// <para>
 /// Everything registers against a message-only window. Unlike broadcasts, <c>WM_HOTKEY</c> is
-/// posted directly to the registering window, so message-only is fine here — and invisible even
+/// posted directly to the registering window, so message-only is fine here, and invisible even
 /// to tooling that enumerates windows.
 /// </para>
 /// </remarks>

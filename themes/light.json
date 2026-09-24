@@ -4,7 +4,7 @@
   "name": "Light",
   "author": "VagueDustin Enterprises",
   "version": "1.0.0",
-  "description": "Paper white. Clean, cool, and quiet — for rooms with daylight and monitors turned up.",
+  "description": "Paper white. Clean, cool and quiet, for rooms with daylight and monitors turned up.",
   "basedOn": "fate",
   "tier": "utility",
   "appearance": "light",

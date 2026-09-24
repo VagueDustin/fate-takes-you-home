@@ -15,7 +15,7 @@ namespace FateTakesYouHome.ViewModels;
 /// A group heading in the flat browser list.
 /// </summary>
 /// <remarks>
-/// The list is deliberately flat — headers and entities interleaved in one collection — rather
+/// The list is deliberately flat (headers and entities interleaved in one collection) rather
 /// than a nested items control per group. WPF cannot virtualise nested items controls, and with a
 /// thousand-entity install that meant building every row and every visual for all of them up
 /// front. A flat collection lets one <c>VirtualizingStackPanel</c> realise only what is on screen.
@@ -69,7 +69,7 @@ public sealed partial class BrowsableEntityViewModel : ObservableObject
 /// <para>
 /// Population is deferred until the page is first opened. A large Home Assistant install has
 /// thousands of entities, and building view models for all of them during application startup
-/// would delay the tray icon appearing — which is the one thing that has to be instant.
+/// would delay the tray icon appearing, which is the one thing that has to be instant.
 /// </para>
 /// <para>
 /// Search is debounced. Rebuilding several thousand rows on every keystroke is exactly the kind of

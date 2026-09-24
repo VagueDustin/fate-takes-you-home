@@ -112,7 +112,7 @@ public sealed class ActivityWidgetViewModel(WidgetSpec spec, ObservableCollectio
 }
 
 /// <summary>
-/// A little history chart of one numeric entity — temperature through the day, power draw, CO₂.
+/// A little history chart of one numeric entity: temperature through the day, power draw, CO₂.
 /// </summary>
 public sealed partial class SparklineWidgetViewModel : WidgetViewModel
 {
@@ -126,7 +126,7 @@ public sealed partial class SparklineWidgetViewModel : WidgetViewModel
     private PointCollection _points = [];
 
     [ObservableProperty]
-    private string _currentText = "—";
+    private string _currentText = "-";
 
     [ObservableProperty]
     private string _rangeText = "";
@@ -175,7 +175,7 @@ public sealed partial class SparklineWidgetViewModel : WidgetViewModel
         if (history.Count < 2)
         {
             HasData = false;
-            CurrentText = _homeAssistant.Find(entityId)?.State ?? "—";
+            CurrentText = _homeAssistant.Find(entityId)?.State ?? "-";
             return;
         }
 
@@ -232,7 +232,7 @@ public sealed partial class SparklineWidgetViewModel : WidgetViewModel
 public static class WidgetFactory
 {
     /// <summary>
-    /// Creates the view model for one spec, or null when the spec cannot be realised here —
+    /// Creates the view model for one spec, or null when the spec cannot be realised here:
     /// an entity that no longer exists, or a rooms widget on a surface with no room data.
     /// </summary>
     public static WidgetViewModel? Build(

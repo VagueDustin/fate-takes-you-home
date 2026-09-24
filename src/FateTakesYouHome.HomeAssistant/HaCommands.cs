@@ -23,7 +23,7 @@ public static class HaCommands
         return Deserialize<List<HaEntityState>>(result) ?? [];
     }
 
-    /// <summary>Reads the core configuration — location name, version, unit system.</summary>
+    /// <summary>Reads the core configuration: location name, version, unit system.</summary>
     public static async Task<HaConfig?> GetConfigAsync(
         this HaClient client, CancellationToken ct = default)
     {
@@ -150,7 +150,7 @@ public static class HaCommands
     /// Invokes a service.
     /// </summary>
     /// <param name="target">
-    /// The <c>target</c> selector — normally <c>{ ["entity_id"] = "light.kitchen" }</c>. Passing
+    /// The <c>target</c> selector, normally <c>{ ["entity_id"] = "light.kitchen" }</c>. Passing
     /// null calls the service with no target, which is correct for things like
     /// <c>homeassistant.restart</c>.
     /// </param>
@@ -230,7 +230,7 @@ public static class HaCommands
     /// <remarks>
     /// The wire format is the compressed one: per entity, a list of <c>{"s": state, "lu": epoch}</c>
     /// pairs, with the first row sometimes arriving in the verbose long-form keys instead. Both are
-    /// handled. Non-numeric states — "unavailable", "unknown", an enum-like sensor — are skipped,
+    /// handled. Non-numeric states ("unavailable", "unknown", an enum-like sensor) are skipped,
     /// because the caller is drawing a line chart and a line through "unavailable" is nonsense.
     /// </remarks>
     public static async Task<IReadOnlyList<HaHistoryPoint>> GetNumericHistoryAsync(

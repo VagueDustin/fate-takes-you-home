@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Produces everything in artifacts/. Nothing is installed and nothing outside the repository is
-    touched — run the MSI yourself when you are ready.
+    touched. Run the MSI yourself when you are ready.
 
     The publish is self-contained on purpose. Asking somebody to find and install the .NET Desktop
     Runtime before a tray utility will run is a bad first five minutes, and the size difference is
@@ -121,7 +121,7 @@ $portableZip = Join-Path $artifacts "FateTakesYouHome-$Version-portable-win-x64.
 
 # A note so somebody unzipping it knows what they have and how it differs from the installer.
 $readme = @"
-Fate Takes You Home $Version — portable build
+Fate Takes You Home $Version (portable build)
 =============================================
 
 Run FateTakesYouHome.exe. Nothing is installed and nothing is written to Program Files.
@@ -132,7 +132,7 @@ copy, so the two share their configuration:
     %APPDATA%\VagueDustin Enterprises\Fate Takes You Home
     %LOCALAPPDATA%\VagueDustin Enterprises\Fate Takes You Home\Logs
 
-Start with Windows works from here too — the app registers whatever path it is running from. If
+Start with Windows works from here too: the app registers whatever path it is running from. If
 you later move this folder, open Settings once and the registration is repaired.
 
 Command line:
@@ -172,7 +172,7 @@ if (-not $wix) {
 
 # "-ext WixToolset.UI.wixext" below resolves to whichever version was added globally, and an
 # extension from a different major fails with "WIX6101: Could not find expected package root
-# folder wixext<n>" — a message that names neither the extension that is wrong nor the fix. Say it
+# folder wixext<n>", a message that names neither the extension that is wrong nor the fix. Say it
 # here instead, while there is still context. A mismatch is only warned about: the build may still
 # be attempted, and a guard that blocks a working setup would be worse than the confusing error.
 $wixVersion = (& wix --version 2>$null | Select-Object -First 1)

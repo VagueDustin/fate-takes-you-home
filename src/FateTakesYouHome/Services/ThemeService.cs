@@ -17,7 +17,7 @@ public sealed class ThemeAppliedEventArgs(Theme theme, bool backdropModeChanged)
     public Theme Theme { get; } = theme;
 
     /// <summary>
-    /// True when the backdrop mode changed, which windows cannot adopt in place — a WPF window's
+    /// True when the backdrop mode changed, which windows cannot adopt in place: a WPF window's
     /// transparency is fixed once its handle exists, so the flyout has to be rebuilt.
     /// </summary>
     public bool BackdropModeChanged { get; } = backdropModeChanged;
@@ -83,8 +83,8 @@ public sealed class ThemeService : IDisposable
 
         Apply(_settings.Current.ThemeId);
 
-        // A launch that loaded no theme files at all is nearly always transient — an antivirus
-        // sweep or a slow disk at sign-in — and the compiled FATE baseline covers the gap. But
+        // A launch that loaded no theme files at all is nearly always transient (an antivirus
+        // sweep or a slow disk at sign-in), and the compiled FATE baseline covers the gap. But
         // silently staying on the baseline for the rest of the session would mean the user's
         // chosen theme never arrives, so say so and look again shortly.
         if (!Repository.ListForDisplay().Any(e => e.SourcePath is not null))
@@ -189,7 +189,7 @@ public sealed class ThemeService : IDisposable
 
     /// <summary>
     /// Swaps in the user's font choices, when they made any. A font choice is a setting rather
-    /// than a theme so it survives switching themes — someone who wants everything in Atkinson
+    /// than a theme so it survives switching themes: someone who wants everything in Atkinson
     /// Hyperlegible wants it in every theme, not in one.
     /// </summary>
     private Theme ApplyFontOverrides(Theme theme)
@@ -372,8 +372,8 @@ public sealed class ThemeService : IDisposable
 
     private const string UserThemesReadme =
         """
-        Fate Takes You Home — themes
-        ============================
+        Fate Takes You Home: themes
+        ===========================
 
         Drop a .json theme file in this folder and it appears in the theme picker within a
         second. Edit one while the app is running and the interface repaints as you save.
@@ -389,7 +389,7 @@ public sealed class ThemeService : IDisposable
             }
 
         The shipped themes are not copied here. To start from one, open Themes in the app and
-        press Duplicate — that writes a small file into this folder that inherits from the
+        press Duplicate. That writes a small file into this folder that inherits from the
         original. You can also copy a shipped theme by hand from the Themes folder inside the
         installation directory.
 

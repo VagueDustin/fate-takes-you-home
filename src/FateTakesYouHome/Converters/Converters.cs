@@ -114,8 +114,8 @@ public sealed class PercentConverter : IValueConverter
 /// Multiplies a double by the converter parameter.
 /// </summary>
 /// <remarks>
-/// Lets a template derive one measurement from another — a half-height row, an indent that scales
-/// with the tile height — without hard-coding a second value that would drift from the theme.
+/// Lets a template derive one measurement from another (a half-height row, an indent that scales
+/// with the tile height) without hard-coding a second value that would drift from the theme.
 /// </remarks>
 public sealed class ScaleConverter : IValueConverter
 {
@@ -143,8 +143,8 @@ public sealed class ScaleConverter : IValueConverter
 /// Shows an element only when a value equals the converter parameter.
 /// </summary>
 /// <remarks>
-/// Used for page switching. Keeping all pages in the tree and toggling visibility — rather than
-/// swapping a ContentControl's content — preserves scroll position and half-finished input when
+/// Used for page switching. Keeping all pages in the tree and toggling visibility (rather than
+/// swapping a ContentControl's content) preserves scroll position and half-finished input when
 /// somebody flicks between pages, which matters most on the settings page.
 /// </remarks>
 public sealed class SectionToVisibilityConverter : IValueConverter
@@ -180,7 +180,7 @@ public sealed class SeverityToBrushConverter : IValueConverter
 
 /// <summary>Turns a <see cref="Models.TrayAction"/> into the words a person would use for it.</summary>
 /// <remarks>
-/// Raw enum names in a dropdown — "OpenMainWindow", "RunDefaultAction" — read as a debug build.
+/// Raw enum names in a dropdown ("OpenMainWindow", "RunDefaultAction") read as a debug build.
 /// The names are UI copy and belong in exactly one place, which is here.
 /// </remarks>
 public sealed class TrayActionToLabelConverter : IValueConverter
@@ -220,7 +220,7 @@ public sealed class GroupingToLabelConverter : IValueConverter
 /// Resolves a theme list entry to one of its colours, for the swatch strip in the theme picker.
 /// </summary>
 /// <remarks>
-/// Themes are patches, so the entry's own document usually declares only a few colours — the
+/// Themes are patches, so the entry's own document usually declares only a few colours; the
 /// swatch has to come from the fully resolved theme, inheritance and all. Resolution is a few
 /// dictionary merges; doing it per swatch keeps the picker stateless.
 /// </remarks>

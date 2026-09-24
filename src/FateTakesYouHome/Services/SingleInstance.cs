@@ -23,7 +23,7 @@ public enum ActivationIntent
 /// <para>
 /// A tray app that can be started twice is a bug people notice immediately: two icons, two sets of
 /// notifications, and settings that overwrite each other. The mutex is session-scoped rather than
-/// global so that two users signed in at once each get their own instance, which is correct — the
+/// global so that two users signed in at once each get their own instance, which is correct: the
 /// settings and the DPAPI-protected token are per-user anyway.
 /// </para>
 /// <para>
@@ -94,7 +94,7 @@ public sealed class SingleInstance : IDisposable
 
         // A real (invisible) top-level window, not a message-only one. Message-only windows are
         // excluded from HWND_BROADCAST delivery, so a message-only listener compiles, runs, and
-        // never hears a single activation — relaunching the app appears to do nothing at all.
+        // never hears a single activation, so relaunching the app appears to do nothing at all.
         var parameters = new HwndSourceParameters("FateTakesYouHome.InstanceListener")
         {
             WindowStyle = unchecked((int)0x80000000), // WS_POPUP: no frame, and never visible.

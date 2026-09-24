@@ -15,7 +15,7 @@ namespace FateTakesYouHome.Theming.Loading;
 /// </para>
 /// <para>
 /// These values are duplicated in <c>themes/fate.json</c>, which is the shipped, user-visible copy.
-/// The two are held in sync by <c>ThemeDefaultsTests</c> — if you retune one, the test tells you to
+/// The two are held in sync by <c>ThemeDefaultsTests</c>: if you retune one, the test tells you to
 /// retune the other. The compiled copy exists so the application can never end up themeless when a
 /// file is missing or corrupt.
 /// </para>
@@ -156,10 +156,10 @@ public static class ThemeDefaults
     public const double ShadowOpacity = 0.85;
     public const double ShadowDepth = 10;
 
-    /// <summary>Inner lit edge — the brand's <c>inset 0 1px 0 rgba(255,233,168,0.08)</c>.</summary>
+    /// <summary>Inner lit edge, the brand's <c>inset 0 1px 0 rgba(255,233,168,0.08)</c>.</summary>
     public const string PanelInnerHighlight = "rgba(255, 233, 168, 0.08)";
 
-    /// <summary>Gilding stroke — the brand's <c>inset 0 0 0 1px rgba(212,175,55,0.10)</c>.</summary>
+    /// <summary>Gilding stroke, the brand's <c>inset 0 0 0 1px rgba(212,175,55,0.10)</c>.</summary>
     public const string PanelGildStroke = "rgba(212, 175, 55, 0.10)";
 
     // -- Buttons ----------------------------------------------------------------------------

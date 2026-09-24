@@ -37,7 +37,7 @@ public sealed partial class PinnedRowViewModel : ObservableObject
 /// </summary>
 /// <remarks>
 /// The access token is never held in a bindable property. The view writes it straight through to
-/// <see cref="SetAccessToken"/>, which encrypts it before it touches anything persistent — a
+/// <see cref="SetAccessToken"/>, which encrypts it before it touches anything persistent; a
 /// bindable string would linger in managed memory and would show up in any diagnostic that dumps
 /// the view model.
 /// </remarks>
@@ -153,7 +153,7 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
     /// <summary>Formatted lines from the in-memory log tail, newest last.</summary>
     /// <remarks>
     /// Fed from <see cref="AppLog.Tail"/> rather than the file, so it keeps working when the file
-    /// cannot be written — which is precisely the situation it exists to make visible.
+    /// cannot be written, which is precisely the situation it exists to make visible.
     /// </remarks>
     public ObservableCollection<string> LogLines { get; } = [];
 
@@ -202,7 +202,7 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
         IReadOnlyList<LogEntry> tail = _log.Tail();
 
         // Rebuilding a few hundred strings once a second, only while the viewer is open, is
-        // cheaper than diffing — and it stays visibly live while verbose logging streams. The
+        // cheaper than diffing, and it stays visibly live while verbose logging streams. The
         // ring buffer's count plateaus once full, so the newest timestamp is the change signal.
         long newest = tail.Count > 0 ? tail[^1].Timestamp.UtcTicks : 0;
 
@@ -321,7 +321,7 @@ public sealed partial class SettingsPageViewModel : ObservableObject, IDisposabl
         HasPendingToken = _pendingToken is not null;
 
         TokenStatus = _pendingToken is not null
-            ? "New token entered — not saved yet"
+            ? "New token entered, not saved yet"
             : SecretProtector.Describe(_settings.GetAccessToken());
 
         TestResult = null;

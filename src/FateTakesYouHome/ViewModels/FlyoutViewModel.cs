@@ -94,7 +94,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>The explanation under the headline. Functional register — no flourish here.</summary>
+    /// <summary>The explanation under the headline. Functional register, no flourish here.</summary>
     public string PlaceholderDetail
     {
         get

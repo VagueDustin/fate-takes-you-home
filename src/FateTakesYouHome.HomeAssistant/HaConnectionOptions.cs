@@ -99,7 +99,7 @@ public sealed class HaConnectionOptions
         }
         else if (AccessToken.Trim().Length < 32)
         {
-            problems.Add("That does not look like a Long-Lived Access Token — they are much longer.");
+            problems.Add("That does not look like a Long-Lived Access Token. Those are much longer.");
         }
 
         return problems;

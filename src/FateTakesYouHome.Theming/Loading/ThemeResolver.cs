@@ -43,7 +43,7 @@ public static class ThemeResolver
         //
         // Ornament is looked up in a chain that stops at whichever document declared the tier, so
         // an ancestor's explicit switch cannot leak past it. Without this, a theme saying
-        // "tier": "utility" still inherited its parent's ornate flags — which is how a light,
+        // "tier": "utility" still inherited its parent's ornate flags, which is how a light,
         // deliberately plain theme ended up with a star field painted over it. Switches the theme
         // sets itself are still honoured, because its own document is at the end of this chain.
         List<ThemeDocument> ornamentChain = ChainFromTierDeclaration(chain);
@@ -250,7 +250,7 @@ public static class ThemeResolver
 
     /// <summary>
     /// Parses a named preset or a literal <c>cubic-bezier(...)</c>. Unrecognised input falls back to
-    /// the brand's standard curve rather than throwing — a typo in a theme should not be fatal.
+    /// the brand's standard curve rather than throwing; a typo in a theme should not be fatal.
     /// </summary>
     public static EasingSpec ParseEasing(string? value)
     {
@@ -315,7 +315,7 @@ public static class ThemeResolver
     /// <remarks>
     /// The chain arrives root-first. Anything above the nearest <c>tier</c> declaration is dropped,
     /// so a theme that picks a tier gets that tier's ornament defaults rather than its ancestor's
-    /// explicit choices — while still keeping any switch it sets itself, since its own document is
+    /// explicit choices, while still keeping any switch it sets itself, since its own document is
     /// the last entry. A theme that declares no tier inherits the whole chain as before.
     /// </remarks>
     private static List<ThemeDocument> ChainFromTierDeclaration(List<ThemeDocument> rootFirstChain)

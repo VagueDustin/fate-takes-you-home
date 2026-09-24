@@ -56,7 +56,7 @@ public sealed partial class HelpViewModel : ObservableObject
                 Number = 1,
                 Title = "Create a Long-Lived Access Token",
                 Body = "In Home Assistant, open your profile, scroll to the bottom of the Security "
-                     + "tab, and create a Long-Lived Access Token. Copy it — Home Assistant will "
+                     + "tab, and create a Long-Lived Access Token. Copy it now; Home Assistant will "
                      + "not show it again.",
                 ActionLabel = "Open Home Assistant",
                 Action = new RelayCommand(OpenHomeAssistant),
@@ -107,7 +107,7 @@ public sealed partial class HelpViewModel : ObservableObject
             new HelpTopic(
                 "It cannot reach my server.",
                 "Check the address in a browser from this same PC first. Use the port Home "
-                + "Assistant actually listens on — 8123 unless you changed it — and include https "
+                + "Assistant actually listens on (8123 unless you changed it), and include https "
                 + "only if you have TLS set up. If you use a self-signed certificate, turn on "
                 + "Accept self-signed certificates."),
 
@@ -115,7 +115,7 @@ public sealed partial class HelpViewModel : ObservableObject
                 "The connection keeps dropping.",
                 "The app reconnects on its own with a widening delay, so brief outages heal "
                 + "themselves. Persistent drops usually mean a reverse proxy timing out idle "
-                + "WebSocket connections — raise the proxy's read timeout above 60 seconds."),
+                + "WebSocket connections. Raise the proxy's read timeout above 60 seconds."),
 
             new HelpTopic(
                 "An entity is missing from the browser.",

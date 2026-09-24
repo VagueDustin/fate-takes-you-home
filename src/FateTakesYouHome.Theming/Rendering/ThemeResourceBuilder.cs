@@ -15,7 +15,7 @@ namespace FateTakesYouHome.Theming.Rendering;
 /// </summary>
 /// <remarks>
 /// Every brush, effect and easing produced here is frozen. Frozen freezables are thread-safe,
-/// skip change notification, and let WPF cache their rendering — which matters because a theme
+/// skip change notification, and let WPF cache their rendering, which matters because a theme
 /// swap replaces every one of them at once.
 /// </remarks>
 public static class ThemeResourceBuilder
@@ -280,7 +280,7 @@ public static class ThemeResourceBuilder
     /// </summary>
     /// <remarks>
     /// The grain is monochrome and drawn at low opacity by whoever consumes it, so it does not need
-    /// to change with the palette — which is fortunate, because regenerating a bitmap on every
+    /// to change with the palette, which is fortunate, because regenerating a bitmap on every
     /// keystroke in the theme editor would be visible.
     /// </remarks>
     private static ImageBrush GetGrainBrush()
@@ -359,8 +359,8 @@ public static class ThemeResourceBuilder
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Set by the host application at startup. Left null — as it is in tests, in the icon
-    /// generator, and anywhere without a WPF <c>Application</c> — font names resolve against
+    /// Set by the host application at startup. Left null (as it is in tests, in the icon
+    /// generator, and anywhere without a WPF <c>Application</c>), font names resolve against
     /// installed families only.
     /// </para>
     /// <para>
@@ -511,7 +511,7 @@ public static class ThemeResourceBuilder
     /// Collapses <c>buttons.style</c> into the concrete brushes one template can consume.
     /// </summary>
     /// <remarks>
-    /// The alternative — a control template per style, selected by a trigger — means six templates
+    /// The alternative (a control template per style, selected by a trigger) means six templates
     /// to keep in step every time the button gains a state. Resolving to brushes here keeps the
     /// visual vocabulary in one place and makes a new button style a change to this method alone.
     /// </remarks>

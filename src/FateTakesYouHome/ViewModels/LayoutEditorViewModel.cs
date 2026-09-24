@@ -74,7 +74,7 @@ public sealed record PickerEntity(string EntityId, string Name, string Detail);
 /// </summary>
 /// <remarks>
 /// The editor works on cheap stand-in cards rather than live widgets, so arranging never fires an
-/// action, and it commits only on Save — walking away loses nothing but the arrangement attempt.
+/// action, and it commits only on Save; walking away loses nothing but the arrangement attempt.
 /// </remarks>
 public sealed partial class LayoutEditorViewModel : ObservableObject
 {

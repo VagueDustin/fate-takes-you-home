@@ -29,7 +29,7 @@ public enum WidgetKind
 /// One widget placed on a grid: what it is, and which cells it covers.
 /// </summary>
 /// <remarks>
-/// Coordinates are grid cells, not pixels — the grid itself stretches with the window, which is
+/// Coordinates are grid cells, not pixels. The grid itself stretches with the window, which is
 /// what keeps one layout working across monitor sizes. Position and span are clamped on load so a
 /// file edited by hand cannot put a widget off the edge of the world.
 /// </remarks>

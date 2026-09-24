@@ -55,7 +55,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       # The extensions must be pinned to the same version as the toolset. Unpinned, "extension add"
-      # takes the latest published — WiX 7 extensions against a WiX 5 toolset, which fails with
+      # takes the latest published: WiX 7 extensions against a WiX 5 toolset, which fails with
       # "WIX6101: Could not find expected package root folder wixext5" and a non-zero exit.
       - name: Install the WiX toolset
         env:
@@ -81,7 +81,7 @@ jobs:
           retention-days: 14
 
   # Only a tag publishes, and it publishes the artifacts the package job already built rather than
-  # rebuilding them — so what a release carries is byte for byte what CI tested.
+  # rebuilding them, so what a release carries is byte for byte what CI tested.
   release:
     needs: package
     if: startsWith(github.ref, 'refs/tags/v')
@@ -123,7 +123,7 @@ jobs:
           ## Install
 
           Run the MSI. It upgrades an existing install in place, keeping your pins, theme and
-          token. The portable zip needs nothing installed — unzip and run.
+          token. The portable zip needs nothing installed: unzip and run.
 
           The MSI is unsigned, so SmartScreen will show its warning on first run.
           NOTES

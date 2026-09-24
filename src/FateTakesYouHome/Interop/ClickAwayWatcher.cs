@@ -14,7 +14,7 @@ namespace FateTakesYouHome.Interop;
 /// <para>
 /// A transient panel cannot rely on <c>Deactivated</c> alone: clicking the empty desktop, the
 /// taskbar, or another app's non-activating surface moves no focus, raises no deactivation, and
-/// leaves the panel standing. Every shell flyout — volume, network, clock — dismisses on the
+/// leaves the panel standing. Every shell flyout (volume, network, clock) dismisses on the
 /// <em>press</em>, wherever it lands, and this is the mechanism they use.
 /// </para>
 /// <para>
@@ -57,9 +57,9 @@ public sealed class ClickAwayWatcher : IDisposable
     public bool IsWatching => _hook != IntPtr.Zero;
 
     /// <summary>
-    /// Starts watching. Presses inside <paramref name="panel"/> — or inside
+    /// Starts watching. Presses inside <paramref name="panel"/> (or inside
     /// <paramref name="exclusion"/>, typically the tray icon, whose click already toggles the
-    /// panel through its own path — are ignored.
+    /// panel through its own path) are ignored.
     /// </summary>
     /// <param name="panel">The panel rectangle, physical pixels.</param>
     /// <param name="exclusion">A second rectangle to leave alone, physical pixels.</param>

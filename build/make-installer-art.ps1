@@ -5,7 +5,7 @@
 .DESCRIPTION
     WixUI takes two bitmaps: a 493x58 banner across the top of the inner pages, and a 493x312
     dialog background for the first and last pages. The stock ones are the red WiX wheel, which
-    reads as "generic open-source installer" — the opposite of the impression an installer should
+    reads as "generic open-source installer", the opposite of the impression an installer should
     give for a branded product.
 
     Drawn at build time rather than committed, so a change to the mark or the palette flows into

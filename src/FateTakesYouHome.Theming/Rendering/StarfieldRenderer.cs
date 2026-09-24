@@ -13,14 +13,14 @@ namespace FateTakesYouHome.Theming.Rendering;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The house look is a deep field with scattered stars and faint constellation lines — the thing
+/// The house look is a deep field with scattered stars and faint constellation lines, the thing
 /// that makes a navy background read as depth rather than as a flat fill. It is rendered once to a
 /// bitmap when a theme is applied and then treated as an image, so the cost is a few tens of
 /// milliseconds at theme-change time and nothing at all per frame.
 /// </para>
 /// <para>
 /// Everything is derived from a fixed seed. A starfield that reshuffled itself on every theme
-/// tweak — or worse, on every window resize — would be a distraction rather than a backdrop.
+/// tweak (or worse, on every window resize) would be a distraction rather than a backdrop.
 /// </para>
 /// </remarks>
 public static class StarfieldRenderer
@@ -106,7 +106,7 @@ public static class StarfieldRenderer
 
         using (DrawingContext dc = visual.RenderOpen())
         {
-            // The bitmap is an overlay, so it starts transparent — the base surface and the depth
+            // The bitmap is an overlay, so it starts transparent; the base surface and the depth
             // wash are painted underneath by the window background brush.
             dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, Width, Height));
 

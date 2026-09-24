@@ -25,7 +25,7 @@ public sealed class ColorParserTests
     /// </summary>
     /// <remarks>
     /// WPF's own parser reads <c>#AARRGGBB</c>, alpha first. Theme authors copy values out of CSS,
-    /// so this deliberately differs from WPF — and getting it backwards would silently turn a
+    /// so this deliberately differs from WPF, and getting it backwards would silently turn a
     /// 10%-opacity gold into an almost-black blue.
     /// </remarks>
     [Fact]

@@ -54,7 +54,7 @@ public static class HaDomains
         Sensor, BinarySensor, Person, DeviceTracker, Camera, Update, Todo,
     };
 
-    /// <summary>Domains that are momentary — activating them has no "off".</summary>
+    /// <summary>Domains that are momentary: activating them has no "off".</summary>
     public static readonly IReadOnlySet<string> Momentary = new HashSet<string>(StringComparer.Ordinal)
     {
         Scene, Button, InputButton,

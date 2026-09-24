@@ -16,7 +16,7 @@ namespace FateTakesYouHome.IconGen;
 /// <remarks>
 /// Run this after changing <see cref="FateMark"/>, then commit the results. The generated files are
 /// committed rather than produced during the build so that a clean clone builds without needing to
-/// run a tool first — and so a change to the mark shows up as a reviewable diff.
+/// run a tool first, and so a change to the mark shows up as a reviewable diff.
 /// </remarks>
 internal static class Program
 {

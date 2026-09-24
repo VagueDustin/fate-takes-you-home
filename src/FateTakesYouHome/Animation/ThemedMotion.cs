@@ -32,7 +32,7 @@ public enum MotionSpeed
 /// </para>
 /// <para>
 /// The ornament tier's <c>maxConcurrentAnimations</c> is enforced here too. Past the budget,
-/// animations are applied instantly rather than queued — a late animation looks worse than no
+/// animations are applied instantly rather than queued: a late animation looks worse than no
 /// animation, and the whole point of the cap is that the interface stays calm.
 /// </para>
 /// </remarks>

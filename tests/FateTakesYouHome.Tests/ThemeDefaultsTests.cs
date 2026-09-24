@@ -13,8 +13,8 @@ namespace FateTakesYouHome.Tests;
 /// Holds the compiled FATE baseline and the shipped <c>fate.json</c> in agreement.
 /// </summary>
 /// <remarks>
-/// The two exist for different reasons — the JSON is the user-visible, editable copy; the
-/// constants are the fallback that guarantees the application is never themeless — and nothing but
+/// The two exist for different reasons (the JSON is the user-visible, editable copy; the
+/// constants are the fallback that guarantees the application is never themeless), and nothing but
 /// this test stops them drifting apart. A drift would be invisible until somebody deleted their
 /// theme file and got a subtly different FATE back.
 /// </remarks>
@@ -140,7 +140,7 @@ public sealed class ThemeDefaultsTests
     /// </summary>
     /// <remarks>
     /// If the house theme cannot clear the contrast and brand rules the editor enforces, then
-    /// either the theme is wrong or the rules are — and either way somebody needs to know.
+    /// either the theme is wrong or the rules are, and either way somebody needs to know.
     /// </remarks>
     [Fact]
     public void ShippedFateFileHasNoValidationErrors()

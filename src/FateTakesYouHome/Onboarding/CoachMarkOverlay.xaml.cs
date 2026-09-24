@@ -20,7 +20,7 @@ public sealed class TourStep
     /// Resolves the element to spotlight, evaluated when the step is shown.
     /// </summary>
     /// <remarks>
-    /// A function rather than a reference because the target may not exist yet — several steps
+    /// A function rather than a reference because the target may not exist yet: several steps
     /// point at controls on pages the tour navigates to as it goes.
     /// </remarks>
     public Func<FrameworkElement?>? Target { get; init; }
@@ -223,7 +223,7 @@ public partial class CoachMarkOverlay : UserControl
         double left;
         double top;
 
-        // Prefer right of the target, then left, then below, then above — the first that fits.
+        // Prefer right of the target, then left, then below, then above; the first that fits.
         if (target.Right + gap + size.Width <= width)
         {
             left = target.Right + gap;

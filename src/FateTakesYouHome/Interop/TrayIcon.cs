@@ -22,7 +22,7 @@ public sealed class TrayClickEventArgs : EventArgs
 /// <para>
 /// WPF has no tray icon, and the WinForms <c>NotifyIcon</c> cannot report where it is on screen.
 /// This implementation exists for <see cref="TryGetIconRect"/>: anchoring the flyout to the icon
-/// the user actually clicked — rather than to the corner of the screen — is the difference between
+/// the user actually clicked (rather than to the corner of the screen) is the difference between
 /// feeling native and feeling approximate.
 /// </para>
 /// <para>

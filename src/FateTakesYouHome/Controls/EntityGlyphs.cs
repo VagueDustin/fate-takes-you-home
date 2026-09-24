@@ -13,7 +13,7 @@ namespace FateTakesYouHome.Controls;
 /// <remarks>
 /// <para>
 /// Hand-drawn rather than taken from Segoe Fluent Icons. Two reasons: the icon font's coverage of
-/// home-automation concepts is poor — there is no thermostat, no cover, no vacuum — and a stroked
+/// home-automation concepts is poor (there is no thermostat, no cover, no vacuum), and a stroked
 /// outline reads as engraved, which is what the charted tier calls for. A filled pictograph would
 /// look pasted in.
 /// </para>

@@ -11,7 +11,7 @@
 
 <!--
   The part a reviewer cannot reconstruct from the diff. If you rejected a simpler approach, say
-  which and why — that reasoning is the thing most likely to be lost, and most likely to be needed
+  which and why. That reasoning is the thing most likely to be lost, and most likely to be needed
   when somebody revisits this in a year.
 -->
 
@@ -23,13 +23,13 @@
 - [ ] Every interactive element added has an `AutomationProperties.Name`, is reachable by
       keyboard, and shows a focus state.
 - [ ] Any new animation honours reduced motion.
-- [ ] Nothing in the diff came from a live Home Assistant instance — no real entity or room names,
+- [ ] Nothing in the diff came from a live Home Assistant instance: no real entity or room names,
       no server address, no screenshot of a real house. Captures come from the fake server in
       `tests/`.
 
 ## Screenshots
 
 <!--
-  Required for anything visual — before and after if you changed something that existed.
+  Required for anything visual, before and after if you changed something that existed.
   Against fabricated data only.
 -->

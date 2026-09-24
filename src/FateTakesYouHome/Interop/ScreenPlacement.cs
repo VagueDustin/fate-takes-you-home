@@ -43,7 +43,7 @@ public sealed record FlyoutPlacement(
 /// <remarks>
 /// Everything here is in physical pixels. WPF's <c>Window.Left</c>/<c>Top</c> are device-independent
 /// and interpreted against the window's <em>current</em> monitor, which makes them unusable for
-/// moving a window onto a monitor with a different scale factor — the classic symptom being a
+/// moving a window onto a monitor with a different scale factor, the classic symptom being a
 /// flyout that lands half off-screen on a mixed-DPI desktop. Positioning through
 /// <c>SetWindowPos</c> in physical pixels sidesteps the whole problem.
 /// </remarks>

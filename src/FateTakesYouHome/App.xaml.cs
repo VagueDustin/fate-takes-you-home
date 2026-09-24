@@ -18,7 +18,7 @@ namespace FateTakesYouHome;
 /// <para>
 /// The application deliberately has no main window at startup. It is a tray app: the shell is the
 /// notification icon, and windows are created on demand and thrown away again. That is why
-/// <c>ShutdownMode</c> is <c>OnExplicitShutdown</c> — the default would quit the moment the last
+/// <c>ShutdownMode</c> is <c>OnExplicitShutdown</c>; the default would quit the moment the last
 /// window closed.
 /// </para>
 /// <para>
@@ -136,7 +136,7 @@ public partial class App : Application
 
         bool launchedByWindows = HasArgument(e.Args, AutostartService.TrayArgument);
 
-        // A configured connection is onboarding, completed — whoever set up the server and token
+        // A configured connection is onboarding, completed. Whoever set up the server and token
         // does not need the welcome tour re-offered on every launch because they skipped a
         // "finish" click they were never told mattered.
         if (!_settings.Current.HasCompletedOnboarding && _settings.Current.IsConfigured)
@@ -242,7 +242,7 @@ public partial class App : Application
     /// Opens the tray panel instead of the full window.
     /// </summary>
     /// <remarks>
-    /// Exists so a shortcut — and therefore a Windows hotkey — can summon the panel directly.
+    /// Exists so a shortcut (and therefore a Windows hotkey) can summon the panel directly.
     /// Works whether or not the app is already running: a second launch hands the intent to the
     /// first and exits.
     /// </remarks>

@@ -64,7 +64,7 @@ public static class WindowCapture
 }
 '@
 
-# Process.MainWindowHandle is no use here: a tool window — which every tray flyout is — is
+# Process.MainWindowHandle is no use here: a tool window (which every tray flyout is) is
 # excluded from it by design. Enumerating top-level windows and filtering by process id finds
 # them all.
 Add-Type @'
