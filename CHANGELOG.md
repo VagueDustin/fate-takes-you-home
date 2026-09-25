@@ -14,10 +14,14 @@ Notable changes to Fate Takes You Home. The format follows
   otherwise, instead of leaving a half-lit room half lit with the halves swapped. Brightness
   steps are sent as steps, so Home Assistant does the arithmetic against the real value. An
   action skips the devices it does not fit, and the editor says which. A shortcut can lock a
-  door but never unlock one. Set them up under Appearance → Device shortcuts.
+  door but never unlock one.
+- **A Shortcuts page.** Every system-wide key now lives on one page of its own: the app's four
+  above, device shortcuts below. A combination can only belong to one of them, and a clash is
+  easier to read with both lists in view.
 
 ### Changed
 
+- The app's own shortcuts moved from Appearance to the new Shortcuts page.
 - Two shortcuts in the app that share a combination are now reported as a clash that names the
   other one, rather than as "in use by another application".
 

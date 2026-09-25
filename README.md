@@ -85,8 +85,9 @@ The app walks you through all four the first time it runs, and Help tracks which
 The default theme is **FATE**, the VagueDustin house style, navy and gold, at the *charted*
 ornament tier. Twelve more ship with it (Daybreak, Light, Crimson, Midnight, Mono, Terminal,
 Cyberpunk, Dracula, Nord, Gruvbox, One Dark and Rosé Pine), and you can write your own. The
-Appearance page also carries your font choices (they win over every theme) and the system-wide
-keyboard shortcuts, including ones that switch, dim or pause the devices you choose.
+Appearance page also carries your font choices (they win over every theme). System-wide keyboard
+shortcuts have a page of their own, including ones that switch, dim or pause the devices you
+choose.
 
 A theme is a **patch**, not a document. It declares only what it changes and inherits the rest, so
 the smallest useful theme is six lines:

@@ -20,6 +20,7 @@ public enum MainWindowSection
     Entities,
     Layout,
     Themes,
+    Shortcuts,
     Settings,
     Help,
 }

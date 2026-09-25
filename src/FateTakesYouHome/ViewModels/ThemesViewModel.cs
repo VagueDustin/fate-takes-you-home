@@ -7,7 +7,6 @@ using System.IO;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FateTakesYouHome.Models;
 using FateTakesYouHome.Services;
 using FateTakesYouHome.Theming.Loading;
 using FateTakesYouHome.Theming.Model;
@@ -102,53 +101,11 @@ public sealed partial class ThemeSwitchSlot : ObservableObject
 /// folder first, so the shipped themes are always recoverable.
 /// </para>
 /// </remarks>
-/// <summary>One system-wide shortcut, as a row on the appearance page.</summary>
-public sealed partial class ShortcutRow : ObservableObject
-{
-    private readonly Action _onChanged;
-    private bool _loading;
-
-    [ObservableProperty]
-    private string? _gesture;
-
-    [ObservableProperty]
-    private string? _failure;
-
-    public ShortcutRow(HotkeyAction action, string label, string description, string? gesture, Action onChanged)
-    {
-        Action = action;
-        Label = label;
-        Description = description;
-        _loading = true;
-        Gesture = gesture;
-        _loading = false;
-        _onChanged = onChanged;
-    }
-
-    public HotkeyAction Action { get; }
-
-    public string Label { get; }
-
-    public string Description { get; }
-
-    partial void OnGestureChanged(string? value)
-    {
-        if (!_loading)
-        {
-            _onChanged();
-        }
-    }
-
-    /// <summary>Reloads the failure state without re-triggering a save.</summary>
-    public void SetFailureQuietly(string? failure) => Failure = failure;
-}
-
 public sealed partial class ThemesViewModel : ObservableObject, IDisposable
 {
     private readonly AppLog _log;
     private readonly SettingsService _settings;
     private readonly ThemeService _themes;
-    private readonly HomeAssistantService _homeAssistant;
 
     private ThemeDocument? _draft;
     private bool _suppressPreview;
@@ -217,21 +174,16 @@ public sealed partial class ThemesViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private double _draftTileHeight = 52;
 
-    public ThemesViewModel(
-        AppLog log, SettingsService settings, ThemeService themes, HomeAssistantService homeAssistant)
+    public ThemesViewModel(AppLog log, SettingsService settings, ThemeService themes)
     {
         _log = log;
         _settings = settings;
         _themes = themes;
-        _homeAssistant = homeAssistant;
 
         _themes.Repository.ThemesChanged += OnRepositoryChanged;
-        _homeAssistant.SnapshotReloaded += OnSnapshotReloaded;
 
         RefreshList();
         BuildFontChoices();
-        BuildShortcutRows();
-        BuildDeviceShortcutRows();
     }
 
     public ObservableCollection<ThemeEntry> Available { get; } = [];
@@ -308,116 +260,6 @@ public sealed partial class ThemesViewModel : ObservableObject, IDisposable
         {
             FontChoices.Add(family);
         }
-    }
-
-    // ------------------------------------------------------------------ shortcuts
-
-    /// <summary>The mappable system-wide shortcuts.</summary>
-    public ObservableCollection<ShortcutRow> Shortcuts { get; } = [];
-
-    private void BuildShortcutRows()
-    {
-        (HotkeyAction Action, string Description)[] rows =
-        [
-            (HotkeyAction.OpenPanel, "Anywhere in Windows, even while another app has focus."),
-            (HotkeyAction.OpenWindow, "Brings this window up, or to the front."),
-            (HotkeyAction.AllLightsOff, "The leaving-the-house key."),
-            (HotkeyAction.RunDefaultPin, "Whichever pin is marked as the default action in Settings."),
-        ];
-
-        foreach ((HotkeyAction action, string description) in rows)
-        {
-            string label = HotkeyService.Describe(action);
-            string? gesture = _settings.Current.Shortcuts.TryGetValue(action.ToString(), out string? text)
-                ? text
-                : null;
-
-            var row = new ShortcutRow(action, label, description, gesture, SaveShortcuts);
-            Shortcuts.Add(row);
-        }
-
-        RefreshShortcutFailures();
-    }
-
-    private void SaveShortcuts()
-    {
-        foreach (ShortcutRow row in Shortcuts)
-        {
-            _settings.Current.Shortcuts[row.Action.ToString()] = row.Gesture;
-        }
-
-        _settings.Save();
-        App.Current?.ApplyShortcuts();
-        RefreshShortcutFailures();
-    }
-
-    private void RefreshShortcutFailures()
-    {
-        if (App.Current is not { } app)
-        {
-            return;
-        }
-
-        foreach (ShortcutRow row in Shortcuts)
-        {
-            row.SetFailureQuietly(app.Hotkeys.FailureFor(row.Action.ToString()));
-        }
-
-        foreach (DeviceShortcutRow row in DeviceShortcuts)
-        {
-            row.SetFailureQuietly(app.Hotkeys.FailureFor(row.Model.HotkeyKey));
-        }
-    }
-
-    // ------------------------------------------------------------------ device shortcuts
-
-    /// <summary>Shortcuts that act on chosen devices.</summary>
-    public ObservableCollection<DeviceShortcutRow> DeviceShortcuts { get; } = [];
-
-    private void BuildDeviceShortcutRows()
-    {
-        foreach (DeviceShortcut shortcut in _settings.Current.DeviceShortcuts)
-        {
-            DeviceShortcuts.Add(NewDeviceShortcutRow(shortcut));
-        }
-
-        RefreshShortcutFailures();
-    }
-
-    private DeviceShortcutRow NewDeviceShortcutRow(DeviceShortcut shortcut) =>
-        new(shortcut, _homeAssistant, SaveDeviceShortcuts, RemoveDeviceShortcut);
-
-    [RelayCommand]
-    private void AddDeviceShortcut()
-    {
-        DeviceShortcuts.Add(NewDeviceShortcutRow(new DeviceShortcut()));
-        SaveDeviceShortcuts();
-    }
-
-    private void RemoveDeviceShortcut(DeviceShortcutRow row)
-    {
-        DeviceShortcuts.Remove(row);
-        SaveDeviceShortcuts();
-    }
-
-    private void SaveDeviceShortcuts()
-    {
-        // Written back from the rows rather than edited in place: normalising on a settings
-        // replace builds a new list, which would leave a held reference editing a stale one.
-        _settings.Current.DeviceShortcuts = DeviceShortcuts.Select(row => row.Model).ToList();
-        _settings.Save();
-        App.Current?.ApplyShortcuts();
-        RefreshShortcutFailures();
-    }
-
-    private void OnSnapshotReloaded(object? sender, EventArgs e)
-    {
-        foreach (DeviceShortcutRow row in DeviceShortcuts)
-        {
-            row.RefreshNames();
-        }
-
-        RefreshShortcutFailures();
     }
 
     public bool CanEditSelected => Selected is not null;
@@ -1013,6 +855,5 @@ public sealed partial class ThemesViewModel : ObservableObject, IDisposable
 
         _disposed = true;
         _themes.Repository.ThemesChanged -= OnRepositoryChanged;
-        _homeAssistant.SnapshotReloaded -= OnSnapshotReloaded;
     }
 }

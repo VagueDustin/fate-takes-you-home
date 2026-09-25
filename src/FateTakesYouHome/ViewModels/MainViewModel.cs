@@ -83,7 +83,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         Dashboard = new DashboardViewModel(settings, homeAssistant, tray);
         Entities = new EntityBrowserViewModel(settings, homeAssistant);
-        Themes = new ThemesViewModel(log, settings, themes, homeAssistant);
+        Themes = new ThemesViewModel(log, settings, themes);
+        Shortcuts = new ShortcutsViewModel(settings, homeAssistant);
         Settings = new SettingsPageViewModel(log, settings, homeAssistant, tray, updates);
         Layout = new LayoutEditorViewModel(settings, homeAssistant);
         Help = new HelpViewModel(settings, tray);
@@ -130,6 +131,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             },
             new NavigationItem
             {
+                Section = MainWindowSection.Shortcuts,
+                Label = "Shortcuts",
+                IconKey = "Fate.Icon.Keyboard",
+                Description = "Keys that work from anywhere in Windows, for the app and for your devices.",
+            },
+            new NavigationItem
+            {
                 Section = MainWindowSection.Settings,
                 Label = "Settings",
                 IconKey = "Fate.Icon.Settings",
@@ -159,6 +167,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public EntityBrowserViewModel Entities { get; }
 
     public ThemesViewModel Themes { get; }
+
+    public ShortcutsViewModel Shortcuts { get; }
 
     public SettingsPageViewModel Settings { get; }
 
@@ -418,6 +428,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Dashboard.Dispose();
         Entities.Dispose();
         Themes.Dispose();
+        Shortcuts.Dispose();
         Settings.Dispose();
     }
 }

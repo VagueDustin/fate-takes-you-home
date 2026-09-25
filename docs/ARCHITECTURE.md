@@ -196,7 +196,7 @@ costs enough to be visible and the panel has to appear the instant it is asked f
 **`Views/Pages` are all in the visual tree at once, toggled by visibility.**
 Deliberate. Swapping a `ContentControl`'s content would discard scroll position and half-finished
 input every time somebody flicked between pages. It is worst on the settings page, where losing a
-half-typed URL would be maddening. Six page view models are cheap.
+half-typed URL would be maddening. Seven page view models are cheap.
 
 **The navigation rail has no command.**
 It binds `IsChecked` two-way and navigates from the selection change. Hanging navigation off a

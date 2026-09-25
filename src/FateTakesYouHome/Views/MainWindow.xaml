@@ -492,6 +492,14 @@
                                  Converter={StaticResource SectionToVisibility},
                                  ConverterParameter=Themes}" />
 
+          <pages:ShortcutsPage
+            x:Name="ShortcutsPage"
+            DataContext="{Binding Shortcuts}"
+            Visibility="{Binding DataContext.CurrentSection,
+                                 RelativeSource={RelativeSource AncestorType=Window},
+                                 Converter={StaticResource SectionToVisibility},
+                                 ConverterParameter=Shortcuts}" />
+
           <pages:SettingsPage
             x:Name="SettingsPage"
             DataContext="{Binding Settings}"
