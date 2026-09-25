@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using FateTakesYouHome.HomeAssistant;
+using FateTakesYouHome.Models;
 using FateTakesYouHome.Services;
 using FateTakesYouHome.Views;
 
@@ -126,6 +127,10 @@ public partial class App : Application
         ApplyShortcuts();
         _settings.Changed += (_, _) => ApplyShortcuts();
 
+        // A clash message names the device shortcut involved, and until the first snapshot the
+        // only name available is the entity id.
+        _homeAssistant.SnapshotReloaded += (_, _) => ApplyShortcuts();
+
         _tray = new TrayController(_log, _settings, _themes, _homeAssistant, _updates);
         _tray.Start();
 
@@ -167,7 +172,7 @@ public partial class App : Application
     public HotkeyService Hotkeys =>
         _hotkeys ?? throw new InvalidOperationException("Startup has not run yet.");
 
-    /// <summary>Reads the shortcut map out of settings and registers it.</summary>
+    /// <summary>Reads every shortcut out of settings and registers them.</summary>
     public void ApplyShortcuts()
     {
         if (_hotkeys is null || _settings is null)
@@ -175,20 +180,45 @@ public partial class App : Application
             return;
         }
 
-        var map = new Dictionary<HotkeyAction, string?>();
+        var shortcuts = new List<HotkeyRegistration>();
 
+        // The application's own shortcuts go first, so they keep a combination a device shortcut
+        // also asks for.
         foreach (HotkeyAction action in Enum.GetValues<HotkeyAction>())
         {
-            map[action] = _settings.Current.Shortcuts.TryGetValue(action.ToString(), out string? text)
-                ? text
+            string? text = _settings.Current.Shortcuts.TryGetValue(action.ToString(), out string? stored)
+                ? stored
                 : null;
+
+            shortcuts.Add(new HotkeyRegistration(action.ToString(), text, HotkeyService.Describe(action)));
         }
 
-        _hotkeys.Apply(map);
+        foreach (DeviceShortcut shortcut in _settings.Current.DeviceShortcuts)
+        {
+            shortcuts.Add(new HotkeyRegistration(
+                shortcut.HotkeyKey, shortcut.Gesture, shortcut.Describe(EntityName)));
+        }
+
+        _hotkeys.Apply(shortcuts);
     }
 
-    private void OnHotkeyPressed(object? sender, HotkeyAction action)
+    /// <summary>The name Home Assistant gives an entity, or its id when that is unknown.</summary>
+    private string EntityName(string entityId) =>
+        _homeAssistant?.Find(entityId)?.FriendlyName ?? entityId;
+
+    private void OnHotkeyPressed(object? sender, string key)
     {
+        if (key.StartsWith(DeviceShortcut.KeyPrefix, StringComparison.Ordinal))
+        {
+            _ = RunDeviceShortcutAsync(key);
+            return;
+        }
+
+        if (!Enum.TryParse(key, out HotkeyAction action))
+        {
+            return;
+        }
+
         switch (action)
         {
             case HotkeyAction.OpenPanel:
@@ -206,6 +236,26 @@ public partial class App : Application
             case HotkeyAction.RunDefaultPin:
                 _ = _tray?.RunDefaultActionAsync();
                 break;
+        }
+    }
+
+    private async Task RunDeviceShortcutAsync(string key)
+    {
+        DeviceShortcut? shortcut = _settings?.Current.DeviceShortcuts
+            .FirstOrDefault(s => s.HotkeyKey == key);
+
+        if (shortcut is null || _homeAssistant is null)
+        {
+            return;
+        }
+
+        CommandResult result = await _homeAssistant
+            .RunDeviceActionAsync(shortcut.Action, shortcut.EntityIds, shortcut.Value)
+            .ConfigureAwait(true);
+
+        if (!result.Succeeded)
+        {
+            _log?.Warning($"The shortcut {shortcut.Gesture} ({shortcut.Describe(EntityName)}) failed: {result.ErrorMessage}");
         }
     }
 

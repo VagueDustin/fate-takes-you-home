@@ -170,6 +170,10 @@ public sealed class AppSettings
     [JsonPropertyName("shortcuts")]
     public Dictionary<string, string?> Shortcuts { get; set; } = [];
 
+    /// <summary>System-wide shortcuts that act on chosen devices. See <see cref="DeviceShortcut"/>.</summary>
+    [JsonPropertyName("deviceShortcuts")]
+    public List<DeviceShortcut> DeviceShortcuts { get; set; } = [];
+
     /// <summary>
     /// Font families the user chose over whatever the theme asks for. Null entries defer to the
     /// theme. Kept as a setting rather than a theme so a font choice survives switching themes.
@@ -216,6 +220,7 @@ public sealed class AppSettings
         VerboseLogging = VerboseLogging,
         CheckForUpdates = CheckForUpdates,
         Shortcuts = new Dictionary<string, string?>(Shortcuts),
+        DeviceShortcuts = DeviceShortcuts.Select(s => s.Clone()).ToList(),
         HomeWidgets = HomeWidgets?.Select(w => w.Clone()).ToList(),
         FlyoutWidgets = FlyoutWidgets?.Select(w => w.Clone()).ToList(),
         FontOverrides = new FontOverrides

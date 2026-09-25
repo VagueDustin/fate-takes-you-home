@@ -83,7 +83,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         Dashboard = new DashboardViewModel(settings, homeAssistant, tray);
         Entities = new EntityBrowserViewModel(settings, homeAssistant);
-        Themes = new ThemesViewModel(log, settings, themes);
+        Themes = new ThemesViewModel(log, settings, themes, homeAssistant);
         Settings = new SettingsPageViewModel(log, settings, homeAssistant, tray, updates);
         Layout = new LayoutEditorViewModel(settings, homeAssistant);
         Help = new HelpViewModel(settings, tray);

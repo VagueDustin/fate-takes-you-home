@@ -438,6 +438,48 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
             "Turn off all lights");
 
     /// <summary>
+    /// Performs a device shortcut's action on its targets.
+    /// </summary>
+    /// <remarks>
+    /// Targets are resolved against the cache at the moment of the press, because a group toggle
+    /// decides its direction from their current state. A target that has since been removed from
+    /// Home Assistant is skipped rather than failing the rest.
+    /// </remarks>
+    public Task<CommandResult> RunDeviceActionAsync(
+        DeviceAction action, IReadOnlyList<string> entityIds, double? value)
+    {
+        if (ConnectionState != HaConnectionState.Connected)
+        {
+            return Task.FromResult(CommandResult.Failed("Not connected to Home Assistant."));
+        }
+
+        var targets = new List<HaEntityState>(entityIds.Count);
+
+        foreach (string entityId in entityIds)
+        {
+            if (Find(entityId) is { } state)
+            {
+                targets.Add(state);
+            }
+            else
+            {
+                _log.Warning($"A device shortcut points at '{entityId}', which no longer exists.");
+            }
+        }
+
+        IReadOnlyList<HaServiceCall> calls = DeviceActions.Plan(action, targets, value);
+
+        if (calls.Count == 0)
+        {
+            return Task.FromResult(CommandResult.Failed("None of its devices can do that right now."));
+        }
+
+        return ExecuteAsync(
+            (client, ct) => client.SendAsync(calls, ct),
+            $"{action} on {string.Join(", ", entityIds)}");
+    }
+
+    /// <summary>
     /// Reads numeric history for one entity, for the sparkline widgets. Empty when disconnected,
     /// when the recorder has nothing, or when the entity's states are not numbers.
     /// </summary>

@@ -289,6 +289,8 @@ public sealed class SettingsService : IDisposable
             foundDefault = true;
         }
 
+        settings.DeviceShortcuts = DeviceShortcut.Normalise(settings.DeviceShortcuts);
+
         if (string.IsNullOrWhiteSpace(settings.ThemeId))
         {
             settings.ThemeId = "fate";

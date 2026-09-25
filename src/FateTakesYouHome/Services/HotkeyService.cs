@@ -101,6 +101,17 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
 }
 
 /// <summary>
+/// One shortcut to register.
+/// </summary>
+/// <param name="Key">
+/// Stable identity, echoed back by <see cref="HotkeyService.Pressed"/>. A
+/// <see cref="HotkeyAction"/> name, or a device shortcut's key.
+/// </param>
+/// <param name="Gesture">"Ctrl+Alt+H" text, or null when unset.</param>
+/// <param name="Name">What the shortcut does, for the message when two of them collide.</param>
+public sealed record HotkeyRegistration(string Key, string? Gesture, string Name);
+
+/// <summary>
 /// Registers system-wide shortcuts and routes them to their actions.
 /// </summary>
 /// <remarks>
@@ -118,10 +129,11 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
 public sealed class HotkeyService : IDisposable
 {
     private const int WM_HOTKEY = 0x0312;
+    private const int FirstId = 0x4A7E;
 
     private readonly AppLog _log;
-    private readonly Dictionary<int, HotkeyAction> _registered = [];
-    private readonly Dictionary<HotkeyAction, string> _failures = [];
+    private readonly Dictionary<int, string> _registered = [];
+    private readonly Dictionary<string, string> _failures = new(StringComparer.Ordinal);
     private HwndSource? _window;
     private bool _disposed;
 
@@ -130,44 +142,102 @@ public sealed class HotkeyService : IDisposable
         _log = log;
     }
 
-    /// <summary>Raised on the UI thread when a registered shortcut is pressed.</summary>
-    public event EventHandler<HotkeyAction>? Pressed;
+    /// <summary>
+    /// Raised on the UI thread when a registered shortcut is pressed, with the
+    /// <see cref="HotkeyRegistration.Key"/> it was registered under.
+    /// </summary>
+    public event EventHandler<string>? Pressed;
 
-    /// <summary>Why a given action's shortcut could not be registered, if it could not.</summary>
-    public string? FailureFor(HotkeyAction action) =>
-        _failures.TryGetValue(action, out string? reason) ? reason : null;
+    /// <summary>Why the shortcut registered under a key could not be, if it could not.</summary>
+    public string? FailureFor(string key) =>
+        _failures.TryGetValue(key, out string? reason) ? reason : null;
 
     /// <summary>
-    /// Drops every registration and applies the given map. Call whenever the settings change.
+    /// Drops every registration and applies the given list. Call whenever the settings change.
     /// </summary>
-    public void Apply(IReadOnlyDictionary<HotkeyAction, string?> shortcuts)
+    public void Apply(IReadOnlyList<HotkeyRegistration> shortcuts)
     {
         EnsureWindow();
         UnregisterAll();
 
-        foreach ((HotkeyAction action, string? text) in shortcuts)
+        IReadOnlyDictionary<string, string> conflicts = FindConflicts(shortcuts);
+        int id = FirstId;
+
+        foreach (HotkeyRegistration shortcut in shortcuts)
         {
-            if (HotkeyGesture.Parse(text) is not { } gesture)
+            if (HotkeyGesture.Parse(shortcut.Gesture) is not { } gesture)
             {
                 continue;
             }
 
-            int id = 0x4A7E + (int)action;
+            // Windows would refuse the second registration too, but its only complaint is
+            // "in use", which would send somebody looking for another application to blame.
+            if (conflicts.TryGetValue(shortcut.Key, out string? conflict))
+            {
+                _failures[shortcut.Key] = conflict;
+                continue;
+            }
+
             uint modifiers = ToNativeModifiers(gesture.Modifiers);
             uint key = (uint)KeyInterop.VirtualKeyFromKey(gesture.Key);
 
             if (NativeMethods.RegisterHotKey(_window!.Handle, id, modifiers, key))
             {
-                _registered[id] = action;
+                _registered[id] = shortcut.Key;
             }
             else
             {
                 // Almost always: another app owns the combination.
-                _failures[action] = $"{gesture} is already in use by another application.";
-                _log.Warning($"Could not register the shortcut {gesture} for {action}.");
+                _failures[shortcut.Key] = $"{gesture} is already in use by another application.";
+                _log.Warning($"Could not register the shortcut {gesture} for {shortcut.Key}.");
             }
+
+            id++;
         }
     }
+
+    /// <summary>
+    /// Finds shortcuts that share a combination with an earlier one in the list.
+    /// </summary>
+    /// <returns>
+    /// A message for each losing shortcut's key, naming the one that keeps the combination. The
+    /// first in the list wins, which puts the application's own shortcuts ahead of device ones.
+    /// </returns>
+    public static IReadOnlyDictionary<string, string> FindConflicts(IEnumerable<HotkeyRegistration> shortcuts)
+    {
+        var owners = new Dictionary<HotkeyGesture, HotkeyRegistration>();
+        var conflicts = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (HotkeyRegistration shortcut in shortcuts)
+        {
+            // Compared as parsed gestures, so "ctrl+alt+l" and "Ctrl+Alt+L" are the same keys.
+            if (HotkeyGesture.Parse(shortcut.Gesture) is not { } gesture)
+            {
+                continue;
+            }
+
+            if (owners.TryGetValue(gesture, out HotkeyRegistration? owner))
+            {
+                conflicts[shortcut.Key] = $"{gesture} is already the shortcut for {owner.Name}.";
+            }
+            else
+            {
+                owners[gesture] = shortcut;
+            }
+        }
+
+        return conflicts;
+    }
+
+    /// <summary>How an application shortcut is named on the settings page and in messages.</summary>
+    public static string Describe(HotkeyAction action) => action switch
+    {
+        HotkeyAction.OpenPanel => "Open the tray panel",
+        HotkeyAction.OpenWindow => "Open the full window",
+        HotkeyAction.AllLightsOff => "Turn off all lights",
+        HotkeyAction.RunDefaultPin => "Run the default pin",
+        _ => action.ToString(),
+    };
 
     private void EnsureWindow()
     {
@@ -190,10 +260,10 @@ public sealed class HotkeyService : IDisposable
 
     private IntPtr OnMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_HOTKEY && _registered.TryGetValue((int)wParam, out HotkeyAction action))
+        if (msg == WM_HOTKEY && _registered.TryGetValue((int)wParam, out string? key))
         {
             handled = true;
-            Pressed?.Invoke(this, action);
+            Pressed?.Invoke(this, key);
         }
 
         return IntPtr.Zero;

@@ -15,6 +15,8 @@
     <conv:NullOrEmptyToVisibilityConverter x:Key="TextToVisibility" />
     <conv:SeverityToBrushConverter x:Key="SeverityToBrush" />
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
+    <conv:CountToVisibilityConverter x:Key="EmptyToVisibility" WhenEmpty="True" />
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     <conv:ThemeSwatchConverter x:Key="Swatch" />
 
     <!-- A skeleton line inside a preview card: a rounded bar in one of the theme's own colours. -->
@@ -300,6 +302,246 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+
+          <!-- ============================================= device shortcuts -->
+
+          <TextBlock Margin="0,22,0,0" Style="{StaticResource Fate.Text.Subtitle}" Text="Device shortcuts" />
+          <TextBlock
+            Margin="0,4,0,0"
+            MaxWidth="760"
+            HorizontalAlignment="Left"
+            Style="{StaticResource Fate.Text.Faint}"
+            TextWrapping="Wrap"
+            Text="Keys that act on the devices you choose. Pick several and they act as one: a toggle turns them all off if any are on, and all on otherwise." />
+
+          <TextBlock
+            Margin="0,14,0,0"
+            Style="{StaticResource Fate.Text.Faint}"
+            Text="No device shortcuts yet."
+            Visibility="{Binding DeviceShortcuts.Count, Converter={StaticResource EmptyToVisibility}}" />
+
+          <ItemsControl
+            Margin="0,14,0,0"
+            MaxWidth="760"
+            HorizontalAlignment="Stretch"
+            ItemsSource="{Binding DeviceShortcuts}"
+            Focusable="False">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:DeviceShortcutRow}">
+                <Border Style="{StaticResource Fate.Card}" Padding="14" Margin="0,0,0,10">
+                  <StackPanel>
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+
+                      <c:ShortcutBox
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Fate.TextBox}"
+                        Padding="9,7"
+                        GestureText="{Binding Gesture}"
+                        AutomationProperties.Name="{Binding Summary, StringFormat='Keys for {0}'}" />
+
+                      <ComboBox
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Fate.ComboBox}"
+                        ItemsSource="{x:Static vm:DeviceShortcutRow.Actions}"
+                        SelectedValuePath="Value"
+                        SelectedValue="{Binding Action}"
+                        AutomationProperties.Name="Action">
+                        <ComboBox.ItemTemplate>
+                          <DataTemplate DataType="{x:Type vm:DeviceActionChoice}">
+                            <TextBlock Text="{Binding Label}" />
+                          </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                      </ComboBox>
+
+                      <Grid
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding TakesValue, Converter={StaticResource BoolToVisibility}}">
+                        <Slider
+                          Style="{StaticResource Fate.Slider}"
+                          Minimum="{Binding ValueMinimum}"
+                          Maximum="100"
+                          TickFrequency="5"
+                          IsSnapToTickEnabled="True"
+                          SmallChange="5"
+                          LargeChange="10"
+                          Value="{Binding Value}"
+                          Margin="0,0,48,0"
+                          AutomationProperties.Name="{Binding ValueLabel, StringFormat='Brightness {0}'}" />
+                        <TextBlock
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          Style="{StaticResource Fate.Text.Mono}"
+                          Text="{Binding Value, StringFormat={}{0:0}%}" />
+                      </Grid>
+
+                      <Button
+                        Grid.Column="5"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource Fate.Button.Icon}"
+                        ToolTip="Remove this shortcut"
+                        AutomationProperties.Name="{Binding Summary, StringFormat='Remove shortcut: {0}'}"
+                        Command="{Binding RemoveCommand}">
+                        <Path Style="{StaticResource Fate.UiIcon}" Data="{StaticResource Fate.Icon.Trash}" />
+                      </Button>
+                    </Grid>
+
+                    <!-- The devices it acts on. -->
+                    <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding Targets}" Focusable="False">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DeviceShortcutTarget}">
+                          <Border
+                            Margin="0,0,8,8"
+                            Padding="10,0,2,0"
+                            CornerRadius="{DynamicResource Fate.Radius.Md}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource Fate.Brush.BorderDefault}">
+                            <StackPanel Orientation="Horizontal">
+                              <TextBlock VerticalAlignment="Center" Text="{Binding Name}" ToolTip="{Binding EntityId}">
+                                <TextBlock.Style>
+                                  <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Body}">
+                                    <Style.Triggers>
+                                      <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Fate.Brush.TextFaint}" />
+                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                      </DataTrigger>
+                                    </Style.Triggers>
+                                  </Style>
+                                </TextBlock.Style>
+                              </TextBlock>
+                              <Button
+                                Margin="4,0,0,0"
+                                Style="{StaticResource Fate.Button.Icon}"
+                                Width="26"
+                                Height="26"
+                                BorderThickness="0"
+                                ToolTip="Remove"
+                                AutomationProperties.Name="{Binding Name, StringFormat='Remove {0}'}"
+                                Command="{Binding DataContext.RemoveTargetCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}">
+                                <Path Style="{StaticResource Fate.UiIcon}" Width="10" Height="10" Data="{StaticResource Fate.Icon.Close}" />
+                              </Button>
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Finding a device to add. Enter adds the highlighted result. -->
+                    <Grid Margin="0,4,0,0">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+
+                      <Grid Grid.Column="0">
+                        <TextBox
+                          x:Name="DeviceSearch"
+                          Style="{StaticResource Fate.TextBox}"
+                          Padding="9,7"
+                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                          AutomationProperties.Name="Find a device to add"
+                          ToolTip="Type part of a device's name, then press Enter">
+                          <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding AddTargetCommand}" />
+                          </TextBox.InputBindings>
+                        </TextBox>
+                        <TextBlock
+                          Margin="12,0,0,0"
+                          VerticalAlignment="Center"
+                          IsHitTestVisible="False"
+                          Text="Find a device to add…">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                              <Setter Property="Visibility" Value="Collapsed" />
+                              <Style.Triggers>
+                                <MultiDataTrigger>
+                                  <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding SearchText}" Value="" />
+                                    <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=DeviceSearch}" Value="False" />
+                                  </MultiDataTrigger.Conditions>
+                                  <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </Grid>
+
+                      <Button
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource Fate.Button}"
+                        Content="Add device"
+                        AutomationProperties.Name="Add device"
+                        Command="{Binding AddTargetCommand}" />
+                    </Grid>
+
+                    <ListBox
+                      Margin="0,6,0,0"
+                      MaxHeight="240"
+                      Style="{StaticResource Fate.ListBox}"
+                      ItemsSource="{Binding Matches}"
+                      SelectedItem="{Binding SelectedMatch}"
+                      AutomationProperties.Name="Matching devices"
+                      Visibility="{Binding Matches.Count, Converter={StaticResource AnyToVisibility}}">
+                      <ListBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding AddTargetCommand}" CommandParameter="{Binding SelectedMatch}" />
+                        <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding AddTargetCommand}" CommandParameter="{Binding SelectedMatch}" />
+                      </ListBox.InputBindings>
+                      <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DeviceShortcutMatch}">
+                          <StackPanel Margin="2,3" AutomationProperties.Name="{Binding Name}">
+                            <TextBlock Style="{StaticResource Fate.Text.Body}" Text="{Binding Name}" />
+                            <TextBlock Style="{StaticResource Fate.Text.Caption}" Text="{Binding Detail}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock
+                      Margin="0,8,0,0"
+                      Style="{StaticResource Fate.Text.Faint}"
+                      TextWrapping="Wrap"
+                      Text="{Binding Note}"
+                      Visibility="{Binding Note, Converter={StaticResource TextToVisibility}}" />
+                    <TextBlock
+                      Margin="0,6,0,0"
+                      Style="{StaticResource Fate.Text.Caption}"
+                      Foreground="{DynamicResource Fate.Brush.StatusWarning}"
+                      TextWrapping="Wrap"
+                      Text="{Binding Failure}"
+                      Visibility="{Binding Failure, Converter={StaticResource TextToVisibility}}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Button
+            Margin="0,4,0,0"
+            HorizontalAlignment="Left"
+            Style="{StaticResource Fate.Button}"
+            Content="Add a device shortcut"
+            AutomationProperties.Name="Add a device shortcut"
+            Command="{Binding AddDeviceShortcutCommand}" />
         </StackPanel>
       </ScrollViewer>
     </ContentControl>
