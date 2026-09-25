@@ -19,38 +19,50 @@ public static class HaControl
     /// <summary>Turns an entity on, using whatever "on" means for its domain.</summary>
     public static Task TurnOnAsync(this HaClient client, string entityId, CancellationToken ct = default)
     {
-        string domain = DomainOf(entityId);
-
-        return domain switch
-        {
-            HaDomains.Scene => client.CallServiceAsync(HaDomains.Scene, "turn_on", entityId, ct: ct),
-            HaDomains.Script => client.CallServiceAsync(HaDomains.Script, "turn_on", entityId, ct: ct),
-            HaDomains.Button => client.CallServiceAsync(HaDomains.Button, "press", entityId, ct: ct),
-            HaDomains.InputButton => client.CallServiceAsync(HaDomains.InputButton, "press", entityId, ct: ct),
-            HaDomains.Cover => client.CallServiceAsync(HaDomains.Cover, "open_cover", entityId, ct: ct),
-            HaDomains.Valve => client.CallServiceAsync(HaDomains.Valve, "open_valve", entityId, ct: ct),
-            HaDomains.Lock => client.CallServiceAsync(HaDomains.Lock, "unlock", entityId, ct: ct),
-            HaDomains.Vacuum => client.CallServiceAsync(HaDomains.Vacuum, "start", entityId, ct: ct),
-            _ => client.CallServiceAsync("homeassistant", "turn_on", entityId, ct: ct),
-        };
+        (string domain, string service) = TurnOnService(DomainOf(entityId));
+        return client.CallServiceAsync(domain, service, entityId, ct: ct);
     }
 
     /// <summary>Turns an entity off. Momentary domains have no off and are ignored.</summary>
     public static Task TurnOffAsync(this HaClient client, string entityId, CancellationToken ct = default)
     {
-        string domain = DomainOf(entityId);
-
-        return domain switch
+        if (TurnOffService(DomainOf(entityId)) is not { } off)
         {
-            HaDomains.Scene or HaDomains.Button or HaDomains.InputButton => Task.CompletedTask,
-            HaDomains.Script => client.CallServiceAsync(HaDomains.Script, "turn_off", entityId, ct: ct),
-            HaDomains.Cover => client.CallServiceAsync(HaDomains.Cover, "close_cover", entityId, ct: ct),
-            HaDomains.Valve => client.CallServiceAsync(HaDomains.Valve, "close_valve", entityId, ct: ct),
-            HaDomains.Lock => client.CallServiceAsync(HaDomains.Lock, "lock", entityId, ct: ct),
-            HaDomains.Vacuum => client.CallServiceAsync(HaDomains.Vacuum, "return_to_base", entityId, ct: ct),
-            _ => client.CallServiceAsync("homeassistant", "turn_off", entityId, ct: ct),
-        };
+            return Task.CompletedTask;
+        }
+
+        return client.CallServiceAsync(off.Domain, off.Service, entityId, ct: ct);
     }
+
+    /// <summary>The service that means "on" for a domain.</summary>
+    /// <remarks>
+    /// Split out from <see cref="TurnOnAsync"/> so that a caller acting on several entities at once
+    /// can batch them into one call per service without keeping a second copy of this mapping.
+    /// </remarks>
+    public static (string Domain, string Service) TurnOnService(string domain) => domain switch
+    {
+        HaDomains.Scene => (HaDomains.Scene, "turn_on"),
+        HaDomains.Script => (HaDomains.Script, "turn_on"),
+        HaDomains.Button => (HaDomains.Button, "press"),
+        HaDomains.InputButton => (HaDomains.InputButton, "press"),
+        HaDomains.Cover => (HaDomains.Cover, "open_cover"),
+        HaDomains.Valve => (HaDomains.Valve, "open_valve"),
+        HaDomains.Lock => (HaDomains.Lock, "unlock"),
+        HaDomains.Vacuum => (HaDomains.Vacuum, "start"),
+        _ => ("homeassistant", "turn_on"),
+    };
+
+    /// <summary>The service that means "off" for a domain, or null for momentary domains.</summary>
+    public static (string Domain, string Service)? TurnOffService(string domain) => domain switch
+    {
+        HaDomains.Scene or HaDomains.Button or HaDomains.InputButton => null,
+        HaDomains.Script => (HaDomains.Script, "turn_off"),
+        HaDomains.Cover => (HaDomains.Cover, "close_cover"),
+        HaDomains.Valve => (HaDomains.Valve, "close_valve"),
+        HaDomains.Lock => (HaDomains.Lock, "lock"),
+        HaDomains.Vacuum => (HaDomains.Vacuum, "return_to_base"),
+        _ => ("homeassistant", "turn_off"),
+    };
 
     /// <summary>
     /// Flips an entity. Uses the observed state rather than <c>toggle</c> for domains where the
