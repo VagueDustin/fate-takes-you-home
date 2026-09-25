@@ -6,6 +6,21 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Device shortcuts.** System-wide keys that act on the devices you choose: toggle, on, off,
+  brightness up, down or to a level, play/pause, pause, next, previous, volume and mute. Several
+  devices on one key act as one, so a toggle turns them all off if any are on and all on
+  otherwise, instead of leaving a half-lit room half lit with the halves swapped. Brightness
+  steps are sent as steps, so Home Assistant does the arithmetic against the real value. An
+  action skips the devices it does not fit, and the editor says which. A shortcut can lock a
+  door but never unlock one. Set them up under Appearance → Device shortcuts.
+
+### Changed
+
+- Two shortcuts in the app that share a combination are now reported as a clash that names the
+  other one, rather than as "in use by another application".
+
 ## [0.3.2] (2026-09-17)
 
 Housekeeping. One library inside the application moved; everything else is the repository
