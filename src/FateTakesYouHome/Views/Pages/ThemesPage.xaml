@@ -43,7 +43,7 @@
       </ContentControl.Style>
 
       <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
-        <StackPanel Margin="26,22,36,26">
+        <StackPanel Margin="26,22,26,26">
 
           <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Appearance" />
 
@@ -287,7 +287,7 @@
             </Style>
           </ScrollViewer.Style>
 
-          <StackPanel Margin="26,24,36,26">
+          <StackPanel Margin="26,24,26,26">
 
             <!-- Identity -->
             <Grid>

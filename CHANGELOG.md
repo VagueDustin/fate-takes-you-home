@@ -24,6 +24,8 @@ Notable changes to Fate Takes You Home. The format follows
 ### Changed
 
 - The app's own shortcuts moved from Appearance to the new Shortcuts page.
+- **Scrollbars sit beside the page instead of over it.** Laid over the content, the bar covered
+  whatever was at the right edge, from a layout card's close button to right-aligned text.
 - **The Layout page rearranges around what you drag.** Dropping a card onto another used to send
   it back where it came from, and the standard layout is full, so almost nothing could move. Now a
   card dropped on one of the same size swaps with it, and anything else in the way moves down,

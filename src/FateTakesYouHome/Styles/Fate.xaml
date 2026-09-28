@@ -774,7 +774,7 @@
 
   <!-- ==================================================================== scrolling -->
 
-  <!-- A slim overlay scrollbar. The default WPF one looks like Windows XP. -->
+  <!-- A slim scrollbar. The default WPF one looks like Windows XP. -->
   <Style x:Key="Fate.ScrollBar" TargetType="ScrollBar">
     <Setter Property="Width" Value="10" />
     <Setter Property="Background" Value="Transparent" />
@@ -829,7 +829,18 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ScrollViewer">
+          <!--
+            The scrollbar has a column of its own rather than floating over the content. Laid
+            over it, the bar covered whatever sat at the right edge of every page: a card's close
+            button, its resize grip, right-aligned text. The column is Auto, so while there is
+            nothing to scroll the bar is collapsed and the content keeps the full width.
+          -->
           <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
             <!--
               Both of these are load-bearing and neither is optional.
 
@@ -843,13 +854,15 @@
             -->
             <ScrollContentPresenter
               x:Name="PART_ScrollContentPresenter"
+              Grid.Column="0"
               CanContentScroll="{TemplateBinding CanContentScroll}"
               Content="{TemplateBinding Content}"
               ContentTemplate="{TemplateBinding ContentTemplate}"
               Margin="{TemplateBinding Padding}" />
             <ScrollBar
               x:Name="PART_VerticalScrollBar"
-              HorizontalAlignment="Right"
+              Grid.Column="1"
+              Margin="6,0,0,0"
               Style="{StaticResource Fate.ScrollBar}"
               Orientation="Vertical"
               Maximum="{TemplateBinding ScrollableHeight}"
@@ -908,8 +921,6 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
 
-    <!-- Keeps content clear of the overlay scrollbar, which otherwise covers right-aligned text. -->
-    <Setter Property="Padding" Value="0,0,14,0" />
     <Setter Property="ItemContainerStyle" Value="{StaticResource Fate.ListBoxItem}" />
     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     <Setter Property="ScrollViewer.CanContentScroll" Value="True" />

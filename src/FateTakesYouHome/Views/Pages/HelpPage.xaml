@@ -16,7 +16,7 @@
 
   <ContentControl Style="{StaticResource Fate.Panel}">
     <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
-      <StackPanel Margin="26,22,36,26" MaxWidth="760" HorizontalAlignment="Left">
+      <StackPanel Margin="26,22,26,26" MaxWidth="760" HorizontalAlignment="Left">
 
         <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Help" />
 
