@@ -7,6 +7,7 @@ using FateTakesYouHome.HomeAssistant;
 using FateTakesYouHome.HomeAssistant.Models;
 using FateTakesYouHome.Models;
 using FateTakesYouHome.Services;
+using FateTakesYouHome.ViewModels;
 using Xunit;
 
 namespace FateTakesYouHome.Tests;
@@ -447,5 +448,77 @@ public sealed class DeviceShortcutIntegrationTests
 
         Assert.Equal("Entity does not support this service.", refused.ServerMessage);
         Assert.Equal(2, server.Received.Count(n => n["type"]?.GetValue<string>() == "call_service"));
+    }
+}
+
+/// <summary>What the device picker offers, and in what order.</summary>
+public sealed class DeviceShortcutSuggestionTests
+{
+    private static readonly DeviceShortcutCandidate[] House =
+    [
+        new("switch.garage_plug", "Garage plug", null),
+        new("light.shelf_strip", "Shelf strip", "Study"),
+        new("light.desk_lamp", "Desk lamp", "Study"),
+        new("switch.kettle_plug", "Kettle plug", "Kitchen"),
+        new("switch.power_strip", "Power strip", "Office"),
+        new("switch.teapot_warmer", "Teapot warmer", "Office"),
+    ];
+
+    private static string[] Ids(IReadOnlyList<DeviceShortcutMatch> matches) =>
+        matches.Select(m => m.EntityId).ToArray();
+
+    /// <summary>A new shortcut's picker must have something in it before anything is typed.</summary>
+    [Fact]
+    public void WithNothingTypedEveryDeviceIsOfferedRoomByRoom()
+    {
+        Assert.Equal(
+            new[]
+            {
+                "switch.kettle_plug",
+                "switch.power_strip", "switch.teapot_warmer",
+                "light.desk_lamp", "light.shelf_strip",
+                "switch.garage_plug",
+            },
+            Ids(DeviceShortcutRow.Suggest(House, [], "", 50)));
+    }
+
+    [Fact]
+    public void DevicesAlreadyChosenAreNotOfferedAgain()
+    {
+        Assert.DoesNotContain(
+            "light.desk_lamp",
+            Ids(DeviceShortcutRow.Suggest(House, ["LIGHT.DESK_LAMP"], "", 50)));
+    }
+
+    [Fact]
+    public void NamesThatStartWithTheQueryComeFirst()
+    {
+        // "po" is inside "Teapot" too; the device whose name starts with it is the one meant.
+        Assert.Equal(
+            new[] { "switch.power_strip", "switch.teapot_warmer" },
+            Ids(DeviceShortcutRow.Suggest(House, [], "po", 50)));
+    }
+
+    [Fact]
+    public void TypingARoomFindsWhatIsInIt()
+    {
+        Assert.Equal(
+            new[] { "light.desk_lamp", "light.shelf_strip" },
+            Ids(DeviceShortcutRow.Suggest(House, [], "study", 50)));
+    }
+
+    [Fact]
+    public void TheListIsCapped()
+    {
+        Assert.Equal(2, DeviceShortcutRow.Suggest(House, [], "  ", 2).Count);
+    }
+
+    [Fact]
+    public void EachSuggestionSaysWhereItIs()
+    {
+        IReadOnlyList<DeviceShortcutMatch> matches = DeviceShortcutRow.Suggest(House, [], "", 50);
+
+        Assert.Equal("Kitchen · switch.kettle_plug", matches[0].Detail);
+        Assert.Equal("switch.garage_plug", matches[^1].Detail);
     }
 }

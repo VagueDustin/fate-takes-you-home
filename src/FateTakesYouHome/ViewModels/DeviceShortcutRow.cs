@@ -21,6 +21,9 @@ public sealed record DeviceShortcutTarget(string EntityId, string Name, bool IsS
 /// <summary>A search result in the device picker.</summary>
 public sealed record DeviceShortcutMatch(string EntityId, string Name, string Detail);
 
+/// <summary>A device that could be offered in the picker, with the room it is in, if any.</summary>
+public sealed record DeviceShortcutCandidate(string EntityId, string Name, string? Area);
+
 /// <summary>
 /// One device shortcut, as an editable row on the appearance page.
 /// </summary>
@@ -31,7 +34,11 @@ public sealed record DeviceShortcutMatch(string EntityId, string Name, string De
 /// </remarks>
 public sealed partial class DeviceShortcutRow : ObservableObject
 {
-    private const int MaxMatches = 8;
+    /// <summary>
+    /// Enough to browse a room or two before typing. The list scrolls; the cap only stops a house
+    /// with a thousand entities from building a thousand buttons for every keystroke.
+    /// </summary>
+    private const int MaxMatches = 60;
 
     private readonly HomeAssistantService _homeAssistant;
     private readonly Action _onChanged;
@@ -51,10 +58,8 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     private string? _failure;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddTargetCommand))]
     private string _searchText = string.Empty;
-
-    [ObservableProperty]
-    private DeviceShortcutMatch? _selectedMatch;
 
     public DeviceShortcutRow(
         DeviceShortcut model,
@@ -74,6 +79,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         _loading = false;
 
         RebuildTargets();
+        RefreshMatches();
     }
 
     /// <summary>Every action, in the order the picker lists them.</summary>
@@ -163,13 +169,17 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     partial void OnSearchTextChanged(string value) => RefreshMatches();
 
     /// <summary>
-    /// Adds a device. With no argument, adds the highlighted search result, or the first one, so
-    /// Enter in the search box does the obvious thing.
+    /// Adds a device: the suggestion given, or with none, the best match for what has been typed,
+    /// so Enter in the search box does the obvious thing.
     /// </summary>
-    [RelayCommand]
+    /// <remarks>
+    /// With nothing typed there is no "best" match, only the first device in the list, and adding
+    /// that would be a guess. The command is disabled instead.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(CanAddTarget))]
     private void AddTarget(DeviceShortcutMatch? match)
     {
-        match ??= SelectedMatch ?? Matches.FirstOrDefault();
+        match ??= HasQuery ? Matches.FirstOrDefault() : null;
 
         if (match is null || Model.EntityIds.Contains(match.EntityId, StringComparer.OrdinalIgnoreCase))
         {
@@ -181,6 +191,10 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         RebuildTargets();
         Changed();
     }
+
+    private bool CanAddTarget(DeviceShortcutMatch? match) => match is not null || HasQuery;
+
+    private bool HasQuery => !string.IsNullOrWhiteSpace(SearchText);
 
     [RelayCommand]
     private void RemoveTarget(DeviceShortcutTarget? target)
@@ -235,37 +249,68 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         OnPropertyChanged(nameof(Summary));
     }
 
+    /// <summary>Rebuilds the suggestions from what Home Assistant currently reports.</summary>
     private void RefreshMatches()
     {
-        Matches.Clear();
-
-        string query = SearchText.Trim();
-
-        if (query.Length == 0)
-        {
-            return;
-        }
-
-        IEnumerable<HaEntityState> found = _homeAssistant
+        IEnumerable<DeviceShortcutCandidate> candidates = _homeAssistant
             .Browsable(includeAuxiliary: false, includeUnavailable: true)
             .Where(state => DeviceActions.IsTargetable(state.Domain))
-            .Where(state => !Model.EntityIds.Contains(state.EntityId, StringComparer.OrdinalIgnoreCase))
-            .Where(state =>
-                state.FriendlyName.Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                || state.EntityId.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(state => state.FriendlyName, StringComparer.CurrentCultureIgnoreCase)
-            .Take(MaxMatches);
+            .Select(state => new DeviceShortcutCandidate(
+                state.EntityId, state.FriendlyName, _homeAssistant.AreaFor(state.EntityId)?.Name));
 
-        foreach (HaEntityState state in found)
+        Matches.Clear();
+
+        foreach (DeviceShortcutMatch match in Suggest(candidates, Model.EntityIds, SearchText, MaxMatches))
         {
-            string detail = _homeAssistant.AreaFor(state.EntityId) is { } area
-                ? $"{area.Name} · {state.EntityId}"
-                : state.EntityId;
+            Matches.Add(match);
+        }
+    }
 
-            Matches.Add(new DeviceShortcutMatch(state.EntityId, state.FriendlyName, detail));
+    /// <summary>
+    /// Chooses and orders the picker's suggestions.
+    /// </summary>
+    /// <remarks>
+    /// With nothing typed, every device not already chosen is offered, room by room, so the list
+    /// is something to browse rather than a blank box that has to be guessed at. Once something is
+    /// typed, it matches a name, an entity id or a room, and names that start with it come first:
+    /// "po" should find the power strip before the teapot, which merely contains the letters.
+    /// </remarks>
+    public static IReadOnlyList<DeviceShortcutMatch> Suggest(
+        IEnumerable<DeviceShortcutCandidate> candidates,
+        IEnumerable<string> alreadyChosen,
+        string? query,
+        int limit)
+    {
+        var chosen = new HashSet<string>(alreadyChosen, StringComparer.OrdinalIgnoreCase);
+        string text = query?.Trim() ?? string.Empty;
+
+        IEnumerable<DeviceShortcutCandidate> available = candidates.Where(c => !chosen.Contains(c.EntityId));
+        IOrderedEnumerable<DeviceShortcutCandidate> ordered;
+
+        if (text.Length == 0)
+        {
+            // Devices without a room go last rather than first, where an empty name would sort.
+            ordered = available
+                .OrderBy(c => c.Area is null)
+                .ThenBy(c => c.Area, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase);
+        }
+        else
+        {
+            ordered = available
+                .Where(c =>
+                    c.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)
+                    || c.EntityId.Contains(text, StringComparison.OrdinalIgnoreCase)
+                    || (c.Area?.Contains(text, StringComparison.CurrentCultureIgnoreCase) ?? false))
+                .OrderBy(c => !c.Name.StartsWith(text, StringComparison.CurrentCultureIgnoreCase))
+                .ThenBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase);
         }
 
-        SelectedMatch = Matches.FirstOrDefault();
+        return ordered
+            .Take(limit)
+            .Select(c => new DeviceShortcutMatch(
+                c.EntityId, c.Name, c.Area is null ? c.EntityId : $"{c.Area} · {c.EntityId}"))
+            .ToList();
     }
 
     private string NameOf(string entityId) =>

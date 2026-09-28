@@ -15,6 +15,52 @@
     <conv:CountToVisibilityConverter x:Key="AnyToVisibility" />
     <conv:CountToVisibilityConverter x:Key="EmptyToVisibility" WhenEmpty="True" />
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+    <!--
+      One suggestion in the device picker: a flat row that lights on hover and rings on focus.
+      A button rather than a list item because choosing one is an action, not a selection. The
+      house list items are deliberately inert, and a selection that does nothing until a second
+      control is found is the trap this replaces.
+    -->
+    <Style x:Key="SuggestionButton" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid>
+              <Border
+                x:Name="Row"
+                Background="Transparent"
+                CornerRadius="{DynamicResource Fate.Radius.Md}"
+                Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+              </Border>
+              <Border
+                x:Name="FocusRing"
+                BorderBrush="{DynamicResource Fate.Brush.AccentHover}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Fate.Radius.Md}"
+                Opacity="0"
+                IsHitTestVisible="False" />
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Row" Property="Background" Value="{DynamicResource Fate.Brush.ButtonFaceHover}" />
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Row" Property="Background" Value="{DynamicResource Fate.Brush.ButtonFacePressed}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Row" Property="Background" Value="{DynamicResource Fate.Brush.ButtonFaceHover}" />
+                <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </UserControl.Resources>
 
   <ContentControl Style="{StaticResource Fate.Panel}">
@@ -209,77 +255,110 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
 
-                  <!-- Finding a device to add. Enter adds the highlighted result. -->
-                  <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                  <!--
+                    Finding a device to add. The suggestions show while the search box, or one of
+                    the suggestions, has focus; each is a button, so a click, Enter or Space adds it.
+                    Enter in the search box adds the top match.
+                  -->
+                  <StackPanel x:Name="Picker" Margin="0,4,0,0">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
 
-                    <Grid Grid.Column="0">
-                      <TextBox
-                        x:Name="DeviceSearch"
-                        Style="{StaticResource Fate.TextBox}"
-                        Padding="9,7"
-                        Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                        AutomationProperties.Name="Find a device to add"
-                        ToolTip="Type part of a device's name, then press Enter">
-                        <TextBox.InputBindings>
-                          <KeyBinding Key="Return" Command="{Binding AddTargetCommand}" />
-                        </TextBox.InputBindings>
-                      </TextBox>
-                      <TextBlock
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        IsHitTestVisible="False"
-                        Text="Find a device to add…">
-                        <TextBlock.Style>
-                          <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                              <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                  <Condition Binding="{Binding SearchText}" Value="" />
-                                  <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=DeviceSearch}" Value="False" />
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="Visibility" Value="Visible" />
-                              </MultiDataTrigger>
-                            </Style.Triggers>
-                          </Style>
-                        </TextBlock.Style>
-                      </TextBlock>
+                      <Grid Grid.Column="0">
+                        <TextBox
+                          x:Name="DeviceSearch"
+                          Style="{StaticResource Fate.TextBox}"
+                          Padding="9,7"
+                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                          PreviewKeyDown="OnSearchPreviewKeyDown"
+                          AutomationProperties.Name="Find a device to add"
+                          ToolTip="Type part of a device's or room's name. Enter adds the top match; the down arrow moves into the list.">
+                          <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding AddTargetCommand}" />
+                          </TextBox.InputBindings>
+                        </TextBox>
+                        <TextBlock
+                          Margin="12,0,0,0"
+                          VerticalAlignment="Center"
+                          IsHitTestVisible="False"
+                          Text="Find a device to add…">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                              <Setter Property="Visibility" Value="Collapsed" />
+                              <Style.Triggers>
+                                <MultiDataTrigger>
+                                  <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding SearchText}" Value="" />
+                                    <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=DeviceSearch}" Value="False" />
+                                  </MultiDataTrigger.Conditions>
+                                  <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </Grid>
+
+                      <Button
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource Fate.Button}"
+                        Content="Add device"
+                        AutomationProperties.Name="Add the top match"
+                        Command="{Binding AddTargetCommand}" />
                     </Grid>
 
-                    <Button
-                      Grid.Column="1"
-                      Margin="8,0,0,0"
-                      Style="{StaticResource Fate.Button}"
-                      Content="Add device"
-                      AutomationProperties.Name="Add device"
-                      Command="{Binding AddTargetCommand}" />
-                  </Grid>
+                    <Border
+                      Margin="0,6,0,0"
+                      Padding="4"
+                      CornerRadius="{DynamicResource Fate.Radius.Md}"
+                      BorderThickness="1"
+                      BorderBrush="{DynamicResource Fate.Brush.BorderSubtle}"
+                      Background="{DynamicResource Fate.Brush.SurfaceSunken}">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Visibility" Value="Collapsed" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsKeyboardFocusWithin, ElementName=Picker}" Value="True">
+                              <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <!-- Declared last so it wins: an empty list is not worth a box. -->
+                            <DataTrigger Binding="{Binding Matches.Count}" Value="0">
+                              <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
 
-                  <ListBox
-                    Margin="0,6,0,0"
-                    MaxHeight="240"
-                    Style="{StaticResource Fate.ListBox}"
-                    ItemsSource="{Binding Matches}"
-                    SelectedItem="{Binding SelectedMatch}"
-                    AutomationProperties.Name="Matching devices"
-                    Visibility="{Binding Matches.Count, Converter={StaticResource AnyToVisibility}}">
-                    <ListBox.InputBindings>
-                      <KeyBinding Key="Return" Command="{Binding AddTargetCommand}" CommandParameter="{Binding SelectedMatch}" />
-                      <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding AddTargetCommand}" CommandParameter="{Binding SelectedMatch}" />
-                    </ListBox.InputBindings>
-                    <ListBox.ItemTemplate>
-                      <DataTemplate DataType="{x:Type vm:DeviceShortcutMatch}">
-                        <StackPanel Margin="2,3" AutomationProperties.Name="{Binding Name}">
-                          <TextBlock Style="{StaticResource Fate.Text.Body}" Text="{Binding Name}" />
-                          <TextBlock Style="{StaticResource Fate.Text.Caption}" Text="{Binding Detail}" />
-                        </StackPanel>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
+                      <ScrollViewer Style="{StaticResource Fate.ScrollViewer}" MaxHeight="260" Focusable="False">
+                        <ItemsControl
+                          ItemsSource="{Binding Matches}"
+                          Focusable="False"
+                          AutomationProperties.Name="Matching devices">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:DeviceShortcutMatch}">
+                              <Button
+                                Style="{StaticResource SuggestionButton}"
+                                Command="{Binding DataContext.AddTargetCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                Click="OnSuggestionClicked"
+                                ToolTip="{Binding EntityId}"
+                                AutomationProperties.Name="{Binding Name, StringFormat='Add {0}'}">
+                                <StackPanel>
+                                  <TextBlock Style="{StaticResource Fate.Text.Body}" Text="{Binding Name}" />
+                                  <TextBlock Style="{StaticResource Fate.Text.Caption}" Text="{Binding Detail}" />
+                                </StackPanel>
+                              </Button>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Border>
+                  </StackPanel>
 
                   <TextBlock
                     Margin="0,8,0,0"
