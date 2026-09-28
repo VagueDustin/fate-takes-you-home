@@ -57,6 +57,8 @@ Notable changes to Fate Takes You Home. The format follows
 - **A blocked update install said it was ready.** When Windows would not start the downloaded
   installer, the error escaped unhandled and the update kept offering an install that could not
   happen. It now says so, and where the file is.
+- **The Layout page's explanation ran under its buttons.** At most window widths, "pull the corner
+  to resize" sat hidden behind Save layout. The text now wraps before the buttons.
 
 ## [0.3.2] (2026-09-17)
 

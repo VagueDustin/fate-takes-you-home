@@ -89,8 +89,14 @@
 
         <!-- ======================================================== heading -->
 
+        <!-- Two columns, so the explanation wraps before the buttons rather than running beneath them. -->
         <Grid Grid.Row="0">
-          <StackPanel>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <StackPanel Grid.Column="0" Margin="0,0,16,0">
             <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Layout" />
             <TextBlock
               Margin="0,8,0,0"
@@ -99,7 +105,7 @@
               Text="Arrange the home screen and the tray panel like a phone: drag to move, pull the corner to resize." />
           </StackPanel>
 
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
             <Button
               Style="{StaticResource Fate.Button.Primary}"
               Content="Save layout"
