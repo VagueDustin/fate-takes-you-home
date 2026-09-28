@@ -39,6 +39,25 @@ Notable changes to Fate Takes You Home. The format follows
 - Two shortcuts in the app that share a combination are now reported as a clash that names the
   other one, rather than as "in use by another application".
 
+### Fixed
+
+- **The connection could hang showing Connected.** A drop between signing in to Home Assistant and
+  its reply to the state subscription left the app waiting for that reply forever, with nothing
+  watching the socket yet. The status said Connected and no change ever arrived again until a
+  restart. The subscription is now raced against the socket, so a dead connection reconnects.
+- **Keepalive loops piled up across reconnects.** The ping loop ran for the life of the app rather
+  than of its connection, so each reconnect added another, pinging the new socket, until one failed
+  with nobody listening: the "stopped answering keepalive pings" unobserved exceptions in the log.
+- **Animations could stop app-wide.** An animation interrupted part way (a hover left early, a
+  card moved mid-glide) never gave back its place in the tier's concurrent-animation budget. After a
+  handful, every animation ran instantly until the theme was changed.
+- **Hotkeys blinked out while editing.** Every change re-registered every system-wide shortcut,
+  once per keystroke while naming one, long enough to lose a press. Only what changed is touched
+  now.
+- **A blocked update install said it was ready.** When Windows would not start the downloaded
+  installer, the error escaped unhandled and the update kept offering an install that could not
+  happen. It now says so, and where the file is.
+
 ## [0.3.2] (2026-09-17)
 
 Housekeeping. One library inside the application moved; everything else is the repository
