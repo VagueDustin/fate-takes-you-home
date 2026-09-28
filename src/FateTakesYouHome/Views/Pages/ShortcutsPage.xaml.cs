@@ -5,14 +5,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using FateTakesYouHome.ViewModels;
 
 namespace FateTakesYouHome.Views.Pages;
 
 /// <summary>Every system-wide shortcut: the application's own, and those that act on devices.</summary>
 /// <remarks>
-/// The two handlers here move focus and nothing else. Adding a device is the suggestion's command,
-/// so keyboard, mouse and automation all reach it the same way; where focus lands afterwards is a
-/// question only the view can answer.
+/// The handlers here deal only in focus: where it goes, and whether a picker has it. Adding a
+/// device is the suggestion's command, so keyboard, mouse and automation all reach it the same
+/// way; where focus lands afterwards, and whether a picker is open, are questions only the view
+/// can answer, because keyboard focus is read-only and cannot be bound to a view model.
 /// </remarks>
 public partial class ShortcutsPage : UserControl
 {
@@ -30,6 +32,15 @@ public partial class ShortcutsPage : UserControl
             && FindDescendant<TextBox>(picker) is { } search)
         {
             search.Focus();
+        }
+    }
+
+    /// <summary>Opens a row's suggestions while its picker has focus, and closes them after.</summary>
+    private void OnPickerFocusChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: DeviceShortcutRow row })
+        {
+            row.SetPickerOpen((bool)e.NewValue);
         }
     }
 

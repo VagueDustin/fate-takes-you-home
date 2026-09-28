@@ -295,7 +295,7 @@
                     the suggestions, has focus; each is a button, so a click, Enter or Space adds it.
                     Enter in the search box adds the top match.
                   -->
-                  <StackPanel x:Name="Picker" Margin="0,4,0,0">
+                  <StackPanel x:Name="Picker" Margin="0,4,0,0" IsKeyboardFocusWithinChanged="OnPickerFocusChanged">
                     <Grid>
                       <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

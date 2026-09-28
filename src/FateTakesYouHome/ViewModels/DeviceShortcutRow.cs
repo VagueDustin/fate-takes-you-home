@@ -44,6 +44,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     private readonly Action _onChanged;
     private readonly Action<DeviceShortcutRow> _onRemove;
     private readonly bool _loading;
+    private bool _pickerOpen;
 
     [ObservableProperty]
     private string _label = string.Empty;
@@ -83,7 +84,6 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         _loading = false;
 
         RebuildTargets();
-        RefreshMatches();
     }
 
     /// <summary>Every action, in the order the picker lists them.</summary>
@@ -236,6 +236,21 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         RefreshMatches();
     }
 
+    /// <summary>
+    /// Told by the view when this row's device picker gains or loses focus, which is when its
+    /// suggestions are shown and hidden.
+    /// </summary>
+    /// <remarks>
+    /// Suggestions are worked out only while they can be seen. Every row used to keep its own list
+    /// up to date, sorting every device in the house for each row on load and again on every
+    /// reconnect, for lists nobody was looking at.
+    /// </remarks>
+    public void SetPickerOpen(bool open)
+    {
+        _pickerOpen = open;
+        RefreshMatches();
+    }
+
     /// <summary>Reloads the failure state without re-triggering a save.</summary>
     public void SetFailureQuietly(string? failure) => Failure = failure;
 
@@ -270,6 +285,12 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     /// <summary>Rebuilds the suggestions from what Home Assistant currently reports.</summary>
     private void RefreshMatches()
     {
+        if (!_pickerOpen)
+        {
+            Matches.Clear();
+            return;
+        }
+
         IEnumerable<DeviceShortcutCandidate> candidates = _homeAssistant
             .Browsable(includeAuxiliary: false, includeUnavailable: true)
             .Where(state => DeviceActions.IsTargetable(state.Domain))
