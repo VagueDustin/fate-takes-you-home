@@ -4,6 +4,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using FateTakesYouHome.Theming.Model;
 using FateTakesYouHome.Theming.Rendering;
 
@@ -121,12 +122,12 @@ public static class ThemedMotion
             FillBehavior = FillBehavior.HoldEnd,
         };
 
-        animation.Completed += (_, _) =>
+        if (onCompleted is not null)
         {
-            ReleaseSlot();
-            onCompleted?.Invoke();
-        };
+            animation.Completed += (_, _) => onCompleted();
+        }
 
+        ReleaseAfter(duration);
         target.BeginAnimation(property, animation);
     }
 
@@ -160,8 +161,7 @@ public static class ThemedMotion
             FillBehavior = FillBehavior.HoldEnd,
         };
 
-        animation.Completed += (_, _) => ReleaseSlot();
-
+        ReleaseAfter(duration);
         brush.BeginAnimation(SolidColorBrush.ColorProperty, animation);
     }
 
@@ -215,6 +215,29 @@ public static class ThemedMotion
 
         Interlocked.Decrement(ref _active);
         return false;
+    }
+
+    /// <summary>
+    /// Returns a slot once the animation holding it can no longer be running.
+    /// </summary>
+    /// <remarks>
+    /// Not on <c>Completed</c>, which does not fire for an animation removed or replaced before it
+    /// ends: a hover left before its lift finished, a layout card moved again mid-glide. Every such
+    /// interruption used to keep its slot for good, and after a handful of them the budget was
+    /// spent and every animation in the application ran instantly until the next theme change. An
+    /// animation cannot outlast its own duration, so the slot is held for exactly that long.
+    /// </remarks>
+    private static void ReleaseAfter(TimeSpan duration)
+    {
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = duration };
+
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            ReleaseSlot();
+        };
+
+        timer.Start();
     }
 
     private static void ReleaseSlot()
