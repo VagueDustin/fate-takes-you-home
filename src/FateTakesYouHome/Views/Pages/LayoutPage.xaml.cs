@@ -19,11 +19,11 @@ namespace FateTakesYouHome.Views.Pages;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The page owns the mouse mechanics and the view model owns the rules. During a drag the cells
-/// update live, so the rest of the canvas behaves as though the card were already there, and an
-/// outline shows the cell it will settle into. The card itself is lifted above the others and
-/// follows the pointer by the pixel rather than jumping from cell to cell; on release it glides
-/// into its cell, or back to where it started if the drop would overlap.
+/// The page owns the mouse mechanics and <see cref="GridReflow"/> owns the rules. During a drag
+/// the other widgets make way live, sliding aside as the card passes over them, and an outline
+/// shows the cells it will settle into. The card itself is lifted above the others and follows the
+/// pointer by the pixel, within the range it could actually land in, rather than jumping from cell
+/// to cell. On release it glides into its cell.
 /// </para>
 /// <para>
 /// The following is a render transform on top of the arranged position, never a change to the
@@ -63,7 +63,10 @@ public partial class LayoutPage : UserControl
     private FrameworkElement? _container;
     private Point _pressPoint;
     private Vector _grabOffset;
-    private (int X, int Y, int W, int H) _start;
+    private GridCell[] _startCells = [];
+    private int _movedIndex;
+    private GridCell _target;
+    private int _floor;
     private TranslateTransform? _follow;
     private ScaleTransform? _lift;
 
@@ -137,7 +140,7 @@ public partial class LayoutPage : UserControl
     {
         _canvas = FindCanvas(EditorHost);
 
-        if (_canvas is null)
+        if (_canvas is null || ViewModel is not { } viewModel)
         {
             return;
         }
@@ -146,7 +149,10 @@ public partial class LayoutPage : UserControl
         _container = EditorHost.ItemContainerGenerator.ContainerFromItem(widget) as FrameworkElement;
         _mode = DragMode.Pending;
         _requested = mode;
-        _start = (widget.X, widget.Y, widget.W, widget.H);
+        _startCells = viewModel.Cells();
+        _movedIndex = viewModel.Items.IndexOf(widget);
+        _target = _startCells[_movedIndex];
+        _floor = LayoutEditorViewModel.DeepestRow(widget, viewModel.Items);
         _pressPoint = e.GetPosition(_canvas);
         _grabOffset = _pressPoint - _canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft;
 
@@ -200,11 +206,19 @@ public partial class LayoutPage : UserControl
 
         if (_mode == DragMode.Move)
         {
-            Point topLeft = pointer - _grabOffset;
-            (int x, int y) = WidgetCanvas.NearestCell(topLeft, canvas.ColumnWidth, canvas.RowPitch);
+            // The card is drawn only where it could land: a full-width card slides up and down and
+            // never sideways, and nothing is drawn above the grid or past the row beneath the rest.
+            Point wanted = pointer - _grabOffset;
+            var topLeft = new Point(
+                Math.Clamp(wanted.X, 0, Math.Max(0, columns - widget.W) * canvas.ColumnWidth),
+                Math.Clamp(wanted.Y, 0, _floor * canvas.RowPitch));
 
-            widget.X = Math.Clamp(x, 0, Math.Max(0, columns - widget.W));
-            widget.Y = Math.Clamp(y, 0, LayoutEditorViewModel.DeepestRow(widget, viewModel.Items));
+            (int x, int y) = WidgetCanvas.NearestCell(topLeft, canvas.ColumnWidth, canvas.RowPitch);
+            Rearrange(new GridCell(
+                Math.Clamp(x, 0, Math.Max(0, columns - widget.W)),
+                Math.Clamp(y, 0, _floor),
+                widget.W,
+                widget.H));
 
             // The container is arranged at the widget's cell; the transform carries the card the
             // rest of the way to the pointer.
@@ -218,13 +232,95 @@ public partial class LayoutPage : UserControl
         else if (_mode == DragMode.Resize)
         {
             (int cellX, int cellY) = canvas.CellAt(pointer);
-            widget.W = Math.Clamp(cellX - widget.X + 1, 1, columns - widget.X);
-            widget.H = Math.Clamp(cellY - widget.Y + 1, 1, 6);
+            Rearrange(_target with
+            {
+                W = Math.Clamp(cellX - _target.X + 1, 1, Math.Max(1, columns - _target.X)),
+                H = Math.Clamp(cellY - _target.Y + 1, 1, 6),
+            });
         }
 
         widget.IsInvalid = viewModel.CollidesWithAnything(widget);
         ShowDropSlot(widget, canvas);
     }
+
+    /// <summary>
+    /// Arranges the grid for the dragged widget at <paramref name="target"/>, sliding every other
+    /// widget that has to move from where it was drawn to where it now belongs.
+    /// </summary>
+    /// <param name="settle">True on drop, when the dragged widget may float up into a gap too.</param>
+    private void Rearrange(GridCell target, bool settle = false)
+    {
+        if (ViewModel is not { } viewModel || _canvas is not { } canvas)
+        {
+            return;
+        }
+
+        // Nothing to do until the pointer reaches a different cell; mouse moves within one cell
+        // only move the card, not the grid.
+        if (!settle && target == _target)
+        {
+            return;
+        }
+
+        _target = target;
+
+        GridCell[] before = viewModel.Cells();
+        var shownAt = new Point[before.Length];
+
+        for (int i = 0; i < before.Length; i++)
+        {
+            shownAt[i] = canvas.CellRect(before[i].X, before[i].Y, before[i].W, before[i].H).TopLeft
+                         + CurrentNudge(i);
+        }
+
+        GridCell[] after = GridReflow.Arrange(_startCells, _movedIndex, target, settle);
+        viewModel.Apply(after);
+
+        for (int i = 0; i < after.Length; i++)
+        {
+            if (i != _movedIndex && (after[i].X, after[i].Y) != (before[i].X, before[i].Y))
+            {
+                Nudge(i, shownAt[i] - canvas.CellRect(after[i].X, after[i].Y, after[i].W, after[i].H).TopLeft);
+            }
+        }
+    }
+
+    /// <summary>How far a widget is currently drawn from its cell by a slide still in progress.</summary>
+    private Vector CurrentNudge(int index) =>
+        ContainerAt(index)?.RenderTransform is TranslateTransform slide
+            ? new Vector(slide.X, slide.Y)
+            : default;
+
+    /// <summary>
+    /// Slides a widget that has just been given a new cell from where it was drawn into that cell,
+    /// so neighbours making way are seen to move rather than blinking into place.
+    /// </summary>
+    private void Nudge(int index, Vector from)
+    {
+        if (ContainerAt(index) is not { } container)
+        {
+            return;
+        }
+
+        if (container.RenderTransform is not TranslateTransform slide || slide.IsFrozen)
+        {
+            slide = new TranslateTransform();
+            container.RenderTransform = slide;
+        }
+
+        slide.BeginAnimation(TranslateTransform.XProperty, null);
+        slide.BeginAnimation(TranslateTransform.YProperty, null);
+        slide.X = from.X;
+        slide.Y = from.Y;
+
+        ThemedMotion.AnimateDouble(slide, TranslateTransform.XProperty, 0, MotionSpeed.FlyoutClose);
+        ThemedMotion.AnimateDouble(slide, TranslateTransform.YProperty, 0, MotionSpeed.FlyoutClose);
+    }
+
+    private FrameworkElement? ContainerAt(int index) =>
+        ViewModel is { } viewModel && index >= 0 && index < viewModel.Items.Count
+            ? EditorHost.ItemContainerGenerator.ContainerFromItem(viewModel.Items[index]) as FrameworkElement
+            : null;
 
     private void OnScrollTick(object? sender, EventArgs e)
     {
@@ -273,23 +369,26 @@ public partial class LayoutPage : UserControl
         EditorHost.ReleaseMouseCapture();
         DropSlot.Visibility = Visibility.Collapsed;
 
-        if (wasDragging && _widget is { } widget && _canvas is { } canvas)
+        if (wasDragging && _widget is { } widget && _canvas is { } canvas && ViewModel is { } viewModel)
         {
             // Where the card is drawn right now, before its cell changes under it.
             Point shownAt = canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft
                             + new Vector(_follow?.X ?? 0, _follow?.Y ?? 0);
 
-            if (widget.IsInvalid)
+            Rearrange(_target, settle: true);
+
+            if (GridReflow.HasOverlap(viewModel.Cells()))
             {
-                // An overlapping drop goes home rather than shoving neighbours around.
-                (widget.X, widget.Y, widget.W, widget.H) = _start;
-                widget.IsInvalid = false;
+                // Cannot happen on a grid that was sound when the drag began, but a hand-edited
+                // settings file can start one that is not. Leave it as it was rather than worse.
+                viewModel.Apply(_startCells);
             }
-            else if ((widget.X, widget.Y, widget.W, widget.H) != _start)
+            else if (!viewModel.Cells().SequenceEqual(_startCells))
             {
-                ViewModel?.MarkDirty();
+                viewModel.MarkDirty();
             }
 
+            widget.IsInvalid = false;
             Settle(canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft, shownAt);
         }
 

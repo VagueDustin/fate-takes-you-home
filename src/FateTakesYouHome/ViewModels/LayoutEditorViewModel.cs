@@ -431,6 +431,18 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
             .DefaultIfEmpty(0)
             .Max();
 
+    /// <summary>Where every widget sits right now, index for index with <see cref="Items"/>.</summary>
+    public GridCell[] Cells() => Items.Select(item => new GridCell(item.X, item.Y, item.W, item.H)).ToArray();
+
+    /// <summary>Moves every widget to the given cells, index for index with <see cref="Items"/>.</summary>
+    public void Apply(IReadOnlyList<GridCell> cells)
+    {
+        for (int i = 0; i < Items.Count && i < cells.Count; i++)
+        {
+            (Items[i].X, Items[i].Y, Items[i].W, Items[i].H) = cells[i];
+        }
+    }
+
     /// <summary>True when the widget currently collides with any other.</summary>
     public bool CollidesWithAnything(EditorWidget widget) => Items.Any(widget.Overlaps);
 
