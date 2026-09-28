@@ -525,4 +525,49 @@ public sealed class HaClientIntegrationTests
                 $"Frame {i} arrived with id {ids[i]} after id {ids[i - 1]}.");
         }
     }
+
+    /// <summary>
+    /// Drops arriving the instant a connection comes up are recovered from, and each connection
+    /// has one keepalive loop that ends with it.
+    /// </summary>
+    /// <remarks>
+    /// Two bugs, both found by this test. A drop between signing in and the subscription's reply
+    /// left the client waiting for that reply forever, showing Connected and hearing nothing. And
+    /// the keepalive ran on the client's lifetime rather than the connection's, so every reconnect
+    /// added another loop pinging the new socket, each eventually failing as an unobserved task
+    /// exception. The drops here come immediately after each reconnect, which is the first case.
+    /// </remarks>
+    [Fact]
+    public async Task AReconnectDoesNotLeaveTheOldKeepaliveRunning()
+    {
+        await using var server = new FakeHomeAssistantServer();
+        await using var client = new HaClient(OptionsFor(server));
+
+        client.Start();
+        Assert.True(await FakeHomeAssistantServer.WaitUntilAsync(
+            () => client.State == HaConnectionState.Connected, Patience));
+
+        for (int drop = 1; drop <= 3; drop++)
+        {
+            server.DropConnection();
+            int expected = drop + 1;
+            Assert.True(
+                await FakeHomeAssistantServer.WaitUntilAsync(
+                    () => server.ConnectionCount >= expected && client.State == HaConnectionState.Connected,
+                    Patience),
+                $"Did not reconnect after drop {drop}.");
+        }
+
+        static int Pings(FakeHomeAssistantServer s) =>
+            s.Received.Count(n => n["type"]?.GetValue<string>() == "ping");
+
+        // Let any leftover loop reach its first ping, then count over five ping intervals.
+        await Task.Delay(TimeSpan.FromMilliseconds(400));
+        int before = Pings(server);
+        await Task.Delay(TimeSpan.FromMilliseconds(1500));
+        int sent = Pings(server) - before;
+
+        // One loop sends about five; the four the old code would be running by now, about twenty.
+        Assert.InRange(sent, 1, 8);
+    }
 }

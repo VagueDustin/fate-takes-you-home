@@ -212,9 +212,18 @@ public sealed class HaClient : IAsyncDisposable
 
         SetState(HaConnectionState.Authenticating, "Presenting access token…");
 
+        // Everything below lives exactly as long as this one connection. On the client's lifetime
+        // token instead, the ping loop outlived the socket it was watching: after a reconnect the
+        // old loop carried on pinging the new connection, one more loop per reconnect, until the
+        // next gap between connections made it fail with nobody left to hear it.
+        using var connection = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
         // The pump must be running before the handshake, because the server speaks first.
         var inbound = new FrameQueue();
-        Task pump = Task.Run(() => ReceivePumpAsync(socket, inbound, ct), CancellationToken.None);
+        Task pump = Task.Run(() => ReceivePumpAsync(socket, inbound, connection.Token), CancellationToken.None);
+        Task? router = null;
+        Task? pinger = null;
+        Task? subscribe = null;
 
         try
         {
@@ -222,13 +231,22 @@ public sealed class HaClient : IAsyncDisposable
 
             SetState(HaConnectionState.Connected, "Connected to Home Assistant " + ServerVersion + ".");
 
-            Task router = RouteAsync(inbound, ct);
-            Task pinger = PingLoopAsync(ct);
+            router = RouteAsync(inbound, connection.Token);
+            pinger = PingLoopAsync(connection.Token);
 
-            await SubscribeToStateChangesAsync(ct).ConfigureAwait(false);
-            Resynchronised?.Invoke(this, EventArgs.Empty);
+            // Raced against the watchers rather than awaited on its own. The subscription's reply
+            // has no timeout, and a connection that died before it arrived used to leave this
+            // waiting forever, showing Connected and hearing nothing, because nothing was yet
+            // watching for the socket to close.
+            subscribe = SubscribeToStateChangesAsync(connection.Token);
 
-            await Task.WhenAny(router, pump, pinger).ConfigureAwait(false);
+            if (await Task.WhenAny(subscribe, router, pump, pinger).ConfigureAwait(false) == subscribe)
+            {
+                await subscribe.ConfigureAwait(false);
+                Resynchronised?.Invoke(this, EventArgs.Empty);
+
+                await Task.WhenAny(router, pump, pinger).ConfigureAwait(false);
+            }
 
             // Surface whichever task faulted, so the supervisor can log a real reason.
             foreach (Task finished in new[] { router, pump, pinger })
@@ -241,10 +259,27 @@ public sealed class HaClient : IAsyncDisposable
         }
         finally
         {
+            await connection.CancelAsync().ConfigureAwait(false);
             inbound.Complete();
             await CloseSocketPolitelyAsync(socket).ConfigureAwait(false);
+
+            // The first failure, if any, is already on its way to the supervisor. The others are
+            // winding down now, and whatever they throw on the way out is noise; observe it so it
+            // does not resurface later as an unobserved task exception.
+            Observe(pump);
+            Observe(router);
+            Observe(pinger);
+            Observe(subscribe);
         }
     }
+
+    /// <summary>Marks a task's eventual failure as seen, without waiting for it.</summary>
+    private static void Observe(Task? task) =>
+        task?.ContinueWith(
+            static finished => _ = finished.Exception,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
 
     private async Task AuthenticateAsync(ClientWebSocket socket, FrameQueue inbound, CancellationToken ct)
     {
