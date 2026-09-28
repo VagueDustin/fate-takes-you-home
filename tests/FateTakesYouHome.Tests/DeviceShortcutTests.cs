@@ -522,3 +522,59 @@ public sealed class DeviceShortcutSuggestionTests
         Assert.Equal("switch.garage_plug", matches[^1].Detail);
     }
 }
+
+/// <summary>Names people give their device shortcuts.</summary>
+public sealed class DeviceShortcutNameTests
+{
+    private static string Name(string id) => id == "light.desk" ? "Desk lamp" : "Shelf";
+
+    [Fact]
+    public void ANamedShortcutIsCalledByItsName()
+    {
+        var shortcut = new DeviceShortcut { Label = "Office printers", EntityIds = ["light.desk"] };
+
+        Assert.Equal("Office printers", shortcut.Describe(Name));
+        Assert.Equal("Toggle Desk lamp", shortcut.DescribeAction(Name));
+    }
+
+    /// <summary>The clash message is where a name earns its keep: it is how the other shortcut is identified.</summary>
+    [Fact]
+    public void AClashNamesTheOtherShortcutByItsName()
+    {
+        var named = new DeviceShortcut { Label = "Office printers", Gesture = "Alt+1", EntityIds = ["light.desk"] };
+        var other = new DeviceShortcut { Gesture = "Alt+1", EntityIds = ["light.shelf"] };
+
+        IReadOnlyDictionary<string, string> conflicts = HotkeyService.FindConflicts(
+        [
+            new HotkeyRegistration(named.HotkeyKey, named.Gesture, named.Describe(Name)),
+            new HotkeyRegistration(other.HotkeyKey, other.Gesture, other.Describe(Name)),
+        ]);
+
+        Assert.Equal("Alt+1 is already the shortcut for Office printers.", conflicts[other.HotkeyKey]);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    [InlineData("  Office printers ", "Office printers")]
+    public void ABlankNameIsNoName(string? given, string? kept)
+    {
+        DeviceShortcut shortcut = Assert.Single(DeviceShortcut.Normalise([new DeviceShortcut { Label = given }]));
+
+        Assert.Equal(kept, shortcut.Label);
+    }
+
+    [Fact]
+    public void TheNameSurvivesASaveAndACopy()
+    {
+        var settings = new AppSettings { DeviceShortcuts = [new DeviceShortcut { Label = "Office printers" }] };
+
+        string json = JsonSerializer.Serialize(settings);
+        Assert.Contains("\"label\":\"Office printers\"", json);
+
+        DeviceShortcut back = Assert.Single(JsonSerializer.Deserialize<AppSettings>(json)!.DeviceShortcuts);
+        Assert.Equal("Office printers", back.Label);
+        Assert.Equal("Office printers", back.Clone().Label);
+    }
+}

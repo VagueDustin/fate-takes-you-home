@@ -46,6 +46,9 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     private readonly bool _loading;
 
     [ObservableProperty]
+    private string _label = string.Empty;
+
+    [ObservableProperty]
     private string? _gesture;
 
     [ObservableProperty]
@@ -73,6 +76,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
         _onRemove = onRemove;
 
         _loading = true;
+        Label = model.Label ?? string.Empty;
         Gesture = model.Gesture;
         Action = model.Action;
         Value = model.Value ?? DeviceActions.DefaultValue(model.Action);
@@ -101,8 +105,14 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     /// <summary>A level may be 0 (off); a step of 0 would do nothing, so the slider stops at 5.</summary>
     public double ValueMinimum => Action == DeviceAction.SetBrightness ? 0 : 5;
 
-    /// <summary>"Toggle Desk lamp": the row's accessible name, and how clashes refer to it.</summary>
+    /// <summary>
+    /// The shortcut's name, or "Toggle Desk lamp" when it has none: the row's accessible name, and
+    /// how clashes refer to it.
+    /// </summary>
     public string Summary => Model.Describe(NameOf);
+
+    /// <summary>What the shortcut does, shown in the empty name box as the name it would otherwise get.</summary>
+    public string ActionSummary => Model.DescribeAction(NameOf);
 
     /// <summary>Says which targets the action will skip, and why, when any will.</summary>
     public string? Note
@@ -129,6 +139,12 @@ public sealed partial class DeviceShortcutRow : ObservableObject
 
             return note;
         }
+    }
+
+    partial void OnLabelChanged(string value)
+    {
+        Model.Label = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        Changed();
     }
 
     partial void OnGestureChanged(string? value)
@@ -226,6 +242,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     private void Changed()
     {
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(ActionSummary));
 
         if (!_loading)
         {
@@ -247,6 +264,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
 
         OnPropertyChanged(nameof(Note));
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(ActionSummary));
     }
 
     /// <summary>Rebuilds the suggestions from what Home Assistant currently reports.</summary>

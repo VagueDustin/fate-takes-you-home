@@ -15,6 +15,8 @@ Notable changes to Fate Takes You Home. The format follows
   steps are sent as steps, so Home Assistant does the arithmetic against the real value. An
   action skips the devices it does not fit, and the editor says which. A shortcut can lock a
   door but never unlock one.
+- **Names for device shortcuts.** Call a group "Office printers" and that is how the app refers to
+  it, clash warnings included. Left unnamed, a shortcut is described by what it does.
 - **A Shortcuts page.** Every system-wide key now lives on one page of its own: the app's four
   above, device shortcuts below. A combination can only belong to one of them, and a clash is
   easier to read with both lists in view.

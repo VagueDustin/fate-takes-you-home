@@ -24,6 +24,13 @@ public sealed class DeviceShortcut
     [JsonPropertyName("id")]
     public string Id { get; set; } = NewId();
 
+    /// <summary>
+    /// What the person calls this shortcut, such as "Office printers". Null means it is described
+    /// by what it does instead. Named "label" in the file, as a pin's own name is.
+    /// </summary>
+    [JsonPropertyName("label")]
+    public string? Label { get; set; }
+
     /// <summary>"Ctrl+Alt+L" text, or null while the shortcut has no keys yet.</summary>
     [JsonPropertyName("gesture")]
     public string? Gesture { get; set; }
@@ -48,6 +55,7 @@ public sealed class DeviceShortcut
     public DeviceShortcut Clone() => new()
     {
         Id = Id,
+        Label = Label,
         Gesture = Gesture,
         Action = Action,
         EntityIds = [.. EntityIds],
@@ -80,6 +88,8 @@ public sealed class DeviceShortcut
                 ids.Add(shortcut.Id);
             }
 
+            shortcut.Label = string.IsNullOrWhiteSpace(shortcut.Label) ? null : shortcut.Label.Trim();
+
             if (!Enum.IsDefined(shortcut.Action))
             {
                 shortcut.Action = DeviceAction.Toggle;
@@ -102,11 +112,15 @@ public sealed class DeviceShortcut
     }
 
     /// <summary>
-    /// A short description for messages and screen readers: "Toggle Desk lamp",
-    /// "Brightness up 3 devices".
+    /// How messages and screen readers refer to this shortcut: its name when it has one, and
+    /// otherwise what it does.
     /// </summary>
     /// <param name="nameOf">Resolves an entity id to the name a person would recognise.</param>
-    public string Describe(Func<string, string> nameOf)
+    public string Describe(Func<string, string> nameOf) => Label ?? DescribeAction(nameOf);
+
+    /// <summary>What the shortcut does, in words: "Toggle Desk lamp", "Brightness up 3 devices".</summary>
+    /// <param name="nameOf">Resolves an entity id to the name a person would recognise.</param>
+    public string DescribeAction(Func<string, string> nameOf)
     {
         ArgumentNullException.ThrowIfNull(nameOf);
 

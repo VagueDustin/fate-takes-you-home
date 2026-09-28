@@ -141,6 +141,41 @@
             <DataTemplate DataType="{x:Type vm:DeviceShortcutRow}">
               <Border Style="{StaticResource Fate.Card}" Padding="14" Margin="0,0,0,10">
                 <StackPanel>
+                  <!-- Its name. Left empty, the placeholder shows what it will be called instead. -->
+                  <Grid Margin="0,0,0,10">
+                    <TextBox
+                      x:Name="NameBox"
+                      Style="{StaticResource Fate.TextBox}"
+                      Padding="9,7"
+                      FontWeight="Medium"
+                      MaxLength="60"
+                      Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}"
+                      AutomationProperties.Name="Shortcut name"
+                      AutomationProperties.HelpText="{Binding ActionSummary, StringFormat='Optional. Left empty, it is called {0}.'}"
+                      ToolTip="Optional. A name for this shortcut, such as Office printers. Left empty, it is described by what it does." />
+                    <TextBlock
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      IsHitTestVisible="False"
+                      TextTrimming="CharacterEllipsis"
+                      Text="{Binding ActionSummary}">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Fate.Text.Faint}">
+                          <Setter Property="Visibility" Value="Collapsed" />
+                          <Style.Triggers>
+                            <MultiDataTrigger>
+                              <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding Label}" Value="" />
+                                <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=NameBox}" Value="False" />
+                              </MultiDataTrigger.Conditions>
+                              <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </Grid>
+
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="200" />
