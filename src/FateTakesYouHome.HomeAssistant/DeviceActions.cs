@@ -252,6 +252,25 @@ public static class DeviceActions
             return HasBrightness(target);
         }
 
+        // Thermostats and fans declare whether they can be switched on and off at all, and Home
+        // Assistant refuses the call for one that cannot. Batched with the rest of a group, that
+        // refusal would report the whole shortcut as failed over a device it was never going to
+        // move.
+        if (domain is HaDomains.Climate or HaDomains.Fan
+            && action is DeviceAction.Toggle or DeviceAction.TurnOn or DeviceAction.TurnOff)
+        {
+            (int on, int off) = domain == HaDomains.Climate
+                ? (HaFeatures.Climate.TurnOn, HaFeatures.Climate.TurnOff)
+                : (HaFeatures.Fan.TurnOn, HaFeatures.Fan.TurnOff);
+
+            return action switch
+            {
+                DeviceAction.TurnOn => target.Supports(on),
+                DeviceAction.TurnOff => target.Supports(off),
+                _ => target.Supports(on) && target.Supports(off),
+            };
+        }
+
         if (domain != HaDomains.MediaPlayer)
         {
             return true;

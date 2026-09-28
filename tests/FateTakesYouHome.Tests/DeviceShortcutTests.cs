@@ -265,6 +265,27 @@ public sealed class DeviceShortcutTests
         Assert.Equal(false, unmute.Data!["is_volume_muted"]);
     }
 
+    /// <summary>
+    /// A thermostat that cannot be switched off is left out of a group's "off", instead of making
+    /// Home Assistant refuse the whole batched call over it.
+    /// </summary>
+    [Fact]
+    public void ThermostatsAndFansThatCannotSwitchAreLeftOut()
+    {
+        HaEntityState oldThermostat = Entity("climate.hall", "heat", new JsonObject { ["supported_features"] = 1 });
+        HaEntityState newThermostat = Entity(
+            "climate.study", "heat",
+            new JsonObject { ["supported_features"] = HaFeatures.Climate.TurnOn | HaFeatures.Climate.TurnOff });
+        HaEntityState fanOnlyOn = Entity("fan.desk", "on", new JsonObject { ["supported_features"] = HaFeatures.Fan.TurnOn });
+
+        HaServiceCall call = Assert.Single(DeviceActions.Plan(
+            DeviceAction.TurnOff,
+            [DimmableLight("light.desk", "on"), oldThermostat, newThermostat, fanOnlyOn]));
+
+        Assert.Equal(new[] { "light.desk", "climate.study" }, call.EntityIds);
+        Assert.Empty(DeviceActions.Plan(DeviceAction.Toggle, [fanOnlyOn]));
+    }
+
     // ------------------------------------------------------------------ hotkey clashes
 
     [Fact]
