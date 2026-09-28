@@ -133,6 +133,7 @@ public sealed class HotkeyService : IDisposable
 
     private readonly AppLog _log;
     private readonly Dictionary<int, string> _registered = [];
+    private readonly Dictionary<string, (int Id, HotkeyGesture Gesture)> _held = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _failures = new(StringComparer.Ordinal);
     private HwndSource? _window;
     private bool _disposed;
@@ -153,15 +154,23 @@ public sealed class HotkeyService : IDisposable
         _failures.TryGetValue(key, out string? reason) ? reason : null;
 
     /// <summary>
-    /// Drops every registration and applies the given list. Call whenever the settings change.
+    /// Makes the registered shortcuts match the given list. Call whenever the settings change.
     /// </summary>
+    /// <remarks>
+    /// Only what differs is touched. This used to drop every registration and make them all again,
+    /// and it runs on each keystroke of a device shortcut's name: every system-wide key blinked
+    /// out and back per letter, long enough to lose a press, or for another application to take a
+    /// combination in the gap.
+    /// </remarks>
     public void Apply(IReadOnlyList<HotkeyRegistration> shortcuts)
     {
         EnsureWindow();
-        UnregisterAll();
 
         IReadOnlyDictionary<string, string> conflicts = FindConflicts(shortcuts);
-        int id = FirstId;
+        var failedBefore = new HashSet<string>(_failures.Keys, StringComparer.Ordinal);
+        var wanted = new Dictionary<string, HotkeyGesture>(StringComparer.Ordinal);
+
+        _failures.Clear();
 
         foreach (HotkeyRegistration shortcut in shortcuts)
         {
@@ -178,22 +187,82 @@ public sealed class HotkeyService : IDisposable
                 continue;
             }
 
-            uint modifiers = ToNativeModifiers(gesture.Modifiers);
-            uint key = (uint)KeyInterop.VirtualKeyFromKey(gesture.Key);
+            wanted[shortcut.Key] = gesture;
+        }
 
-            if (NativeMethods.RegisterHotKey(_window!.Handle, id, modifiers, key))
+        (IReadOnlyList<string> release, IReadOnlyList<string> claim) = PlanChanges(
+            _held.ToDictionary(pair => pair.Key, pair => pair.Value.Gesture, StringComparer.Ordinal),
+            wanted);
+
+        // Releases first, so a combination moving from one shortcut to another is free to take.
+        foreach (string key in release)
+        {
+            (int id, _) = _held[key];
+            NativeMethods.UnregisterHotKey(_window!.Handle, id);
+            _registered.Remove(id);
+            _held.Remove(key);
+        }
+
+        foreach (string key in claim)
+        {
+            HotkeyGesture gesture = wanted[key];
+            int id = NextFreeId();
+
+            if (NativeMethods.RegisterHotKey(
+                    _window!.Handle, id, ToNativeModifiers(gesture.Modifiers),
+                    (uint)KeyInterop.VirtualKeyFromKey(gesture.Key)))
             {
-                _registered[id] = shortcut.Key;
+                _registered[id] = key;
+                _held[key] = (id, gesture);
             }
             else
             {
-                // Almost always: another app owns the combination.
-                _failures[shortcut.Key] = $"{gesture} is already in use by another application.";
-                _log.Warning($"Could not register the shortcut {gesture} for {shortcut.Key}.");
-            }
+                // Almost always: another app owns the combination. It is tried again on every
+                // apply, since that app may have let go, but only logged the first time.
+                _failures[key] = $"{gesture} is already in use by another application.";
 
+                if (!failedBefore.Contains(key))
+                {
+                    _log.Warning($"Could not register the shortcut {gesture} for {key}.");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Which registrations to release and which to make, to go from what is held to what is wanted.
+    /// </summary>
+    /// <returns>
+    /// Keys to release: no longer wanted, or wanted on a different combination. Keys to claim:
+    /// wanted and not held on that combination, which includes any that failed last time.
+    /// </returns>
+    public static (IReadOnlyList<string> Release, IReadOnlyList<string> Claim) PlanChanges(
+        IReadOnlyDictionary<string, HotkeyGesture> held,
+        IReadOnlyDictionary<string, HotkeyGesture> wanted)
+    {
+        var release = held
+            .Where(pair => !wanted.TryGetValue(pair.Key, out HotkeyGesture? gesture) || gesture != pair.Value)
+            .Select(pair => pair.Key)
+            .ToList();
+
+        var claim = wanted
+            .Where(pair => !held.TryGetValue(pair.Key, out HotkeyGesture? gesture) || gesture != pair.Value)
+            .Select(pair => pair.Key)
+            .ToList();
+
+        return (release, claim);
+    }
+
+    private int NextFreeId()
+    {
+        int id = FirstId;
+
+        while (_registered.ContainsKey(id))
+        {
             id++;
         }
+
+        return id;
     }
 
     /// <summary>
@@ -282,6 +351,7 @@ public sealed class HotkeyService : IDisposable
         }
 
         _registered.Clear();
+        _held.Clear();
         _failures.Clear();
     }
 
