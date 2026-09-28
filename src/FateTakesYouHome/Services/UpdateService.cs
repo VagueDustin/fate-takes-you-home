@@ -1,6 +1,7 @@
 // Copyright © 2026 VagueDustin Enterprises
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -237,13 +238,26 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
 
         _log.Info("Starting the installer and exiting.");
 
-        // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
-        Process.Start(new ProcessStartInfo
+        try
         {
-            FileName = "msiexec.exe",
-            Arguments = $"/i \"{installer}\" /passive",
-            UseShellExecute = true,
-        });
+            // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "msiexec.exe",
+                Arguments = $"/i \"{installer}\" /passive",
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            // Policy can block msiexec, and security software can take the file between the
+            // download and this line. Either way the app must not exit for an install that never
+            // started, or go on offering one that cannot. The file is kept for a manual run.
+            Status = UpdateStatus.Failed;
+            Detail = $"Windows would not start the installer. It is saved at {installer}.";
+            _log.Warning("Could not start the installer.", ex);
+            return;
+        }
 
         ExitRequested?.Invoke(this, EventArgs.Empty);
     }
