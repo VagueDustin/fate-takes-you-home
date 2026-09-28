@@ -24,6 +24,12 @@ Notable changes to Fate Takes You Home. The format follows
 ### Changed
 
 - The app's own shortcuts moved from Appearance to the new Shortcuts page.
+- **Dragging on the Layout page feels like picking a card up.** The card lifts above the others
+  and follows the pointer smoothly instead of jumping from cell to cell, an outline shows the cell
+  it will land in (red where it cannot), and on release it glides into place, or back home from
+  a blocked spot. The editor scrolls when a card is dragged near its top or bottom edge, so a
+  long layout can be rearranged end to end. A click on a card no longer counts as a drag. Reduced
+  motion turns the gliding off, as it does everywhere else.
 - Two shortcuts in the app that share a combination are now reported as a clash that names the
   other one, rather than as "in use by another application".
 

@@ -178,7 +178,7 @@
           CornerRadius="{DynamicResource Fate.Radius.Md}"
           Padding="12">
           <Grid>
-            <ScrollViewer Style="{StaticResource Fate.ScrollViewer}">
+            <ScrollViewer x:Name="EditorScroll" Style="{StaticResource Fate.ScrollViewer}">
               <StackPanel>
                 <TextBlock
                   Style="{StaticResource Fate.Text.Faint}"
@@ -186,22 +186,35 @@
                   Margin="0,0,0,10"
                   Text="{Binding SurfaceExplainer}" />
 
-                <ItemsControl
-                  x:Name="EditorHost"
-                  ItemsSource="{Binding Items}"
-                  ItemContainerStyle="{StaticResource Fate.WidgetContainer}"
-                  MouseMove="OnCanvasMouseMove"
-                  MouseLeftButtonUp="OnCanvasMouseUp">
-                  <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                      <c:WidgetCanvas
-                        Columns="{Binding Columns}"
-                        RowHeight="{Binding RowHeight}"
-                        Gap="10"
-                        Background="Transparent" />
-                    </ItemsPanelTemplate>
-                  </ItemsControl.ItemsPanel>
-                </ItemsControl>
+                <Grid>
+                  <!-- Beneath the cards: the outline of where a dragged card will settle. Its
+                       colours are set as it moves, from the theme's accent or danger roles. -->
+                  <Canvas x:Name="DragLayer" IsHitTestVisible="False">
+                    <Border
+                      x:Name="DropSlot"
+                      Visibility="Collapsed"
+                      BorderThickness="1.5"
+                      CornerRadius="{DynamicResource Fate.Radius.Md}" />
+                  </Canvas>
+
+                  <ItemsControl
+                    x:Name="EditorHost"
+                    ItemsSource="{Binding Items}"
+                    ItemContainerStyle="{StaticResource Fate.WidgetContainer}"
+                    MouseMove="OnCanvasMouseMove"
+                    MouseLeftButtonUp="OnCanvasMouseUp"
+                    LostMouseCapture="OnCanvasLostMouseCapture">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <c:WidgetCanvas
+                          Columns="{Binding Columns}"
+                          RowHeight="{Binding RowHeight}"
+                          Gap="10"
+                          Background="Transparent" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                </Grid>
 
                 <!-- Room to drop things below the last row. -->
                 <Border Height="120" Background="Transparent" />

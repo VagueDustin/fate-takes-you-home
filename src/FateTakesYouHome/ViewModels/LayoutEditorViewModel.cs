@@ -417,6 +417,20 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
         return (0, 0);
     }
 
+    /// <summary>
+    /// The lowest row a widget may be dragged to: directly beneath everything else.
+    /// </summary>
+    /// <remarks>
+    /// The canvas grows to fit whatever it holds, and it scrolls while a card is dragged near its
+    /// edge. Without a floor, dragging to the bottom would scroll, grow the canvas, and scroll
+    /// again, for as long as the button was held.
+    /// </remarks>
+    public static int DeepestRow(EditorWidget widget, IEnumerable<EditorWidget> all) =>
+        all.Where(other => !ReferenceEquals(other, widget))
+            .Select(other => other.Y + other.H)
+            .DefaultIfEmpty(0)
+            .Max();
+
     /// <summary>True when the widget currently collides with any other.</summary>
     public bool CollidesWithAnything(EditorWidget widget) => Items.Any(widget.Overlaps);
 

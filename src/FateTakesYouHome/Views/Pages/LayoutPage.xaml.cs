@@ -5,7 +5,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
+using System.Windows.Threading;
+using FateTakesYouHome.Animation;
 using FateTakesYouHome.Controls;
+using FateTakesYouHome.Theming.Rendering;
 using FateTakesYouHome.ViewModels;
 
 namespace FateTakesYouHome.Views.Pages;
@@ -14,31 +18,97 @@ namespace FateTakesYouHome.Views.Pages;
 /// The layout editor's interaction layer: drag to move, pull the corner to resize.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The page owns the mouse mechanics and the view model owns the rules. During a drag the cells
-/// update live so the canvas re-arranges under the cursor, exactly the way a phone launcher
-/// behaves; a drop that would overlap simply snaps back to where the drag began.
+/// update live, so the rest of the canvas behaves as though the card were already there, and an
+/// outline shows the cell it will settle into. The card itself is lifted above the others and
+/// follows the pointer by the pixel rather than jumping from cell to cell; on release it glides
+/// into its cell, or back to where it started if the drop would overlap.
+/// </para>
+/// <para>
+/// The following is a render transform on top of the arranged position, never a change to the
+/// layout, so a card in flight costs one transform per mouse move and nothing is re-measured.
+/// Every animation goes through <see cref="ThemedMotion"/>, which turns it into an instant change
+/// when the theme, the user or Windows has asked for reduced motion.
+/// </para>
 /// </remarks>
 public partial class LayoutPage : UserControl
 {
+    /// <summary>How close to the top or bottom of the editor, in pixels, dragging starts to scroll.</summary>
+    public const double ScrollEdge = 48;
+
+    /// <summary>The fastest the editor scrolls while dragging, in pixels per tick, reached at the very edge.</summary>
+    public const double MaxScrollStep = 22;
+
+    /// <summary>How much a card grows as it is picked up: enough to read as lifted, not enough to cover its neighbours.</summary>
+    private const double LiftScale = 1.03;
+
     private enum DragMode
     {
         None,
+
+        /// <summary>Pressed, but not yet moved far enough to count as a drag. A click is not a drag.</summary>
+        Pending,
+
         Move,
         Resize,
     }
 
+    private readonly DispatcherTimer _scrollTimer;
+
     private DragMode _mode = DragMode.None;
+    private DragMode _requested = DragMode.None;
     private EditorWidget? _widget;
     private WidgetCanvas? _canvas;
-    private (int X, int Y) _grabOffset;
+    private FrameworkElement? _container;
+    private Point _pressPoint;
+    private Vector _grabOffset;
     private (int X, int Y, int W, int H) _start;
+    private TranslateTransform? _follow;
+    private ScaleTransform? _lift;
 
     public LayoutPage()
     {
         InitializeComponent();
+
+        // Mouse moves stop arriving when the pointer rests at the edge, which is exactly when the
+        // scrolling should continue, so the scroll runs on a timer rather than on mouse moves.
+        _scrollTimer = new DispatcherTimer(DispatcherPriority.Input)
+        {
+            Interval = TimeSpan.FromMilliseconds(16),
+        };
+        _scrollTimer.Tick += OnScrollTick;
     }
 
     private LayoutEditorViewModel? ViewModel => DataContext as LayoutEditorViewModel;
+
+    /// <summary>
+    /// How far to scroll this tick for a pointer at <paramref name="pointerY"/> within a viewport
+    /// of <paramref name="viewportHeight"/>: nothing in the middle, faster the deeper into an edge
+    /// band, and full speed once past the edge.
+    /// </summary>
+    public static double AutoScrollStep(double pointerY, double viewportHeight)
+    {
+        if (viewportHeight <= 0)
+        {
+            return 0;
+        }
+
+        // In a short editor the bands would meet in the middle; keep a still zone between them.
+        double edge = Math.Min(ScrollEdge, viewportHeight / 4);
+
+        if (pointerY < edge)
+        {
+            return -MaxScrollStep * Math.Min(1, (edge - pointerY) / edge);
+        }
+
+        if (pointerY > viewportHeight - edge)
+        {
+            return MaxScrollStep * Math.Min(1, (pointerY - (viewportHeight - edge)) / edge);
+        }
+
+        return 0;
+    }
 
     // ------------------------------------------------------------------ grabbing
 
@@ -73,11 +143,12 @@ public partial class LayoutPage : UserControl
         }
 
         _widget = widget;
-        _mode = mode;
+        _container = EditorHost.ItemContainerGenerator.ContainerFromItem(widget) as FrameworkElement;
+        _mode = DragMode.Pending;
+        _requested = mode;
         _start = (widget.X, widget.Y, widget.W, widget.H);
-
-        (int cellX, int cellY) = _canvas.CellAt(e.GetPosition(_canvas));
-        _grabOffset = (cellX - widget.X, cellY - widget.Y);
+        _pressPoint = e.GetPosition(_canvas);
+        _grabOffset = _pressPoint - _canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft;
 
         EditorHost.CaptureMouse();
     }
@@ -86,8 +157,7 @@ public partial class LayoutPage : UserControl
 
     private void OnCanvasMouseMove(object sender, MouseEventArgs e)
     {
-        if (_mode == DragMode.None || _widget is null || _canvas is null
-            || ViewModel is not { } viewModel)
+        if (_mode == DragMode.None || _canvas is null)
         {
             return;
         }
@@ -98,34 +168,120 @@ public partial class LayoutPage : UserControl
             return;
         }
 
-        (int cellX, int cellY) = _canvas.CellAt(e.GetPosition(_canvas));
+        Point pointer = e.GetPosition(_canvas);
+
+        if (_mode == DragMode.Pending)
+        {
+            Vector moved = pointer - _pressPoint;
+
+            if (Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance
+                && Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance)
+            {
+                return;
+            }
+
+            _mode = _requested;
+            Lift();
+            _scrollTimer.Start();
+        }
+
+        Track(pointer);
+    }
+
+    /// <summary>Moves or resizes the widget to follow a pointer position on the canvas.</summary>
+    private void Track(Point pointer)
+    {
+        if (_widget is not { } widget || _canvas is not { } canvas || ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
         int columns = viewModel.Columns;
 
         if (_mode == DragMode.Move)
         {
-            _widget.X = Math.Clamp(cellX - _grabOffset.X, 0, Math.Max(0, columns - _widget.W));
-            _widget.Y = Math.Max(0, cellY - _grabOffset.Y);
+            Point topLeft = pointer - _grabOffset;
+            (int x, int y) = WidgetCanvas.NearestCell(topLeft, canvas.ColumnWidth, canvas.RowPitch);
+
+            widget.X = Math.Clamp(x, 0, Math.Max(0, columns - widget.W));
+            widget.Y = Math.Clamp(y, 0, LayoutEditorViewModel.DeepestRow(widget, viewModel.Items));
+
+            // The container is arranged at the widget's cell; the transform carries the card the
+            // rest of the way to the pointer.
+            if (_follow is not null)
+            {
+                Vector offset = topLeft - canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft;
+                _follow.X = offset.X;
+                _follow.Y = offset.Y;
+            }
         }
-        else
+        else if (_mode == DragMode.Resize)
         {
-            _widget.W = Math.Clamp(cellX - _widget.X + 1, 1, columns - _widget.X);
-            _widget.H = Math.Clamp(cellY - _widget.Y + 1, 1, 6);
+            (int cellX, int cellY) = canvas.CellAt(pointer);
+            widget.W = Math.Clamp(cellX - widget.X + 1, 1, columns - widget.X);
+            widget.H = Math.Clamp(cellY - widget.Y + 1, 1, 6);
         }
 
-        _widget.IsInvalid = viewModel.CollidesWithAnything(_widget);
+        widget.IsInvalid = viewModel.CollidesWithAnything(widget);
+        ShowDropSlot(widget, canvas);
+    }
+
+    private void OnScrollTick(object? sender, EventArgs e)
+    {
+        if (_mode is not (DragMode.Move or DragMode.Resize) || _canvas is null)
+        {
+            _scrollTimer.Stop();
+            return;
+        }
+
+        double step = AutoScrollStep(Mouse.GetPosition(EditorScroll).Y, EditorScroll.ActualHeight);
+
+        if (step == 0)
+        {
+            return;
+        }
+
+        double before = EditorScroll.VerticalOffset;
+        EditorScroll.ScrollToVerticalOffset(before + step);
+        EditorScroll.UpdateLayout();
+
+        // The canvas moved under a still pointer, so the card has to follow as if it had moved.
+        if (EditorScroll.VerticalOffset != before)
+        {
+            Track(Mouse.GetPosition(_canvas));
+        }
     }
 
     private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e) => FinishDrag();
 
+    /// <summary>Ends a drag cleanly if the capture is taken away, by another window or a switch of app.</summary>
+    private void OnCanvasLostMouseCapture(object sender, MouseEventArgs e) => FinishDrag();
+
     private void FinishDrag()
     {
-        EditorHost.ReleaseMouseCapture();
-
-        if (_widget is { } widget)
+        if (_mode == DragMode.None)
         {
+            return;
+        }
+
+        bool wasDragging = _mode is DragMode.Move or DragMode.Resize;
+
+        // Cleared before releasing capture, because releasing it raises LostMouseCapture, which
+        // lands back here.
+        _mode = DragMode.None;
+        _scrollTimer.Stop();
+        EditorHost.ReleaseMouseCapture();
+        DropSlot.Visibility = Visibility.Collapsed;
+
+        if (wasDragging && _widget is { } widget && _canvas is { } canvas)
+        {
+            // Where the card is drawn right now, before its cell changes under it.
+            Point shownAt = canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft
+                            + new Vector(_follow?.X ?? 0, _follow?.Y ?? 0);
+
             if (widget.IsInvalid)
             {
-                // An overlapping drop snaps home rather than shoving neighbours around.
+                // An overlapping drop goes home rather than shoving neighbours around.
                 (widget.X, widget.Y, widget.W, widget.H) = _start;
                 widget.IsInvalid = false;
             }
@@ -133,11 +289,127 @@ public partial class LayoutPage : UserControl
             {
                 ViewModel?.MarkDirty();
             }
+
+            Settle(canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft, shownAt);
         }
 
-        _mode = DragMode.None;
         _widget = null;
         _canvas = null;
+        _container = null;
+        _follow = null;
+        _lift = null;
+    }
+
+    // ------------------------------------------------------------------ lift and settle
+
+    /// <summary>Raises the card above the others, with the theme's panel shadow, and grows it slightly.</summary>
+    private void Lift()
+    {
+        if (_container is not { } container)
+        {
+            return;
+        }
+
+        Panel.SetZIndex(container, 1);
+        container.Effect = TryFindResource(ThemeKeys.EffectPanelShadow) as Effect;
+
+        // Only a moving card follows the pointer. A resizing one stays anchored at its corner,
+        // and growing it would fight the size the pointer is setting.
+        if (_mode != DragMode.Move)
+        {
+            return;
+        }
+
+        _lift = new ScaleTransform(1, 1);
+        _follow = new TranslateTransform();
+
+        container.RenderTransformOrigin = new Point(0.5, 0.5);
+        container.RenderTransform = new TransformGroup { Children = { _lift, _follow } };
+
+        ThemedMotion.AnimateDouble(_lift, ScaleTransform.ScaleXProperty, LiftScale, MotionSpeed.Press);
+        ThemedMotion.AnimateDouble(_lift, ScaleTransform.ScaleYProperty, LiftScale, MotionSpeed.Press);
+    }
+
+    /// <summary>
+    /// Glides the card from where it was shown to the cell it now occupies, then puts it back
+    /// among the others.
+    /// </summary>
+    private void Settle(Point home, Point shownAt)
+    {
+        if (_container is not { } container)
+        {
+            return;
+        }
+
+        Transform settling = container.RenderTransform;
+
+        // Only clean up if nothing newer has picked the same card up in the meantime.
+        void Land()
+        {
+            if (ReferenceEquals(container.RenderTransform, settling))
+            {
+                container.RenderTransform = Transform.Identity;
+                container.Effect = null;
+                Panel.SetZIndex(container, 0);
+            }
+        }
+
+        if (_follow is not { } follow || _lift is not { } lift)
+        {
+            container.Effect = null;
+            Panel.SetZIndex(container, 0);
+            return;
+        }
+
+        // The cell may just have changed (a blocked drop going home), so re-express the card's
+        // current position relative to its new cell before gliding that offset away to nothing.
+        Vector from = shownAt - home;
+        follow.BeginAnimation(TranslateTransform.XProperty, null);
+        follow.BeginAnimation(TranslateTransform.YProperty, null);
+        follow.X = from.X;
+        follow.Y = from.Y;
+
+        // The flyout's easing is the theme's springiest, which is what a card dropping into
+        // place should feel like.
+        ThemedMotion.AnimateDouble(follow, TranslateTransform.XProperty, 0, MotionSpeed.FlyoutOpen, Land);
+        ThemedMotion.AnimateDouble(follow, TranslateTransform.YProperty, 0, MotionSpeed.FlyoutOpen);
+        ThemedMotion.AnimateDouble(lift, ScaleTransform.ScaleXProperty, 1, MotionSpeed.Press);
+        ThemedMotion.AnimateDouble(lift, ScaleTransform.ScaleYProperty, 1, MotionSpeed.Press);
+    }
+
+    /// <summary>Outlines the cells the dragged card will settle into, beneath the card itself.</summary>
+    private void ShowDropSlot(EditorWidget widget, WidgetCanvas canvas)
+    {
+        // A resizing card already is its own outline.
+        if (_mode != DragMode.Move)
+        {
+            DropSlot.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        Rect cells = canvas.CellRect(widget.X, widget.Y, widget.W, widget.H);
+        Point topLeft = canvas.TranslatePoint(cells.TopLeft, DragLayer);
+
+        Canvas.SetLeft(DropSlot, topLeft.X);
+        Canvas.SetTop(DropSlot, topLeft.Y);
+        DropSlot.Width = cells.Width;
+        DropSlot.Height = cells.Height;
+
+        // Accent says "this is where it goes"; a blocked cell is a status, and status is never
+        // the accent.
+        DropSlot.SetResourceReference(
+            Border.BorderBrushProperty,
+            widget.IsInvalid ? ThemeKeys.BrushStatusDanger : ThemeKeys.BrushAccentDefault);
+        if (widget.IsInvalid)
+        {
+            DropSlot.ClearValue(Border.BackgroundProperty);
+        }
+        else
+        {
+            DropSlot.SetResourceReference(Border.BackgroundProperty, ThemeKeys.BrushAccentSubtle);
+        }
+
+        DropSlot.Visibility = Visibility.Visible;
     }
 
     // ------------------------------------------------------------------ picker

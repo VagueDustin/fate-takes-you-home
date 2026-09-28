@@ -82,17 +82,26 @@ public sealed class WidgetCanvas : Panel
     public double ColumnWidth =>
         Columns > 0 ? Math.Max(1, (ActualWidth + Gap) / Columns) : 1;
 
-    private Rect RectFor(UIElement child, double columnWidth)
+    /// <summary>The distance from the top of one row to the top of the next.</summary>
+    public double RowPitch => RowHeight + Gap;
+
+    private Rect RectFor(UIElement child, double columnWidth) =>
+        CellRect(GetCellX(child), GetCellY(child), GetCellW(child), GetCellH(child), columnWidth);
+
+    /// <summary>Where a widget covering these cells is drawn, at the panel's current size.</summary>
+    public Rect CellRect(int x, int y, int w, int h) => CellRect(x, y, w, h, ColumnWidth);
+
+    private Rect CellRect(int x, int y, int w, int h, double columnWidth)
     {
-        int x = Math.Max(0, GetCellX(child));
-        int y = Math.Max(0, GetCellY(child));
-        int w = Math.Max(1, GetCellW(child));
-        int h = Math.Max(1, GetCellH(child));
+        x = Math.Max(0, x);
+        y = Math.Max(0, y);
+        w = Math.Max(1, w);
+        h = Math.Max(1, h);
 
         double left = x * columnWidth;
-        double top = y * (RowHeight + Gap);
+        double top = y * RowPitch;
         double width = Math.Max(1, (w * columnWidth) - Gap);
-        double height = Math.Max(1, (h * (RowHeight + Gap)) - Gap);
+        double height = Math.Max(1, (h * RowPitch) - Gap);
 
         return new Rect(left, top, width, height);
     }
@@ -125,6 +134,19 @@ public sealed class WidgetCanvas : Panel
 
         return finalSize;
     }
+
+    /// <summary>
+    /// The cell a dragged widget whose top-left corner is at <paramref name="topLeft"/> should
+    /// settle into: the nearest one, rather than the one the corner happens to be inside.
+    /// </summary>
+    /// <remarks>
+    /// Nearest, because the card is drawn under the pointer while it moves. With truncation, a card
+    /// shown nine tenths of the way into the next column would still claim the previous one, and
+    /// the drop outline would lag visibly behind the card.
+    /// </remarks>
+    public static (int X, int Y) NearestCell(Point topLeft, double columnWidth, double rowPitch) =>
+        ((int)Math.Round(topLeft.X / Math.Max(1, columnWidth), MidpointRounding.AwayFromZero),
+         (int)Math.Round(topLeft.Y / Math.Max(1, rowPitch), MidpointRounding.AwayFromZero));
 
     /// <summary>The cell under a point, for drag placement. Clamped into the grid.</summary>
     public (int X, int Y) CellAt(Point point)
