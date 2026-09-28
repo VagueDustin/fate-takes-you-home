@@ -75,11 +75,6 @@
         </Grid>
       </Border>
 
-      <DataTemplate.Triggers>
-        <DataTrigger Binding="{Binding IsInvalid}" Value="True">
-          <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Fate.Brush.StatusDanger}" />
-        </DataTrigger>
-      </DataTemplate.Triggers>
     </DataTemplate>
   </UserControl.Resources>
 
@@ -187,13 +182,14 @@
                   Text="{Binding SurfaceExplainer}" />
 
                 <Grid>
-                  <!-- Beneath the cards: the outline of where a dragged card will settle. Its
-                       colours are set as it moves, from the theme's accent or danger roles. -->
+                  <!-- Beneath the cards: the outline of where a dragged card will settle. -->
                   <Canvas x:Name="DragLayer" IsHitTestVisible="False">
                     <Border
                       x:Name="DropSlot"
                       Visibility="Collapsed"
                       BorderThickness="1.5"
+                      BorderBrush="{DynamicResource Fate.Brush.AccentDefault}"
+                      Background="{DynamicResource Fate.Brush.AccentSubtle}"
                       CornerRadius="{DynamicResource Fate.Radius.Md}" />
                   </Canvas>
 

@@ -26,10 +26,6 @@ public sealed partial class EditorWidget : ObservableObject
     [ObservableProperty]
     private int _h;
 
-    /// <summary>True while a drag has parked it somewhere it cannot stay.</summary>
-    [ObservableProperty]
-    private bool _isInvalid;
-
     public EditorWidget(WidgetSpec spec, string title, string subtitle)
     {
         Spec = spec;
@@ -442,9 +438,6 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
             (Items[i].X, Items[i].Y, Items[i].W, Items[i].H) = cells[i];
         }
     }
-
-    /// <summary>True when the widget currently collides with any other.</summary>
-    public bool CollidesWithAnything(EditorWidget widget) => Items.Any(widget.Overlaps);
 
     /// <summary>Called by the page after a completed drag or resize.</summary>
     public void MarkDirty() => HasUnsavedChanges = true;

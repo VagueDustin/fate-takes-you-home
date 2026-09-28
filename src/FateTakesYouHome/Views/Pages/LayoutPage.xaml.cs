@@ -239,7 +239,6 @@ public partial class LayoutPage : UserControl
             });
         }
 
-        widget.IsInvalid = viewModel.CollidesWithAnything(widget);
         ShowDropSlot(widget, canvas);
     }
 
@@ -285,10 +284,13 @@ public partial class LayoutPage : UserControl
         }
     }
 
-    /// <summary>How far a widget is currently drawn from its cell by a slide still in progress.</summary>
+    /// <summary>
+    /// How far a widget is currently drawn from its cell: by a slide still in progress, or by the
+    /// glide of a card that was dropped a moment ago and has not landed yet.
+    /// </summary>
     private Vector CurrentNudge(int index) =>
-        ContainerAt(index)?.RenderTransform is TranslateTransform slide
-            ? new Vector(slide.X, slide.Y)
+        ContainerAt(index)?.RenderTransform is { } transform
+            ? new Vector(transform.Value.OffsetX, transform.Value.OffsetY)
             : default;
 
     /// <summary>
@@ -307,6 +309,11 @@ public partial class LayoutPage : UserControl
             slide = new TranslateTransform();
             container.RenderTransform = slide;
         }
+
+        // A card still gliding in from the last drop loses that glide here, and with it the chance
+        // to put its shadow away when it lands. It is being moved as a neighbour now, not carried.
+        container.Effect = null;
+        Panel.SetZIndex(container, 0);
 
         slide.BeginAnimation(TranslateTransform.XProperty, null);
         slide.BeginAnimation(TranslateTransform.YProperty, null);
@@ -360,7 +367,8 @@ public partial class LayoutPage : UserControl
             return;
         }
 
-        bool wasDragging = _mode is DragMode.Move or DragMode.Resize;
+        DragMode ending = _mode;
+        bool wasDragging = ending is DragMode.Move or DragMode.Resize;
 
         // Cleared before releasing capture, because releasing it raises LostMouseCapture, which
         // lands back here.
@@ -375,7 +383,9 @@ public partial class LayoutPage : UserControl
             Point shownAt = canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft
                             + new Vector(_follow?.X ?? 0, _follow?.Y ?? 0);
 
-            Rearrange(_target, settle: true);
+            // A moved card may float up into a gap on release. A resized one stays on its row:
+            // the person changed its size, not where it is.
+            Rearrange(_target, settle: ending == DragMode.Move);
 
             if (GridReflow.HasOverlap(viewModel.Cells()))
             {
@@ -388,7 +398,6 @@ public partial class LayoutPage : UserControl
                 viewModel.MarkDirty();
             }
 
-            widget.IsInvalid = false;
             Settle(canvas.CellRect(widget.X, widget.Y, widget.W, widget.H).TopLeft, shownAt);
         }
 
@@ -442,14 +451,21 @@ public partial class LayoutPage : UserControl
 
         Transform settling = container.RenderTransform;
 
-        // Only clean up if nothing newer has picked the same card up in the meantime.
         void Land()
         {
+            // Picked up again before it landed: the new drag has lifted it and will settle it.
+            if (ReferenceEquals(container, _container) && _mode is DragMode.Move or DragMode.Resize)
+            {
+                return;
+            }
+
+            container.Effect = null;
+            Panel.SetZIndex(container, 0);
+
+            // Nudged since, as a neighbour of a newer drag: that slide owns the transform now.
             if (ReferenceEquals(container.RenderTransform, settling))
             {
                 container.RenderTransform = Transform.Identity;
-                container.Effect = null;
-                Panel.SetZIndex(container, 0);
             }
         }
 
@@ -493,20 +509,6 @@ public partial class LayoutPage : UserControl
         Canvas.SetTop(DropSlot, topLeft.Y);
         DropSlot.Width = cells.Width;
         DropSlot.Height = cells.Height;
-
-        // Accent says "this is where it goes"; a blocked cell is a status, and status is never
-        // the accent.
-        DropSlot.SetResourceReference(
-            Border.BorderBrushProperty,
-            widget.IsInvalid ? ThemeKeys.BrushStatusDanger : ThemeKeys.BrushAccentDefault);
-        if (widget.IsInvalid)
-        {
-            DropSlot.ClearValue(Border.BackgroundProperty);
-        }
-        else
-        {
-            DropSlot.SetResourceReference(Border.BackgroundProperty, ThemeKeys.BrushAccentSubtle);
-        }
 
         DropSlot.Visibility = Visibility.Visible;
     }
