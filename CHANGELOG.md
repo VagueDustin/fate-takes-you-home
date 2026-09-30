@@ -24,6 +24,10 @@ Notable changes to Fate Takes You Home. The format follows
   by Home Assistant, a device shortcut, the all-lights-off key or the default action shows a quiet
   notification from the tray icon saying what went wrong, instead of looking exactly like a key
   that was never pressed. Pressing it again straight away does not stack up another.
+- **Hold a brightness or volume shortcut and it keeps going,** the way a dimmer or a volume key
+  does. It starts repeating after the same delay Windows uses for a held letter, then steps four
+  times a second: slow enough to let go where you meant to, and a step is never sent while the
+  last is still on its way, so nothing carries on after you let go.
 
 ### Changed
 

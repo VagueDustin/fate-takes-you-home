@@ -123,7 +123,7 @@
           HorizontalAlignment="Left"
           Style="{StaticResource Fate.Text.Faint}"
           TextWrapping="Wrap"
-          Text="Keys that act on the devices you choose. Pick several and they act as one: a toggle turns them all off if any are on, and all on otherwise." />
+          Text="Keys that act on the devices you choose. Pick several and they act as one: a toggle turns them all off if any are on, and all on otherwise. Hold a brightness or volume key down and it keeps going." />
 
         <TextBlock
           Margin="0,14,0,0"

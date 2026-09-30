@@ -107,6 +107,14 @@ public static class DeviceActions
     public static bool TakesValue(DeviceAction action) =>
         action is DeviceAction.BrightnessUp or DeviceAction.BrightnessDown or DeviceAction.SetBrightness;
 
+    /// <summary>
+    /// True for the actions that move something a step at a time, which is what makes doing them
+    /// again and again, as a held key does, mean something.
+    /// </summary>
+    public static bool IsStep(DeviceAction action) =>
+        action is DeviceAction.BrightnessUp or DeviceAction.BrightnessDown
+            or DeviceAction.VolumeUp or DeviceAction.VolumeDown;
+
     /// <summary>The percentage used when a shortcut does not specify one.</summary>
     public static double DefaultValue(DeviceAction action) =>
         action == DeviceAction.SetBrightness ? 50 : 10;

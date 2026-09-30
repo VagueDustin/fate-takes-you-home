@@ -40,6 +40,7 @@ public partial class App : Application
     private HomeAssistantService? _homeAssistant;
     private UpdateService? _updates;
     private HotkeyService? _hotkeys;
+    private HeldShortcutRepeater? _repeater;
     private AutostartService? _autostart;
     private TrayController? _tray;
     private bool _shuttingDown;
@@ -127,6 +128,7 @@ public partial class App : Application
 
         _hotkeys = new HotkeyService(_log);
         _hotkeys.Pressed += OnHotkeyPressed;
+        _repeater = new HeldShortcutRepeater();
         ApplyShortcuts();
         _settings.Changed += (_, _) => ApplyShortcuts();
 
@@ -213,7 +215,7 @@ public partial class App : Application
     {
         if (key.StartsWith(DeviceShortcut.KeyPrefix, StringComparison.Ordinal))
         {
-            _ = RunDeviceShortcutAsync(key);
+            PressDeviceShortcut(key);
             return;
         }
 
@@ -242,14 +244,35 @@ public partial class App : Application
         }
     }
 
-    private async Task RunDeviceShortcutAsync(string key)
+    private void PressDeviceShortcut(string key)
     {
         DeviceShortcut? shortcut = _settings?.Current.DeviceShortcuts
             .FirstOrDefault(s => s.HotkeyKey == key);
 
-        if (shortcut is null || _homeAssistant is null)
+        if (shortcut is null)
         {
             return;
+        }
+
+        // Brightness and volume keep going while the keys are held, as a dimmer or a volume key
+        // would. Everything else happens once per press.
+        if (DeviceActions.IsStep(shortcut.Action)
+            && HotkeyGesture.Parse(shortcut.Gesture) is { } gesture
+            && _repeater is not null)
+        {
+            _repeater.Press(gesture, () => RunDeviceShortcutAsync(shortcut));
+            return;
+        }
+
+        _ = RunDeviceShortcutAsync(shortcut);
+    }
+
+    /// <summary>Performs a device shortcut's action once. True when it did its job.</summary>
+    private async Task<bool> RunDeviceShortcutAsync(DeviceShortcut shortcut)
+    {
+        if (_homeAssistant is null)
+        {
+            return false;
         }
 
         CommandResult result = await _homeAssistant
@@ -262,6 +285,8 @@ public partial class App : Application
             _log?.Warning($"The shortcut {shortcut.Gesture} ({name}) failed: {result.ErrorMessage}");
             _tray?.ReportFailure(ShortcutFailed, $"{name}: {result.ErrorMessage}");
         }
+
+        return result.Succeeded;
     }
 
     private async Task TurnOffAllLightsFromShortcutAsync()
@@ -416,7 +441,9 @@ public partial class App : Application
         _shuttingDown = true;
 
         // Order matters: stop the UI surface first so nothing tries to render against a service
-        // that is already gone, then close the connection, then flush state to disk.
+        // that is already gone, then close the connection, then flush state to disk. A key still
+        // held down stops stepping before any of it.
+        _repeater?.Dispose();
         _tray?.Dispose();
         _instance?.Dispose();
 
