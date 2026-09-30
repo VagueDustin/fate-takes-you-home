@@ -1,6 +1,7 @@
 // Copyright © 2026 VagueDustin Enterprises
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using FateTakesYouHome.HomeAssistant;
 
@@ -38,7 +39,7 @@ public sealed class DeviceShortcut
     // The converter sits on the property rather than the enum so the Home Assistant library does
     // not have to know how this application stores its settings.
     [JsonPropertyName("action")]
-    [JsonConverter(typeof(JsonStringEnumConverter<DeviceAction>))]
+    [JsonConverter(typeof(DeviceActionConverter))]
     public DeviceAction Action { get; set; } = DeviceAction.Toggle;
 
     [JsonPropertyName("entityIds")]
@@ -66,8 +67,16 @@ public sealed class DeviceShortcut
     /// Repairs a list read from a file somebody may have edited by hand.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A shortcut with no targets is kept: it is what a newly added row looks like until somebody
     /// picks a device, and dropping it on the next load would lose a half-made shortcut.
+    /// </para>
+    /// <para>
+    /// An action this version does not recognise, from a typo or from a newer version's file, is
+    /// not guessed at. A system-wide key that quietly did something other than what was chosen
+    /// would be worse than one that does nothing, so the shortcut keeps its name and devices and
+    /// gives up its keys until somebody picks an action for it on the Shortcuts page.
+    /// </para>
     /// </remarks>
     public static List<DeviceShortcut> Normalise(List<DeviceShortcut>? shortcuts)
     {
@@ -93,6 +102,7 @@ public sealed class DeviceShortcut
             if (!Enum.IsDefined(shortcut.Action))
             {
                 shortcut.Action = DeviceAction.Toggle;
+                shortcut.Gesture = null;
             }
 
             shortcut.EntityIds = (shortcut.EntityIds ?? [])
@@ -155,4 +165,56 @@ public sealed class DeviceShortcut
     };
 
     private static string NewId() => Guid.NewGuid().ToString("N");
+}
+
+/// <summary>
+/// Reads a device shortcut's action by name, without letting a name it does not know break the
+/// whole settings file.
+/// </summary>
+/// <remarks>
+/// <see cref="JsonStringEnumConverter{TEnum}"/> throws on a name it does not know, and a throw
+/// anywhere in the settings file sets the whole file aside and starts over from defaults: the
+/// server, the token, every pin. One mistyped action, or a file written by a newer version with an
+/// action this one lacks, is no reason for that. Anything unrecognised reads as a value outside
+/// the enum instead, which <see cref="DeviceShortcut.Normalise"/> then deals with.
+/// </remarks>
+internal sealed class DeviceActionConverter : JsonConverter<DeviceAction>
+{
+    /// <summary>What an action this version has no name for reads as.</summary>
+    internal const DeviceAction Unrecognised = (DeviceAction)(-1);
+
+    public override DeviceAction Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        switch (reader.TokenType)
+        {
+            case JsonTokenType.String:
+                // Compared name by name. Enum.TryParse would also take "3" and "Toggle, TurnOn",
+                // neither of which anybody means by an action.
+                string? name = reader.GetString();
+
+                foreach (DeviceAction action in Enum.GetValues<DeviceAction>())
+                {
+                    if (string.Equals(action.ToString(), name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return action;
+                    }
+                }
+
+                return Unrecognised;
+
+            case JsonTokenType.Number:
+                return reader.TryGetInt32(out int number) ? (DeviceAction)number : Unrecognised;
+
+            case JsonTokenType.StartObject or JsonTokenType.StartArray:
+                // The rest of the value still has to be read past, or the next property is lost.
+                reader.Skip();
+                return Unrecognised;
+
+            default:
+                return Unrecognised;
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, DeviceAction value, JsonSerializerOptions options) =>
+        writer.WriteStringValue(value.ToString());
 }

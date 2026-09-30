@@ -1,6 +1,7 @@
 // Copyright © 2026 VagueDustin Enterprises
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FateTakesYouHome.HomeAssistant;
@@ -475,6 +476,96 @@ public sealed class DeviceShortcutTests
         Assert.Equal(DeviceAction.Toggle, repaired[1].Action);
         Assert.Null(repaired[1].Value);
         Assert.Equal(100, repaired[2].Value);
+    }
+
+    /// <summary>
+    /// One mistyped action, or one from a newer version, used to make the whole settings file
+    /// unreadable, and an unreadable file is set aside for defaults: the server, the token and
+    /// every pin gone with it.
+    /// </summary>
+    [Fact]
+    public void AnActionThisVersionDoesNotKnowDoesNotCostTheRestOfTheSettings()
+    {
+        string root = Directory.CreateTempSubdirectory("fate-tests-").FullName;
+
+        try
+        {
+            string path = Path.Combine(root, "settings.json");
+            File.WriteAllText(path, """
+                {
+                  "serverUrl": "http://homeassistant.local:8123",
+                  "deviceShortcuts": [
+                    { "id": "a", "label": "Study", "gesture": "Ctrl+Alt+S", "action": "Dim", "entityIds": ["light.desk"] },
+                    { "id": "b", "gesture": "Ctrl+Alt+P", "action": "playPause", "entityIds": ["media_player.speaker"] }
+                  ]
+                }
+                """);
+
+            using var log = new AppLog(Path.Combine(root, "logs"));
+            using var settings = new SettingsService(log, path);
+
+            Assert.Equal("http://homeassistant.local:8123", settings.Current.ServerUrl);
+            Assert.False(File.Exists(path + ".invalid"));
+
+            DeviceShortcut unknown = settings.Current.DeviceShortcuts[0];
+            Assert.Equal("Study", unknown.Label);
+            Assert.Equal(new[] { "light.desk" }, unknown.EntityIds);
+            Assert.Null(unknown.Gesture);
+
+            DeviceShortcut known = settings.Current.DeviceShortcuts[1];
+            Assert.Equal(DeviceAction.PlayPause, known.Action);
+            Assert.Equal("Ctrl+Alt+P", known.Gesture);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+                // A straggling handle on a temp directory is not worth failing the run over.
+            }
+        }
+    }
+
+    /// <summary>
+    /// A key that quietly did something other than what was chosen would be worse than one that
+    /// does nothing, so an unrecognised action keeps its devices but gives up its keys.
+    /// </summary>
+    [Fact]
+    public void AnUnrecognisedActionIsNotGuessedAt()
+    {
+        DeviceShortcut repaired = Assert.Single(DeviceShortcut.Normalise(
+        [
+            new DeviceShortcut
+            {
+                Label = "Study",
+                Gesture = "Ctrl+Alt+S",
+                Action = (DeviceAction)999,
+                EntityIds = ["light.desk"],
+            },
+        ]));
+
+        Assert.Null(repaired.Gesture);
+        Assert.Equal("Study", repaired.Label);
+        Assert.Equal(new[] { "light.desk" }, repaired.EntityIds);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("3.5")]
+    [InlineData("true")]
+    [InlineData("""{ "nested": [1, 2] }""")]
+    [InlineData("""["Toggle"]""")]
+    public void AnActionOfTheWrongShapeIsReadPastRatherThanBreakingTheFile(string action)
+    {
+        string json = $$"""{ "deviceShortcuts": [ { "action": {{action}}, "entityIds": ["light.desk"] } ] }""";
+
+        DeviceShortcut read = Assert.Single(JsonSerializer.Deserialize<AppSettings>(json)!.DeviceShortcuts);
+
+        Assert.False(Enum.IsDefined(read.Action));
+        Assert.Equal(new[] { "light.desk" }, read.EntityIds);
     }
 
     /// <summary>A newly added row has no devices yet, and must survive a restart as it is.</summary>
