@@ -88,9 +88,7 @@ public sealed class AutostartService
                 return false;
             }
 
-            // Quoted because the install path contains spaces, and passed the tray flag so a
-            // login launch does not throw a window in the user's face.
-            run.SetValue(ValueName, $"\"{executable}\" {TrayArgument}", RegistryValueKind.String);
+            run.SetValue(ValueName, CommandLineFor(executable), RegistryValueKind.String);
 
             if (IsDisabledByShell())
             {
@@ -111,11 +109,13 @@ public sealed class AutostartService
     }
 
     /// <summary>
-    /// Rewrites the registration when the executable has moved.
+    /// Rewrites the registration when the executable it names no longer exists.
     /// </summary>
     /// <remarks>
-    /// Running a portable copy after installing properly (or the reverse) otherwise leaves the
-    /// Run key pointing at a path that no longer exists, and the app silently stops starting.
+    /// Moving or deleting the copy that registered itself (uninstalling, say, and carrying on with
+    /// a portable copy) otherwise leaves the Run key pointing at a path that no longer exists, and
+    /// the app silently stops starting. An entry naming another copy that is still there is left
+    /// alone; <see cref="ShouldRepair"/> has the reasoning.
     /// </remarks>
     public void RepairIfStale()
     {
@@ -134,19 +134,85 @@ public sealed class AutostartService
                 return;
             }
 
-            if (existing.Contains(executable, StringComparison.OrdinalIgnoreCase))
+            if (!ShouldRepair(existing, executable, File.Exists))
             {
                 return;
             }
 
-            run.SetValue(ValueName, $"\"{executable}\" {TrayArgument}", RegistryValueKind.String);
-            _log.Info($"Autostart pointed at a different copy of the app; updated it to {executable}.");
+            run.SetValue(ValueName, CommandLineFor(executable), RegistryValueKind.String);
+            _log.Info(
+                $"Autostart named a copy of the app that no longer exists ({existing}); "
+                + $"updated it to {executable}.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             _log.Warning("Could not check whether the autostart registration was stale.", ex);
         }
     }
+
+    /// <summary>
+    /// Decides whether a Run entry should be rewritten to launch <paramref name="executable"/>.
+    /// Split out so the decision is testable without the registry or the disk.
+    /// </summary>
+    /// <param name="registered">The command line currently stored under the Run key.</param>
+    /// <param name="executable">The copy that is running now.</param>
+    /// <param name="fileExists">
+    /// Asked about the executable the entry names. <see cref="File.Exists"/> outside tests.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Only a missing executable makes an entry stale. Naming a different copy is not enough,
+    /// because this runs on every launch: a debug build, or a portable copy opened while the
+    /// installed app was closed, would take over the installed app's entry, and the installed app
+    /// would quietly stop starting with Windows. Moving the entry to another copy on purpose still
+    /// works: switching Start with Windows off and on again from that copy rewrites it through
+    /// <see cref="SetEnabled"/>.
+    /// </para>
+    /// <para>
+    /// An entry that is not in the form <see cref="CommandLineFor"/> writes, or does not name an
+    /// absolute path, is left alone as well. Whoever wrote it knows more about it than this does,
+    /// and a path that is not absolute would be looked up from this process's working directory,
+    /// which has nothing to do with where Windows finds it at sign-in.
+    /// </para>
+    /// </remarks>
+    public static bool ShouldRepair(string registered, string executable, Func<string, bool> fileExists)
+    {
+        if (!registered.StartsWith('"'))
+        {
+            return false;
+        }
+
+        int closingQuote = registered.IndexOf('"', 1);
+
+        if (closingQuote < 0)
+        {
+            return false;
+        }
+
+        string target = registered[1..closingQuote];
+
+        if (!Path.IsPathFullyQualified(target))
+        {
+            return false;
+        }
+
+        // Decided on the path alone. The running copy is plainly still there, so there is nothing
+        // to ask the disk.
+        if (target.Equals(executable, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return !fileExists(target);
+    }
+
+    /// <summary>The command line that launches <paramref name="executable"/> at sign-in.</summary>
+    /// <remarks>
+    /// Quoted because the install path contains spaces, and passed the tray flag so a login
+    /// launch does not throw a window in the user's face. <see cref="ShouldRepair"/> reads the
+    /// path back out of this form, so the two have to agree.
+    /// </remarks>
+    public static string CommandLineFor(string executable) => $"\"{executable}\" {TrayArgument}";
 
     /// <summary>
     /// True when Windows has switched this entry off in the Startup apps list.

@@ -87,6 +87,12 @@ Notable changes to Fate Takes You Home. The format follows
   is repaired: an unknown double- or middle-click action goes back to its default, an unknown
   grouping to By room, and a widget of an unknown kind is left out of its layout, since there is
   nothing to draw it as.
+- **Running another copy of the app could stop the installed one starting with Windows.** The
+  startup check meant to repair an entry whose executable had moved rewrote it whenever it named
+  a different copy, whether or not that copy still existed, so a debug build or a portable copy
+  run while the installed app was closed took the entry for itself. The entry is now repaired
+  only when the executable it names is gone. To move it to another copy on purpose, turn
+  *Start with Windows* off and on again from that copy.
 
 ## [0.3.2] (2026-09-17)
 
