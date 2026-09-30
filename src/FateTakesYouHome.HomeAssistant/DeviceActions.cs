@@ -256,22 +256,18 @@ public static class DeviceActions
             return HasBrightness(target);
         }
 
-        // Thermostats and fans declare whether they can be switched on and off at all, and Home
-        // Assistant refuses the call for one that cannot. Batched with the rest of a group, that
-        // refusal would report the whole shortcut as failed over a device it was never going to
-        // move.
-        if (domain is HaDomains.Climate or HaDomains.Fan
-            && action is DeviceAction.Toggle or DeviceAction.TurnOn or DeviceAction.TurnOff)
+        // Several domains declare whether they can be switched each way at all: a thermostat with
+        // no off, a blind that only tilts, a siren that can only sound. Home Assistant refuses the
+        // service for one that cannot, and refuses it for every entity named in that call, so one
+        // such member would stop the rest of its domain in the group from moving.
+        if (action is DeviceAction.Toggle or DeviceAction.TurnOn or DeviceAction.TurnOff
+            && SwitchingFeatures(domain) is { } switching)
         {
-            (int on, int off) = domain == HaDomains.Climate
-                ? (HaFeatures.Climate.TurnOn, HaFeatures.Climate.TurnOff)
-                : (HaFeatures.Fan.TurnOn, HaFeatures.Fan.TurnOff);
-
             return action switch
             {
-                DeviceAction.TurnOn => target.Supports(on),
-                DeviceAction.TurnOff => target.Supports(off),
-                _ => target.Supports(on) && target.Supports(off),
+                DeviceAction.TurnOn => target.Supports(switching.On),
+                DeviceAction.TurnOff => target.Supports(switching.Off),
+                _ => target.Supports(switching.On) && target.Supports(switching.Off),
             };
         }
 
@@ -285,10 +281,6 @@ public static class DeviceActions
         // feature, so the ones that lack it are left out rather than failing the whole call.
         return action switch
         {
-            DeviceAction.TurnOn => target.Supports(HaFeatures.MediaPlayer.TurnOn),
-            DeviceAction.TurnOff => target.Supports(HaFeatures.MediaPlayer.TurnOff),
-            DeviceAction.Toggle =>
-                target.Supports(HaFeatures.MediaPlayer.TurnOn) && target.Supports(HaFeatures.MediaPlayer.TurnOff),
             DeviceAction.PlayPause =>
                 target.Supports(HaFeatures.MediaPlayer.Pause) || target.Supports(HaFeatures.MediaPlayer.Play),
             DeviceAction.Pause => target.Supports(HaFeatures.MediaPlayer.Pause),
@@ -300,6 +292,26 @@ public static class DeviceActions
             _ => false,
         };
     }
+
+    /// <summary>
+    /// The features that the services behind "on" and "off" require, for the domains that
+    /// register those services with a required feature. Null for the rest, which accept anyone.
+    /// </summary>
+    /// <remarks>
+    /// These mirror what Home Assistant itself checks, including that an entity reporting no
+    /// features at all has none, so nothing left in a call is refused for lacking one.
+    /// </remarks>
+    private static (int On, int Off)? SwitchingFeatures(string domain) => domain switch
+    {
+        HaDomains.Climate => (HaFeatures.Climate.TurnOn, HaFeatures.Climate.TurnOff),
+        HaDomains.Fan => (HaFeatures.Fan.TurnOn, HaFeatures.Fan.TurnOff),
+        HaDomains.MediaPlayer => (HaFeatures.MediaPlayer.TurnOn, HaFeatures.MediaPlayer.TurnOff),
+        HaDomains.Cover => (HaFeatures.Cover.Open, HaFeatures.Cover.Close),
+        HaDomains.Valve => (HaFeatures.Valve.Open, HaFeatures.Valve.Close),
+        HaDomains.Siren => (HaFeatures.Siren.TurnOn, HaFeatures.Siren.TurnOff),
+        HaDomains.Vacuum => (HaFeatures.Vacuum.Start, HaFeatures.Vacuum.ReturnHome),
+        _ => null,
+    };
 
     /// <summary>
     /// Whether a light can dim. A light that reports no colour modes at all is given the benefit

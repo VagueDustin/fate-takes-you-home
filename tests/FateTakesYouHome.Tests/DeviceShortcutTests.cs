@@ -19,6 +19,7 @@ public sealed class DeviceShortcutTests
 {
     private const int MediaPause = HaFeatures.MediaPlayer.Pause;
     private const int MediaPowered = HaFeatures.MediaPlayer.TurnOn | HaFeatures.MediaPlayer.TurnOff;
+    private const int CoverOpensAndCloses = HaFeatures.Cover.Open | HaFeatures.Cover.Close | HaFeatures.Cover.Stop;
 
     private static HaEntityState Entity(string entityId, string state, JsonObject? attributes = null)
     {
@@ -84,7 +85,7 @@ public sealed class DeviceShortcutTests
             DeviceAction.TurnOn,
             [
                 DimmableLight("light.desk", "off"),
-                Entity("cover.blind", "closed"),
+                Entity("cover.blind", "closed", new JsonObject { ["supported_features"] = CoverOpensAndCloses }),
                 Entity("switch.fan_plug", "off"),
             ]);
 
@@ -329,6 +330,37 @@ public sealed class DeviceShortcutTests
 
         Assert.Equal(new[] { "light.desk", "climate.study" }, call.EntityIds);
         Assert.Empty(DeviceActions.Plan(DeviceAction.Toggle, [fanOnlyOn]));
+    }
+
+    /// <summary>
+    /// Home Assistant refuses <c>close_cover</c> for every cover in the call if one of them cannot
+    /// close, so a blind that only tilts would have kept the rest of the room's blinds open.
+    /// </summary>
+    [Fact]
+    public void ABlindThatOnlyTiltsDoesNotHoldTheOthersOpen()
+    {
+        HaEntityState tiltOnly = Entity(
+            "cover.venetian", "open",
+            new JsonObject { ["supported_features"] = HaFeatures.Cover.OpenTilt | HaFeatures.Cover.CloseTilt });
+
+        HaServiceCall call = Assert.Single(DeviceActions.Plan(
+            DeviceAction.TurnOff,
+            [Entity("cover.blind", "open", new JsonObject { ["supported_features"] = CoverOpensAndCloses }), tiltOnly]));
+
+        Assert.Equal(("cover", "close_cover"), (call.Domain, call.Service));
+        Assert.Equal(new[] { "cover.blind" }, call.EntityIds);
+    }
+
+    [Theory]
+    [InlineData("siren.hall", HaFeatures.Siren.TurnOn, DeviceAction.TurnOff)]
+    [InlineData("valve.garden", HaFeatures.Valve.Open, DeviceAction.TurnOff)]
+    [InlineData("vacuum.downstairs", HaFeatures.Vacuum.ReturnHome, DeviceAction.TurnOn)]
+    [InlineData("cover.skylight", HaFeatures.Cover.Close, DeviceAction.Toggle)]
+    public void ThingsThatCannotGoTheWayAskedAreLeftOut(string entityId, int features, DeviceAction action)
+    {
+        HaEntityState device = Entity(entityId, "off", new JsonObject { ["supported_features"] = features });
+
+        Assert.Empty(DeviceActions.Plan(action, [device]));
     }
 
     // ------------------------------------------------------------------ hotkey clashes
