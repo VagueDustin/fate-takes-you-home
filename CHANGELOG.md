@@ -6,6 +6,12 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] (2026-09-30)
+
+The keyboard release. System-wide keys can now switch, dim, pause and mute the devices you choose,
+singly or as a group, and all of them live on a new Shortcuts page. The layout editor makes room
+for a dropped card instead of sending it home. Both are Coriantamer's work, from #8.
+
 ### Added
 
 - **Device shortcuts.** System-wide keys that act on the devices you choose: toggle, on, off,
@@ -417,7 +423,8 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/VagueDustin/fate-takes-you-home/releases/tag/v0.3.0
