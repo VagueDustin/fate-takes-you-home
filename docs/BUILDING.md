@@ -54,7 +54,8 @@ The script **refuses to package a build whose tests fail**. That is deliberate.
 ## Versioning
 
 `VersionPrefix` in `Directory.Build.props` is the single source of truth. The publish script reads
-it, stamps it into the assemblies, and derives the MSI's `ProductVersion` from it.
+it, stamps it into the assemblies, and derives the MSI's `ProductVersion` from it, and a release's
+tag is made from it too.
 
 Windows Installer compares only the first three fields of a version and rejects pre-release
 suffixes, so `0.2.0-beta.1` becomes `0.2.0` in the MSI. Never ship two different builds under one
@@ -62,6 +63,46 @@ MSI version; the upgrade will not trigger.
 
 The `UpgradeCode` GUID in `installer/wix/Package.wxs` must **never** change. It is what makes an
 install an upgrade rather than a second entry in Programs and Features.
+
+## Releasing
+
+A release is a version bump, and nothing else. There is no tag to push: when a commit reaches
+`main` carrying a `VersionPrefix` that has never been released, CI builds, tests and packages it
+as it does every commit, then publishes those same packages as a GitHub release and tags the
+commit they were built from. Installed copies find it on their next daily check.
+
+```powershell
+./build/bump-version.ps1 -Part Minor    # Patch for fixes alone, Major when something stops working
+```
+
+That moves `VersionPrefix` on and turns the changelog's `[Unreleased]` section into the new
+version's, dated, with the comparison links at the foot of the file moved on to match. Write a
+sentence under the new heading saying what the release is about, commit both files as
+"Fate Takes You Home 0.4.0", and push to `main`.
+
+A commit that leaves `VersionPrefix` alone releases nothing, so ordinary changes land on `main` at
+any pace and ship with the next bump.
+
+Every build, pull requests included, runs `./build/release.ps1 -Plan`, which fails a bump that
+could not be released cleanly, so the problem shows on the pull request and not as a failed
+release after the merge:
+
+- a version that is not a plain `major.minor.patch`, since the MSI keeps only those numbers;
+- a version that is not newer than the latest release, which every install would ignore and every
+  new install would be given;
+- a version with no section of its own in `CHANGELOG.md`, which is where the release notes come
+  from;
+- a tag of that name already on a different commit.
+
+To see what a release would do without doing it:
+
+```powershell
+./build/release.ps1 -Plan -Version 0.4.0
+./build/release.ps1 -Publish -Artifacts artifacts -WhatIf
+```
+
+If a release fails part way, re-running the workflow's failed jobs picks up where it stopped: the
+packages are kept with the run, and a version that did get published is left alone.
 
 ## The brand mark
 

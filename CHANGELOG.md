@@ -46,6 +46,11 @@ Notable changes to Fate Takes You Home. The format follows
   no longer counts as a drag. Reduced motion turns the sliding off, as it does everywhere else.
 - Two shortcuts in the app that share a combination are now reported as a clash that names the
   other one, rather than as "in use by another application".
+- **Releases publish themselves.** Moving the version on is the whole of a release: when a commit
+  on main carries a version that has not been released, CI builds, tests and publishes it, and
+  installs are offered it within a day. Nothing is tagged by hand any more, so a tag can no longer
+  disagree with the version inside the installer, and a bump that could not be released cleanly
+  fails on its pull request instead of after the merge.
 
 ### Fixed
 

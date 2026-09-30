@@ -1,9 +1,11 @@
 name: Build
 
+# No tag trigger. A release is a commit on main that moves VersionPrefix on: the release job below
+# tags it and publishes it, so there is no tag to push, and no way for a tag to disagree with the
+# version inside the installer.
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,6 +14,27 @@ permissions:
   contents: read
 
 jobs:
+  # Works out whether this commit is a release, and fails on a version bump that could not be
+  # released cleanly: no changelog section, not newer than the latest release, a pre-release
+  # suffix the MSI would drop, a tag already on another commit. On a pull request that means the
+  # problem shows before the merge rather than as a failed release after it.
+  version:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      release: ${{ steps.plan.outputs.release }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Work out whether this is a release
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./build/release.ps1 -Plan
+        shell: pwsh
+
   build:
     # Windows only, and not a matrix: the projects target net8.0-windows and use WPF, so there is
     # nothing to gain from pretending otherwise.
@@ -80,15 +103,22 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  # Only a tag publishes, and it publishes the artifacts the package job already built rather than
-  # rebuilding them, so what a release carries is byte for byte what CI tested.
+  # Publishes the artifacts the package job already built rather than rebuilding them, so what a
+  # release carries is byte for byte what CI tested. Runs only on main, and only when the version
+  # job found VersionPrefix unreleased; every other commit on main ships with the next bump.
   release:
-    needs: package
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, package]
+    if: needs.version.outputs.release == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
+
+    # One at a time, never cancelled. Two pushes close together can both find the same version
+    # unreleased; the second waits, looks again, and finds it published.
+    concurrency:
+      group: release
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v7
@@ -99,41 +129,10 @@ jobs:
           path: artifacts
 
       # The notes are the CHANGELOG's own section for this version. One source of truth means the
-      # release page and the file cannot end up describing the same release differently.
-      - name: Assemble the release notes
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-
-          # Prefix matching rather than a regex: the heading is "## [0.3.1]", and building that
-          # into a pattern turns the brackets into a character class unless they are escaped
-          # through both the shell and awk, which is a silent no-match when it goes wrong.
-          awk -v head="## [$version]" '
-            index($0, head) == 1        { inside = 1; next }
-            inside && index($0, "## [") == 1 { exit }
-            inside                      { print }
-          ' CHANGELOG.md > notes.md
-
-          if [ ! -s notes.md ]; then
-            echo "CHANGELOG.md has no section for $version, so there are no notes to publish." >&2
-            exit 1
-          fi
-
-          cat >> notes.md <<'NOTES'
-
-          ## Install
-
-          Run the MSI. It upgrades an existing install in place, keeping your pins, theme and
-          token. The portable zip needs nothing installed: unzip and run.
-
-          The MSI is unsigned, so SmartScreen will show its warning on first run.
-          NOTES
-
+      # release page and the file cannot end up describing the same release differently. The
+      # script checks everything the version job did again first, then tags this commit.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Fate Takes You Home ${GITHUB_REF_NAME#v}" \
-            --notes-file notes.md \
-            artifacts/*.msi artifacts/*.zip
+        run: ./build/release.ps1 -Publish -Artifacts artifacts
+        shell: pwsh
