@@ -59,6 +59,13 @@ Notable changes to Fate Takes You Home. The format follows
   happen. It now says so, and where the file is.
 - **The Layout page's explanation ran under its buttons.** At most window widths, "pull the corner
   to resize" sat hidden behind Save layout. The text now wraps before the buttons.
+- **A scene or button nobody had used yet could not be pressed.** Home Assistant reports when a
+  scene or button last fired, so one that never has reads "unknown", and the app took that to
+  mean unavailable: the tile showed Unknown, would not respond, and was hidden along with the
+  unavailable entities. It now works like any other.
+- **Recording a shortcut the app already used ran it instead.** Windows hands a registered
+  combination straight to its owner, so the shortcut box never saw it pressed. The app now lets go
+  of its own shortcuts while a box is recording, and takes them back after.
 
 ## [0.3.2] (2026-09-17)
 
