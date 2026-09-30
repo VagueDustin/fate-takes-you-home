@@ -212,6 +212,23 @@ public sealed class HaEntityStateTests
     }
 
     /// <summary>
+    /// A scene's or button's state is when it last fired, so one that never has reads "unknown"
+    /// and is as usable as any other.
+    /// </summary>
+    [Theory]
+    [InlineData("scene.reading", false)]
+    [InlineData("button.doorbell_chime", false)]
+    [InlineData("input_button.feed_the_cat", false)]
+    [InlineData("light.porch", true)]
+    public void OnlyThingsWithAStateTreatUnknownAsUnavailable(string entityId, bool expected)
+    {
+        HaEntityState state = Parse(
+            $$"""{ "entity_id": "{{entityId}}", "state": "unknown", "attributes": {} }""");
+
+        Assert.Equal(expected, state.IsUnavailable);
+    }
+
+    /// <summary>
     /// A lock that is "unlocked" reports IsOn, which is the opposite of what a padlock icon
     /// suggests but matches how every other domain reads: on means "not in the resting state".
     /// </summary>

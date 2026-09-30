@@ -145,6 +145,22 @@ public sealed class DeviceShortcutTests
         Assert.Equal(new[] { "light.desk" }, Assert.Single(calls).EntityIds);
     }
 
+    /// <summary>
+    /// A scene or button nobody has used yet reads "unknown", which used to count as unavailable
+    /// and left a shortcut pointed at one doing nothing at all.
+    /// </summary>
+    [Fact]
+    public void AShortcutFiresASceneThatHasNeverRun()
+    {
+        IReadOnlyList<HaServiceCall> calls = DeviceActions.Plan(
+            DeviceAction.TurnOn,
+            [Entity("scene.reading", "unknown"), Entity("button.doorbell_chime", "unknown")]);
+
+        Assert.Equal(2, calls.Count);
+        Assert.Contains(calls, c => c is { Domain: "scene", Service: "turn_on" });
+        Assert.Contains(calls, c => c is { Domain: "button", Service: "press" });
+    }
+
     [Fact]
     public void NothingIsSentWhenNoTargetCanTakeTheAction()
     {

@@ -63,9 +63,19 @@ public sealed class HaEntityState
         AttrString("friendly_name") ?? HumaniseObjectId(ObjectId);
 
     /// <summary>True when Home Assistant cannot currently reach the entity.</summary>
+    /// <remarks>
+    /// "unknown" usually means the integration has not said, but a scene or a button reports the
+    /// moment it last fired, so one that has never fired is "unknown" as a matter of course and
+    /// works perfectly well. Counting those as unavailable greyed out every scene nobody had used
+    /// yet, and left a shortcut pointed at one doing nothing.
+    /// </remarks>
     [JsonIgnore]
-    public bool IsUnavailable =>
-        State is "unavailable" or "unknown" or "";
+    public bool IsUnavailable => State switch
+    {
+        "unavailable" or "" => true,
+        "unknown" => !HaDomains.Momentary.Contains(Domain),
+        _ => false,
+    };
 
     /// <summary>
     /// Best-effort "is this thing on" across the domains that have a binary notion of on.
