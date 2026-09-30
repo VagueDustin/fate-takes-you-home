@@ -453,6 +453,14 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
             return Task.FromResult(CommandResult.Failed("Not connected to Home Assistant."));
         }
 
+        // A shortcut is saved as soon as it is added, so one with keys and no devices yet is an
+        // ordinary half-made thing, and "none of its devices can" would send somebody looking at
+        // devices it does not have.
+        if (entityIds.Count == 0)
+        {
+            return Task.FromResult(CommandResult.Failed("It has no devices yet. Choose some on the Shortcuts page."));
+        }
+
         var targets = new List<HaEntityState>(entityIds.Count);
 
         foreach (string entityId in entityIds)

@@ -20,6 +20,10 @@ Notable changes to Fate Takes You Home. The format follows
 - **A Shortcuts page.** Every system-wide key now lives on one page of its own: the app's four
   above, device shortcuts below. A combination can only belong to one of them, and a clash is
   easier to read with both lists in view.
+- **A shortcut that cannot do its job says so.** Pressed while the connection is down, or refused
+  by Home Assistant, a device shortcut, the all-lights-off key or the default action shows a quiet
+  notification from the tray icon saying what went wrong, instead of looking exactly like a key
+  that was never pressed. Pressing it again straight away does not stack up another.
 
 ### Changed
 

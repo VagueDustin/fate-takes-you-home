@@ -30,6 +30,9 @@ namespace FateTakesYouHome;
 /// </remarks>
 public partial class App : Application
 {
+    /// <summary>The title of the notification when a system-wide shortcut could not do its job.</summary>
+    private const string ShortcutFailed = "A shortcut did not run";
+
     private SingleInstance? _instance;
     private AppLog? _log;
     private SettingsService? _settings;
@@ -230,7 +233,7 @@ public partial class App : Application
                 break;
 
             case HotkeyAction.AllLightsOff:
-                _ = _homeAssistant?.TurnOffAllLightsAsync();
+                _ = TurnOffAllLightsFromShortcutAsync();
                 break;
 
             case HotkeyAction.RunDefaultPin:
@@ -255,7 +258,25 @@ public partial class App : Application
 
         if (!result.Succeeded)
         {
-            _log?.Warning($"The shortcut {shortcut.Gesture} ({shortcut.Describe(EntityName)}) failed: {result.ErrorMessage}");
+            string name = shortcut.Describe(EntityName);
+            _log?.Warning($"The shortcut {shortcut.Gesture} ({name}) failed: {result.ErrorMessage}");
+            _tray?.ReportFailure(ShortcutFailed, $"{name}: {result.ErrorMessage}");
+        }
+    }
+
+    private async Task TurnOffAllLightsFromShortcutAsync()
+    {
+        if (_homeAssistant is null)
+        {
+            return;
+        }
+
+        CommandResult result = await _homeAssistant.TurnOffAllLightsAsync().ConfigureAwait(true);
+
+        if (!result.Succeeded)
+        {
+            _tray?.ReportFailure(
+                ShortcutFailed, $"{HotkeyService.Describe(HotkeyAction.AllLightsOff)}: {result.ErrorMessage}");
         }
     }
 

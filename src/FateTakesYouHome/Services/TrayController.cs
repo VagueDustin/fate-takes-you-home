@@ -51,6 +51,13 @@ public sealed class TrayController : IDisposable
     /// <summary>Window within which a second tray notification is treated as the same click.</summary>
     private static readonly TimeSpan ToggleCoalesce = TimeSpan.FromMilliseconds(120);
 
+    /// <summary>How long the same failure is reported only once, however often it happens.</summary>
+    private static readonly TimeSpan RepeatedFailureWindow = TimeSpan.FromSeconds(10);
+
+    private const string DefaultActionFailed = "The default action did not run";
+
+    private readonly RepeatedNoticeFilter _failures = new(RepeatedFailureWindow);
+
     private DateTime _lastToggle = DateTime.MinValue;
 
     private TrayIcon? _icon;
@@ -331,6 +338,11 @@ public sealed class TrayController : IDisposable
     // ------------------------------------------------------------------ default action
 
     /// <summary>Fires whichever pinned entity is marked as the default action.</summary>
+    /// <remarks>
+    /// Reached from a key or a click on the icon, never from a window, so a failure is reported
+    /// from the icon too. The connection is checked before the pin is looked up: with nothing yet
+    /// read from Home Assistant, every pin looks as if it had been removed.
+    /// </remarks>
     public async Task RunDefaultActionAsync()
     {
         PinnedEntity? pin = _settings.Current.Pinned.FirstOrDefault(p => p.IsDefaultAction);
@@ -338,6 +350,13 @@ public sealed class TrayController : IDisposable
         if (pin is null)
         {
             _log.Info("A tray gesture asked for the default action, but no pin is marked as one.");
+            ReportFailure(DefaultActionFailed, "No pin is marked as the default action. Choose one in Settings.");
+            return;
+        }
+
+        if (_homeAssistant.ConnectionState != HaConnectionState.Connected)
+        {
+            ReportFailure(DefaultActionFailed, "Not connected to Home Assistant.");
             return;
         }
 
@@ -346,6 +365,7 @@ public sealed class TrayController : IDisposable
         if (state is null)
         {
             _log.Warning($"The default action points at '{pin.EntityId}', which no longer exists.");
+            ReportFailure(DefaultActionFailed, $"{pin.Label ?? pin.EntityId} is no longer in Home Assistant.");
             return;
         }
 
@@ -358,7 +378,27 @@ public sealed class TrayController : IDisposable
         if (!result.Succeeded)
         {
             _log.Warning($"The default action failed: {result.ErrorMessage}");
+            ReportFailure(DefaultActionFailed, $"{pin.Label ?? state.FriendlyName}: {result.ErrorMessage}");
         }
+    }
+
+    // ------------------------------------------------------------------ notifications
+
+    /// <summary>
+    /// Says, from the tray icon, that something asked for with no window in sight did not happen.
+    /// </summary>
+    /// <remarks>
+    /// A key pressed in another application, or a click on the icon, has nowhere else to report
+    /// to. Logged and nothing more, a failure looked exactly like a key that had not been pressed.
+    /// </remarks>
+    public void ReportFailure(string title, string detail)
+    {
+        if (_disposed || !_failures.ShouldShow(title, detail, DateTime.UtcNow))
+        {
+            return;
+        }
+
+        _icon?.ShowNotification(title, detail);
     }
 
     // ------------------------------------------------------------------ icon state

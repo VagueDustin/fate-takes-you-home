@@ -142,6 +142,33 @@ public sealed class TrayIcon : IDisposable
     }
 
     /// <summary>
+    /// Shows a notification from the icon: a toast on current Windows, a balloon on older.
+    /// </summary>
+    /// <remarks>
+    /// Silent, and held back during the quiet time Windows gives a newly signed-in account. It only
+    /// ever reports something that did not happen, to somebody who has just pressed a key and is
+    /// already looking for the result, so a sound would add nothing but noise.
+    /// </remarks>
+    public void ShowNotification(string title, string text)
+    {
+        if (_disposed || !_added)
+        {
+            return;
+        }
+
+        NativeMethods.NOTIFYICONDATA data = BuildData(NativeMethods.NIF_INFO);
+        data.szInfoTitle = Truncate(title, 63);
+        data.szInfo = Truncate(text, 255);
+        data.dwInfoFlags =
+            NativeMethods.NIIF_WARNING | NativeMethods.NIIF_NOSOUND | NativeMethods.NIIF_RESPECT_QUIET_TIME;
+
+        if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_MODIFY, ref data))
+        {
+            _log?.Invoke("Could not show a notification from the tray icon.", null);
+        }
+    }
+
+    /// <summary>
     /// Returns the icon's rectangle in physical screen pixels.
     /// </summary>
     /// <remarks>

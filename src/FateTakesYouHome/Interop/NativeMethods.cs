@@ -69,6 +69,11 @@ internal static class NativeMethods
     public const int NIF_GUID = 0x00000020;
     public const int NIF_SHOWTIP = 0x00000080;
 
+    // Notification (balloon, and on current Windows toast) flags for NIF_INFO.
+    public const int NIIF_WARNING = 0x00000002;
+    public const int NIIF_NOSOUND = 0x00000010;
+    public const int NIIF_RESPECT_QUIET_TIME = 0x00000080;
+
     /// <summary>
     /// Version 4 gives us screen coordinates in the callback and the <c>NIN_*</c> notifications,
     /// which is what makes precise flyout placement possible.
