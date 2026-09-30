@@ -135,7 +135,10 @@ public sealed class HotkeyService : IDisposable
     private readonly Dictionary<int, string> _registered = [];
     private readonly Dictionary<string, (int Id, HotkeyGesture Gesture)> _held = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _failures = new(StringComparer.Ordinal);
+    private readonly HashSet<(string Key, HotkeyGesture Gesture)> _loggedAsTaken = [];
+    private IReadOnlyList<HotkeyRegistration> _requested = [];
     private HwndSource? _window;
+    private bool _suspended;
     private bool _disposed;
 
     public HotkeyService(AppLog log)
@@ -149,9 +152,48 @@ public sealed class HotkeyService : IDisposable
     /// </summary>
     public event EventHandler<string>? Pressed;
 
+    /// <summary>
+    /// Raised after every <see cref="Apply"/>, so anything showing <see cref="FailureFor"/> can
+    /// read it again. Some failures are only known once a combination is claimed, which can happen
+    /// later than the change that asked for it.
+    /// </summary>
+    public event EventHandler? Applied;
+
     /// <summary>Why the shortcut registered under a key could not be, if it could not.</summary>
     public string? FailureFor(string key) =>
         _failures.TryGetValue(key, out string? reason) ? reason : null;
+
+    /// <summary>
+    /// Lets go of every combination until <see cref="Resume"/>, so that one can be recorded.
+    /// </summary>
+    /// <remarks>
+    /// Windows gives a registered combination to its owner and never to the window with focus.
+    /// While the app held one, pressing it in a recorder ran whatever owned it, so recording a
+    /// device shortcut's keys for a second shortcut moved the first one's devices, the recorder saw
+    /// nothing, and the message naming the clash had no way to appear.
+    /// </remarks>
+    public void Suspend()
+    {
+        if (_suspended || _disposed)
+        {
+            return;
+        }
+
+        _suspended = true;
+        Apply(_requested);
+    }
+
+    /// <summary>Claims again every combination let go of by <see cref="Suspend"/>.</summary>
+    public void Resume()
+    {
+        if (!_suspended || _disposed)
+        {
+            return;
+        }
+
+        _suspended = false;
+        Apply(_requested);
+    }
 
     /// <summary>
     /// Makes the registered shortcuts match the given list. Call whenever the settings change.
@@ -164,10 +206,14 @@ public sealed class HotkeyService : IDisposable
     /// </remarks>
     public void Apply(IReadOnlyList<HotkeyRegistration> shortcuts)
     {
+        ArgumentNullException.ThrowIfNull(shortcuts);
+
+        // Kept so that a resume can claim again exactly what was last asked for.
+        _requested = shortcuts;
+
         EnsureWindow();
 
         IReadOnlyDictionary<string, string> conflicts = FindConflicts(shortcuts);
-        var failedBefore = new HashSet<string>(_failures.Keys, StringComparer.Ordinal);
         var wanted = new Dictionary<string, HotkeyGesture>(StringComparer.Ordinal);
 
         _failures.Clear();
@@ -188,6 +234,14 @@ public sealed class HotkeyService : IDisposable
             }
 
             wanted[shortcut.Key] = gesture;
+        }
+
+        // While a combination is being recorded nothing is held, so every key reaches the
+        // recorder. Clashes inside the app are still reported, from the list alone. Whether
+        // another application holds a combination is only known by asking for it, on resume.
+        if (_suspended)
+        {
+            wanted.Clear();
         }
 
         (IReadOnlyList<string> release, IReadOnlyList<string> claim) = PlanChanges(
@@ -214,19 +268,24 @@ public sealed class HotkeyService : IDisposable
             {
                 _registered[id] = key;
                 _held[key] = (id, gesture);
+                _loggedAsTaken.RemoveWhere(taken => taken.Key == key);
             }
             else
             {
                 // Almost always: another app owns the combination. It is tried again on every
-                // apply, since that app may have let go, but only logged the first time.
+                // apply, since that app may have let go, but logged only the first time for each
+                // combination. Recording a shortcut lets go of everything and claims it all back,
+                // so "the first time" cannot mean the last apply.
                 _failures[key] = $"{gesture} is already in use by another application.";
 
-                if (!failedBefore.Contains(key))
+                if (_loggedAsTaken.Add((key, gesture)))
                 {
                     _log.Warning($"Could not register the shortcut {gesture} for {key}.");
                 }
             }
         }
+
+        Applied?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

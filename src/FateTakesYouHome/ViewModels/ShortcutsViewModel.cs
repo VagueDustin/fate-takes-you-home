@@ -70,6 +70,13 @@ public sealed partial class ShortcutsViewModel : ObservableObject, IDisposable
 
         _homeAssistant.SnapshotReloaded += OnSnapshotReloaded;
 
+        // Whether another application holds a combination is only known once it is claimed, and
+        // that can happen after the change that asked for it: when a recorder lets go of focus.
+        if (App.Current is { } app)
+        {
+            app.Hotkeys.Applied += OnHotkeysApplied;
+        }
+
         BuildShortcutRows();
         BuildDeviceShortcutRows();
     }
@@ -183,6 +190,8 @@ public sealed partial class ShortcutsViewModel : ObservableObject, IDisposable
         RefreshShortcutFailures();
     }
 
+    private void OnHotkeysApplied(object? sender, EventArgs e) => RefreshShortcutFailures();
+
     public void Dispose()
     {
         if (_disposed)
@@ -192,5 +201,10 @@ public sealed partial class ShortcutsViewModel : ObservableObject, IDisposable
 
         _disposed = true;
         _homeAssistant.SnapshotReloaded -= OnSnapshotReloaded;
+
+        if (App.Current is { } app)
+        {
+            app.Hotkeys.Applied -= OnHotkeysApplied;
+        }
     }
 }

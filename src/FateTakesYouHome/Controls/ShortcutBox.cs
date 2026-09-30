@@ -4,6 +4,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using FateTakesYouHome.Services;
 
 namespace FateTakesYouHome.Controls;
@@ -12,10 +13,18 @@ namespace FateTakesYouHome.Controls;
 /// A box that records a keyboard shortcut: focus it, press the combination, done.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Built on <see cref="TextBox"/> for the focus visuals and accessibility plumbing, with all
 /// typing intercepted: the text is always the formatted gesture, never keystrokes. Escape,
 /// Backspace and Delete clear the shortcut, which is also the documented convention everywhere
 /// else on Windows.
+/// </para>
+/// <para>
+/// While a box has focus the app lets go of its own system-wide shortcuts. Windows gives a
+/// registered combination to its owner rather than to the window with focus, so without that,
+/// pressing a combination the app already used would run that shortcut instead of reaching the
+/// box.
+/// </para>
 /// </remarks>
 public sealed class ShortcutBox : TextBox
 {
@@ -91,6 +100,8 @@ public sealed class ShortcutBox : TextBox
     {
         base.OnGotKeyboardFocus(e);
 
+        App.Current?.Hotkeys.Suspend();
+
         if (string.IsNullOrEmpty(GestureText))
         {
             Text = "Press a combination…";
@@ -100,6 +111,17 @@ public sealed class ShortcutBox : TextBox
     protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
     {
         base.OnLostKeyboardFocus(e);
+
+        // A moment later rather than now, and only if focus has not simply gone to the next box:
+        // tabbing down a list of them would otherwise claim every shortcut back and let go of
+        // them all again at each step.
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, static () =>
+        {
+            if (Keyboard.FocusedElement is not ShortcutBox)
+            {
+                App.Current?.Hotkeys.Resume();
+            }
+        });
 
         if (string.IsNullOrEmpty(GestureText))
         {
