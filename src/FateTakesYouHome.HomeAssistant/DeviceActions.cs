@@ -84,8 +84,8 @@ public static class DeviceActions
     /// skips its locks.
     /// </para>
     /// <para>
-    /// This is the domain-level answer the editor uses to warn about skipped targets. Planning
-    /// additionally checks what each entity reports it supports.
+    /// This is the domain-level answer, for an entity nothing more is known about yet.
+    /// <see cref="CanTake"/> also checks what the entity reports it supports.
     /// </para>
     /// </remarks>
     public static bool AppliesTo(DeviceAction action, string domain) => action switch
@@ -242,8 +242,18 @@ public static class DeviceActions
         }
     }
 
-    private static bool CanTake(DeviceAction action, HaEntityState target)
+    /// <summary>
+    /// True when <paramref name="action"/> would act on this entity: its domain takes the action,
+    /// and it reports the features the action needs.
+    /// </summary>
+    /// <remarks>
+    /// About what the device can do at all, which is what the editor shows. Whether it is
+    /// reachable is a separate question, answered at the moment of the press.
+    /// </remarks>
+    public static bool CanTake(DeviceAction action, HaEntityState target)
     {
+        ArgumentNullException.ThrowIfNull(target);
+
         string domain = target.Domain;
 
         if (!AppliesTo(action, domain))

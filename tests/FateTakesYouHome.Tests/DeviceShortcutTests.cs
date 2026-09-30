@@ -363,6 +363,59 @@ public sealed class DeviceShortcutTests
         Assert.Empty(DeviceActions.Plan(action, [device]));
     }
 
+    // ------------------------------------------------------------------ the editor
+
+    /// <summary>
+    /// The domain says a light can dim; the light itself may say it only switches. The strike
+    /// through its name has to follow the light, or the editor promises what a press will not do.
+    /// </summary>
+    [Fact]
+    public void TheEditorStrikesThroughALightThatCannotDim()
+    {
+        HaEntityState switchOnly = Entity(
+            "light.porch", "off", new JsonObject { ["supported_color_modes"] = new JsonArray("onoff") });
+
+        Assert.True(DeviceShortcutRow.Skips(DeviceAction.BrightnessUp, "light.porch", switchOnly));
+        Assert.False(DeviceShortcutRow.Skips(DeviceAction.BrightnessUp, "light.desk", DimmableLight("light.desk", "off")));
+    }
+
+    [Fact]
+    public void UntilHomeAssistantHasSaidTheEditorGoesByTheKindOfDevice()
+    {
+        Assert.False(DeviceShortcutRow.Skips(DeviceAction.BrightnessUp, "light.porch", null));
+        Assert.True(DeviceShortcutRow.Skips(DeviceAction.BrightnessUp, "switch.kettle_plug", null));
+    }
+
+    /// <summary>
+    /// A toggle locks an unlocked door and never opens a locked one. Nothing about the word says
+    /// so, so the editor does.
+    /// </summary>
+    [Fact]
+    public void AToggleOnADoorSaysItWillOnlyEverLockIt()
+    {
+        DeviceShortcutTarget door = new("lock.side_door", "Side door", IsSkipped: false);
+
+        Assert.Equal(
+            "A shortcut can lock a door, but never unlock one.",
+            DeviceShortcutRow.NoteFor(DeviceAction.Toggle, [door]));
+        Assert.Null(DeviceShortcutRow.NoteFor(DeviceAction.TurnOff, [door]));
+    }
+
+    [Fact]
+    public void TheNoteCountsWhatIsSkipped()
+    {
+        DeviceShortcutTarget[] targets =
+        [
+            new("light.desk", "Desk lamp", IsSkipped: false),
+            new("switch.kettle_plug", "Kettle plug", IsSkipped: true),
+        ];
+
+        Assert.Equal(
+            "Brightness up skips 1 of these 2 devices.",
+            DeviceShortcutRow.NoteFor(DeviceAction.BrightnessUp, targets));
+        Assert.Null(DeviceShortcutRow.NoteFor(DeviceAction.BrightnessUp, [targets[0]]));
+    }
+
     // ------------------------------------------------------------------ hotkey clashes
 
     [Fact]

@@ -25,7 +25,7 @@ public sealed record DeviceShortcutMatch(string EntityId, string Name, string De
 public sealed record DeviceShortcutCandidate(string EntityId, string Name, string? Area);
 
 /// <summary>
-/// One device shortcut, as an editable row on the appearance page.
+/// One device shortcut, as an editable row on the Shortcuts page.
 /// </summary>
 /// <remarks>
 /// Edits write straight through to the <see cref="DeviceShortcut"/> held in settings and are saved
@@ -115,31 +115,51 @@ public sealed partial class DeviceShortcutRow : ObservableObject
     public string ActionSummary => Model.DescribeAction(NameOf);
 
     /// <summary>Says which targets the action will skip, and why, when any will.</summary>
-    public string? Note
+    public string? Note => NoteFor(Action, Targets);
+
+    /// <summary>
+    /// The note under a shortcut: how many of its devices the action skips, and a word about locks
+    /// wherever a shortcut would otherwise be expected to open one.
+    /// </summary>
+    public static string? NoteFor(DeviceAction action, IReadOnlyCollection<DeviceShortcutTarget> targets)
     {
-        get
+        ArgumentNullException.ThrowIfNull(targets);
+
+        var notes = new List<string>(2);
+        int skipped = targets.Count(t => t.IsSkipped);
+
+        if (skipped > 0)
         {
-            int skipped = Targets.Count(t => t.IsSkipped);
+            string label = DeviceShortcut.ActionLabel(action);
 
-            if (skipped == 0)
-            {
-                return null;
-            }
-
-            string label = DeviceShortcut.ActionLabel(Action);
-
-            string note = skipped == Targets.Count
+            notes.Add(skipped == targets.Count
                 ? $"{label} does nothing to {(skipped == 1 ? "this device" : "any of these devices")}."
-                : $"{label} skips {skipped} of these {Targets.Count} devices.";
-
-            if (Action == DeviceAction.TurnOn && Targets.Any(t => DomainOf(t.EntityId) == HaDomains.Lock))
-            {
-                note += " A shortcut can lock a door, but never unlock one.";
-            }
-
-            return note;
+                : $"{label} skips {skipped} of these {targets.Count} devices.");
         }
+
+        // A toggle locks an unlocked door and leaves a locked one alone, which nothing about the
+        // word "toggle" would lead anybody to expect, so it gets the same warning as "turn on".
+        if (action is DeviceAction.TurnOn or DeviceAction.Toggle
+            && targets.Any(t => DomainOf(t.EntityId) == HaDomains.Lock))
+        {
+            notes.Add("A shortcut can lock a door, but never unlock one.");
+        }
+
+        return notes.Count == 0 ? null : string.Join(" ", notes);
     }
+
+    /// <summary>
+    /// Whether a press would leave a device out: by what it reports it can do, once Home Assistant
+    /// has said, and until then by what its kind of device can do.
+    /// </summary>
+    /// <remarks>
+    /// The domain alone says a light can dim, but not that this one only switches, and the strike
+    /// through a device's name is only worth having if it matches what a press will do.
+    /// </remarks>
+    public static bool Skips(DeviceAction action, string entityId, HaEntityState? state) =>
+        state is not null
+            ? !DeviceActions.CanTake(action, state)
+            : !DeviceActions.AppliesTo(action, DomainOf(entityId));
 
     partial void OnLabelChanged(string value)
     {
@@ -274,7 +294,7 @@ public sealed partial class DeviceShortcutRow : ObservableObject
             Targets.Add(new DeviceShortcutTarget(
                 entityId,
                 NameOf(entityId),
-                !DeviceActions.AppliesTo(Action, DomainOf(entityId))));
+                Skips(Action, entityId, _homeAssistant.Find(entityId))));
         }
 
         OnPropertyChanged(nameof(Note));
