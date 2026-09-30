@@ -42,6 +42,7 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
 
     private Stream? _current;
     private int _connectionCount;
+    private int _closesReceived;
     private bool _disposed;
     private long _lastCommandId;
 
@@ -87,8 +88,20 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     /// </remarks>
     public string? RefuseServiceCallsWith { get; set; }
 
+    /// <summary>
+    /// When set, <c>subscribe_events</c> is refused, which ends the client's connection attempt
+    /// while the socket is still open.
+    /// </summary>
+    public bool RefuseSubscriptions { get; set; }
+
     /// <summary>How many times a client has completed the WebSocket handshake.</summary>
     public int ConnectionCount => Volatile.Read(ref _connectionCount);
+
+    /// <summary>
+    /// How many close frames clients have sent: connections a client ended on purpose, rather than
+    /// dropped.
+    /// </summary>
+    public int ClosesReceived => Volatile.Read(ref _closesReceived);
 
     /// <summary>Every command frame the server has received, in order.</summary>
     public IReadOnlyList<JsonNode> Received => _received.ToArray();
@@ -428,6 +441,20 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
                 }).ConfigureAwait(false);
                 break;
 
+            case "subscribe_events" when RefuseSubscriptions:
+                await SendAsync(new JsonObject
+                {
+                    ["id"] = id,
+                    ["type"] = "result",
+                    ["success"] = false,
+                    ["error"] = new JsonObject
+                    {
+                        ["code"] = "unauthorized",
+                        ["message"] = "Unauthorized",
+                    },
+                }).ConfigureAwait(false);
+                break;
+
             case "subscribe_events":
             case "call_service":
                 await ResultAsync(id, null).ConfigureAwait(false);
@@ -517,7 +544,7 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     }
 
     /// <summary>Reads one text frame, reassembling continuations. Clients always mask.</summary>
-    private static async Task<string?> ReadFrameAsync(Stream stream)
+    private async Task<string?> ReadFrameAsync(Stream stream)
     {
         var assembled = new MemoryStream();
 
@@ -537,6 +564,7 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
 
             if (opcode == 0x8)
             {
+                Interlocked.Increment(ref _closesReceived);
                 return null; // Close.
             }
 

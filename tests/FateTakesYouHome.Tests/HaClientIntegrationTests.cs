@@ -570,4 +570,25 @@ public sealed class HaClientIntegrationTests
         // One loop sends about five; the four the old code would be running by now, about twenty.
         Assert.InRange(sent, 1, 8);
     }
+
+    /// <summary>
+    /// A connection the client gives up on while the socket is still open is closed properly,
+    /// not dropped.
+    /// </summary>
+    /// <remarks>
+    /// Cancelling a receive aborts a <c>ClientWebSocket</c>, so tearing down a connection's tasks
+    /// before closing it left nothing to close, and the close frame was never sent.
+    /// </remarks>
+    [Fact]
+    public async Task AConnectionThatEndsWhileOpenIsClosedPolitely()
+    {
+        await using var server = new FakeHomeAssistantServer { RefuseSubscriptions = true };
+        await using var client = new HaClient(OptionsFor(server));
+
+        client.Start();
+
+        Assert.True(
+            await FakeHomeAssistantServer.WaitUntilAsync(() => server.ClosesReceived > 0, Patience),
+            "The client never sent a close frame.");
+    }
 }

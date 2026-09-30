@@ -259,9 +259,12 @@ public sealed class HaClient : IAsyncDisposable
         }
         finally
         {
-            await connection.CancelAsync().ConfigureAwait(false);
+            // Closed before the connection's tasks are cancelled, not after. Cancelling the pump's
+            // receive aborts the socket, and an aborted socket cannot say goodbye: the other way
+            // round, the polite close had nothing left to close.
             inbound.Complete();
             await CloseSocketPolitelyAsync(socket).ConfigureAwait(false);
+            await connection.CancelAsync().ConfigureAwait(false);
 
             // The first failure, if any, is already on its way to the supervisor. The others are
             // winding down now, and whatever they throw on the way out is noise; observe it so it
