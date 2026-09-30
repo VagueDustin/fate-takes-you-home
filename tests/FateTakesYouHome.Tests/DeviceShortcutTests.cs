@@ -282,6 +282,35 @@ public sealed class DeviceShortcutTests
     }
 
     /// <summary>
+    /// A player that is off reports no mute state at all. Counting it as audible meant the group
+    /// was muted on every press and never unmuted.
+    /// </summary>
+    [Fact]
+    public void APlayerThatIsOffDoesNotStopAGroupUnmuting()
+    {
+        int features = HaFeatures.MediaPlayer.VolumeMute;
+
+        HaServiceCall call = Assert.Single(DeviceActions.Plan(
+            DeviceAction.ToggleMute,
+            [
+                Player("media_player.speaker", "playing", features, muted: true),
+                Player("media_player.tv", "off", features),
+            ]));
+
+        Assert.Equal(false, call.Data!["is_volume_muted"]);
+    }
+
+    [Fact]
+    public void PlayersThatSayNothingAboutMutingAreMuted()
+    {
+        HaServiceCall call = Assert.Single(DeviceActions.Plan(
+            DeviceAction.ToggleMute,
+            [Player("media_player.tv", "idle", HaFeatures.MediaPlayer.VolumeMute)]));
+
+        Assert.Equal(true, call.Data!["is_volume_muted"]);
+    }
+
+    /// <summary>
     /// A thermostat that cannot be switched off is left out of a group's "off", instead of making
     /// Home Assistant refuse the whole batched call over it.
     /// </summary>

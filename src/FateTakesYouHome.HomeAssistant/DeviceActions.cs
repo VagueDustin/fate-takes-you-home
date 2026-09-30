@@ -189,7 +189,11 @@ public static class DeviceActions
                 return [Call(HaDomains.MediaPlayer, "volume_down", usable)];
 
             case DeviceAction.ToggleMute:
-                bool anyAudible = usable.Any(t => t.AttrBool("is_volume_muted") != true);
+                // Decided by the players that say whether they are muted. One that is switched off
+                // says nothing, and counting that silence as audible meant a group with a player
+                // turned off could be muted but never unmuted again.
+                bool anyAudible = usable.Any(t => t.AttrBool("is_volume_muted") == false)
+                    || usable.All(t => t.AttrBool("is_volume_muted") is null);
                 return [Call(HaDomains.MediaPlayer, "volume_mute", usable, ("is_volume_muted", anyAudible))];
 
             default:
