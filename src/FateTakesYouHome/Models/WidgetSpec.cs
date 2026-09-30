@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace FateTakesYouHome.Models;
 
 /// <summary>What a widget on the home screen or tray panel is.</summary>
-[JsonConverter(typeof(JsonStringEnumConverter<WidgetKind>))]
+[JsonConverter(typeof(TolerantEnumConverter<WidgetKind>))]
 public enum WidgetKind
 {
     /// <summary>One entity, with its full tile: state, control, slider when it has one.</summary>

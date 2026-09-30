@@ -79,6 +79,14 @@ Notable changes to Fate Takes You Home. The format follows
 - **Recording a shortcut the app already used ran it instead.** Windows hands a registered
   combination straight to its owner, so the shortcut box never saw it pressed. The app now lets go
   of its own shortcuts while a box is recording, and takes them back after.
+- **One unrecognised value in the settings file cost every other setting.** A tray click action,
+  grouping or widget kind this version does not know, whether mistyped by hand or written by a
+  newer version, made the whole file unreadable, and so did a `null` in its place. An unreadable
+  file is copied to `settings.json.invalid` and the app starts over from defaults, so the server,
+  the token, every pin and both layouts were gone until it was mended by hand. Now only that value
+  is repaired: an unknown double- or middle-click action goes back to its default, an unknown
+  grouping to By room, and a widget of an unknown kind is left out of its layout, since there is
+  nothing to draw it as.
 
 ## [0.3.2] (2026-09-17)
 

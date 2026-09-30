@@ -260,7 +260,7 @@ public sealed class SettingsService : IDisposable
         }
     }
 
-    /// <summary>Repairs anything a hand-edited or older file might have got wrong.</summary>
+    /// <summary>Repairs anything a hand-edited, older or newer file might have got wrong.</summary>
     private static void Normalise(AppSettings settings)
     {
         settings.Pinned ??= [];
@@ -297,7 +297,42 @@ public sealed class SettingsService : IDisposable
         }
 
         settings.ServerUrl = settings.ServerUrl?.Trim();
+
+        // A name this version does not know, mistyped or from a newer version's file, reads as a
+        // value outside the enum rather than failing the file (see TolerantEnumConverter), and so
+        // does a number no member has. Each such setting goes back to what a fresh install has.
+        var defaults = new AppSettings();
+
+        if (!Enum.IsDefined(settings.TrayDoubleClickAction))
+        {
+            settings.TrayDoubleClickAction = defaults.TrayDoubleClickAction;
+        }
+
+        if (!Enum.IsDefined(settings.TrayMiddleClickAction))
+        {
+            settings.TrayMiddleClickAction = defaults.TrayMiddleClickAction;
+        }
+
+        if (!Enum.IsDefined(settings.Grouping))
+        {
+            settings.Grouping = defaults.Grouping;
+        }
+
+        settings.HomeWidgets = WithoutUnknownKinds(settings.HomeWidgets);
+        settings.FlyoutWidgets = WithoutUnknownKinds(settings.FlyoutWidgets);
     }
+
+    /// <summary>
+    /// Leaves out every widget of a kind this version does not know, and any null a hand-edited
+    /// file has where a widget should be.
+    /// </summary>
+    /// <remarks>
+    /// Such a widget cannot be drawn, and turning it into a kind this version does know would be a
+    /// guess. Kept as it is, it would be an empty space on the page and a card the layout editor
+    /// has no name for. The widgets around it keep their places.
+    /// </remarks>
+    private static List<WidgetSpec>? WithoutUnknownKinds(List<WidgetSpec>? widgets) =>
+        widgets?.Where(widget => widget is not null && Enum.IsDefined(widget.Kind)).ToList();
 
     public void Dispose()
     {

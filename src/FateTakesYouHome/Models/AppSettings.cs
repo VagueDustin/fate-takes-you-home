@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace FateTakesYouHome.Models;
 
 /// <summary>What a tray gesture does.</summary>
-[JsonConverter(typeof(JsonStringEnumConverter<TrayAction>))]
+[JsonConverter(typeof(TolerantEnumConverter<TrayAction>))]
 public enum TrayAction
 {
     /// <summary>Do nothing at all.</summary>
@@ -23,7 +23,7 @@ public enum TrayAction
 }
 
 /// <summary>How entities are grouped on the full entity browser.</summary>
-[JsonConverter(typeof(JsonStringEnumConverter<EntityGrouping>))]
+[JsonConverter(typeof(TolerantEnumConverter<EntityGrouping>))]
 public enum EntityGrouping
 {
     Area,
