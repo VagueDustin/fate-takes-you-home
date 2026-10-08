@@ -9,7 +9,7 @@ so the fastest way to make a change that lands is to read the reasoning first.
   ends with a section called *Things that look wrong but are not*. Several of the odder decisions
   here are deliberate and already have a paragraph explaining why.
 - For anything visual, the design language comes from the
-  [`vaguedustin-brand`](https://github.com/VagueDustin/vaguedustin-brand) repository. See
+  [`fate-brand`](https://github.com/VagueDustin/fate-brand) repository. See
   [Design rules](#design-rules).
 
 For a change of any size, open an issue first. It is easier to agree on an approach than to unpick

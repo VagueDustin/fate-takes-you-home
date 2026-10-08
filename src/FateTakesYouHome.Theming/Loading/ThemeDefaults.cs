@@ -9,7 +9,7 @@ namespace FateTakesYouHome.Theming.Loading;
 /// <remarks>
 /// <para>
 /// <strong>This file is the only legal home for a colour literal in this codebase.</strong> It
-/// mirrors the role of <c>src/primitives.ts</c> in the <c>vaguedustin-brand</c> repository: the
+/// mirrors the role of <c>src/primitives.ts</c> in the <c>fate-brand</c> repository: the
 /// values are written down exactly once, and everything else in the application consumes them
 /// through semantic roles. A hex anywhere else is a bug.
 /// </para>
