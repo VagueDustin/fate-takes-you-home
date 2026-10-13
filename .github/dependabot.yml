@@ -7,7 +7,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     open-pull-requests-limit: 5
     labels:
       - dependencies
@@ -26,7 +26,7 @@ updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     open-pull-requests-limit: 5
     labels:
       - dependencies
@@ -45,6 +45,14 @@ updates:
         patterns:
           - xunit*
           - Microsoft.NET.Test.Sdk
+      # Every other minor or patch version update, in one pull request a month. Majors stay
+      # ungrouped so each one is reviewed on its own.
+      nuget-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
       # A vulnerability rarely arrives alone, and when several land at once the useful review is
       # of the set. Ungrouped, a bad week is one pull request per advisory.
       security:
