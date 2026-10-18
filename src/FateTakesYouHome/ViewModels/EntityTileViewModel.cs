@@ -222,6 +222,7 @@ public sealed partial class EntityTileViewModel : ObservableObject
         ErrorMessage = result.ErrorMessage;
 
         // The optimistic state was a guess and it was wrong. Put the real one back.
+        _optimisticUntil = DateTimeOffset.MinValue;
         RaiseStateProperties();
     }
 
@@ -290,6 +291,10 @@ public sealed partial class EntityTileViewModel : ObservableObject
 
         _state = state;
         Glyph = EntityGlyphs.For(state);
+
+        // A real event is the confirmation the optimistic state was standing in for, whichever
+        // way it went.
+        _optimisticUntil = DateTimeOffset.MinValue;
 
         RaiseStateProperties();
     }
