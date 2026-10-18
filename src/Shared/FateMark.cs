@@ -13,9 +13,10 @@ namespace FateTakesYouHome.Branding;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The mark is a gabled house whose doorway is an arch: a gate you pass through to get home. It
-/// follows the naming pattern the brand already uses for the family (<c>Fate of Evrima</c>,
-/// <c>Fated Updates</c>), and stays legible at 16 pixels, which rules out anything finer.
+/// The mark is a keystoned arch with a guiding star standing in its doorway: the way home, and the
+/// light that shows it. The star is the same four-point star the starfield backdrop and the scene
+/// glyph use, so the icon and the interface read as one family. It stays legible at 16 pixels,
+/// which rules out anything finer.
 /// </para>
 /// <para>
 /// This file is linked into both the application and the icon generator so the runtime tray icon
@@ -30,7 +31,7 @@ public static class FateMark
     public const double DesignSize = 32d;
 
     /// <summary>
-    /// The ink bounds of the glyph on the design grid: x 3.2–28.8, y 6.5–29.3.
+    /// The ink bounds of the glyph on the design grid: x 3.2 to 28.8, y 6.5 to 29.3.
     /// </summary>
     /// <remarks>
     /// Hard-coded rather than measured. <see cref="Geometry.Bounds"/> on a path containing arcs
@@ -66,16 +67,54 @@ public static class FateMark
     /// even-odd hole. That keeps the join between pier and arch a single continuous contour, so it
     /// stays clean at every size instead of showing a seam where two subpaths meet.
     /// </para>
+    /// <para>
+    /// The keystone sits flush with the crown and drops a little into the opening, set off by two
+    /// hairline joints. A keystone standing proud of the crown was tried and turned the arch into
+    /// a bell jar at 16 pixels; flush, the joints simply vanish at small sizes and the detail only
+    /// appears where there is room for it. The keystone overlaps the ring, so the two fill
+    /// non-zero (even-odd would punch the overlap out) before the joints are cut through both.
+    /// </para>
     /// </remarks>
     public static Geometry BuildMarkGeometry()
     {
         // Outer contour: up the left pier, over the crown, down the right pier. Then the inner
         // contour returns in the opposite sweep direction, cutting the opening.
         const string ring =
-            "M5,26.5 L5,17.5 A11,11 0 0 1 27,17.5 L27,26.5 L22,26.5 L22,17.5 "
-            + "A6,6 0 0 0 10,17.5 L10,26.5 Z";
+            "M5,26.5 L5,17.5 A11,11 0 0 1 27,17.5 L27,26.5 L23,26.5 L23,17.5 "
+            + "A7,7 0 0 0 9,17.5 L9,26.5 Z";
 
-        var geometry = Geometry.Parse(ring);
+        const string keystone = "M13.7,6.5 L18.3,6.5 L17.2,11.2 L14.8,11.2 Z";
+
+        // The joints run along the keystone's flanks, overshooting both edges of the ring.
+        const string joints = "M13.45,5.4 L14.92,11.7 M18.55,5.4 L17.08,11.7";
+
+        var masonry = new GeometryGroup { FillRule = FillRule.Nonzero };
+        masonry.Children.Add(Geometry.Parse(ring));
+        masonry.Children.Add(Geometry.Parse(keystone));
+
+        Geometry cuts = Geometry.Parse(joints).GetWidenedPathGeometry(new Pen(Brushes.Black, 0.45));
+
+        Geometry geometry = new CombinedGeometry(GeometryCombineMode.Exclude, masonry, cuts);
+        geometry.Freeze();
+        return geometry;
+    }
+
+    /// <summary>
+    /// The guiding star in the doorway.
+    /// </summary>
+    /// <remarks>
+    /// Taller than it is wide, like a star seen through a door, and sat low in the opening so it
+    /// reads as standing on the threshold rather than hanging from the arch. The concave flanks
+    /// are curves rather than straight lines: straight, the star turns into a plus sign at 16
+    /// pixels.
+    /// </remarks>
+    public static Geometry BuildStarGeometry()
+    {
+        const string star =
+            "M16,13.8 Q16.5,18.6 19.8,19.4 Q16.5,20.2 16,24.8 "
+            + "Q15.5,20.2 12.2,19.4 Q15.5,18.6 16,13.8 Z";
+
+        var geometry = Geometry.Parse(star);
         geometry.Freeze();
         return geometry;
     }
@@ -132,8 +171,18 @@ public static class FateMark
                 ? Frozen(new SolidColorBrush(Parse(GoldPrimary)))
                 : BuildGoldBrush();
 
+            // Light spilling through the doorway. Plated only: on a bare taskbar a soft halo just
+            // reads as a smudge, and the muted icon is meant to look unlit.
+            if (withPlate && !monochrome)
+            {
+                DrawDoorwayGlow(dc);
+            }
+
             dc.DrawGeometry(glyph, pen: null, BuildMarkGeometry());
             dc.DrawGeometry(glyph, pen: null, BuildThresholdGeometry());
+
+            Brush star = monochrome ? glyph : BuildStarBrush();
+            dc.DrawGeometry(star, pen: null, BuildStarGeometry());
 
             if (!withPlate)
             {
@@ -218,6 +267,38 @@ public static class FateMark
         };
         brush.Freeze();
         return brush;
+    }
+
+    /// <summary>The star is lit from within, so it runs pale at the centre to bright gold.</summary>
+    private static Brush BuildStarBrush()
+    {
+        var brush = new RadialGradientBrush
+        {
+            GradientStops =
+            [
+                new GradientStop(Parse(GoldHighlight), 0.0),
+                new GradientStop(Parse(GoldBright), 1.0),
+            ],
+        };
+        brush.Freeze();
+        return brush;
+    }
+
+    private static void DrawDoorwayGlow(DrawingContext dc)
+    {
+        Color gold = Parse(GoldBright);
+
+        var glow = new RadialGradientBrush
+        {
+            GradientStops =
+            [
+                new GradientStop(Color.FromArgb(0x66, gold.R, gold.G, gold.B), 0.0),
+                new GradientStop(Color.FromArgb(0x00, gold.R, gold.G, gold.B), 1.0),
+            ],
+        };
+        glow.Freeze();
+
+        dc.DrawEllipse(glow, pen: null, new Point(16, 19.6), 7.5, 7.5);
     }
 
     private static Color Parse(string hex) => (Color)ColorConverter.ConvertFromString(hex)!;
