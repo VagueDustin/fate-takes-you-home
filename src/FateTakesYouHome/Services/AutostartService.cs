@@ -248,7 +248,7 @@ public sealed class AutostartService
     /// covers being launched through the host (<c>dotnet run</c>), where the process path is
     /// <c>dotnet.exe</c> and registering it would be useless.
     /// </remarks>
-    private static string? GetExecutablePath()
+    internal static string? GetExecutablePath()
     {
         string? path = Environment.ProcessPath;
 

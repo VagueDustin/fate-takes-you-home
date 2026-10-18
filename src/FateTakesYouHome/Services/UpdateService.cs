@@ -53,9 +53,9 @@ public sealed record UpdateInfo(Version Version, string InstallerUrl, long Insta
 /// whose tray it lives in.
 /// </para>
 /// <para>
-/// The handoff is <c>msiexec /i package.msi /passive</c>. The MSI's own upgrade logic closes the
-/// running copy, replaces it in place and relaunches nothing, so this service asks the app to
-/// exit first and lets the installer's exit-dialog behaviour stay out of it.
+/// The handoff is <c>msiexec /i package.msi /passive</c>, run by a <c>cmd</c> that waits for it
+/// and then starts the app again; see <see cref="RelaunchingInstallCommand"/>. The app exits
+/// straight after the handoff so the installer can replace its files.
 /// </para>
 /// </remarks>
 public sealed partial class UpdateService : ObservableObject, IDisposable
@@ -238,15 +238,23 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
 
         _log.Info("Starting the installer and exiting.");
 
+        string? app = AutostartService.GetExecutablePath();
+
+        // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
+        // Without a path to start again (dotnet run with nothing installed) the installer runs alone.
+        ProcessStartInfo start = app is null
+            ? new ProcessStartInfo("msiexec.exe", $"/i \"{installer}\" /passive")
+            : new ProcessStartInfo("cmd.exe", RelaunchingInstallCommand(installer, app));
+
+        start.UseShellExecute = false;
+        start.CreateNoWindow = true;
+
+        // Anywhere but the install folder, which a waiting cmd must not hold open.
+        start.WorkingDirectory = Path.GetDirectoryName(installer);
+
         try
         {
-            // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "msiexec.exe",
-                Arguments = $"/i \"{installer}\" /passive",
-                UseShellExecute = true,
-            });
+            Process.Start(start);
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
@@ -261,6 +269,26 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
 
         ExitRequested?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// The <c>cmd</c> arguments that run the installer and, once it has returned, start the app.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>/passive</c> skips the installer's UI sequence, so the exit dialog's "Start now" never
+    /// runs, and the app exits before the installer has even asked for elevation. Something that
+    /// outlives the app has to do the restart. A custom action in the MSI's execute sequence was
+    /// the alternative, but that sequence runs in the elevated installer service, and a tray app
+    /// started from there would run elevated, cut off from Explorer's messages.
+    /// </para>
+    /// <para>
+    /// The app is started whatever msiexec returns: the new version after an upgrade, or the old
+    /// one, still installed, after a refused UAC prompt or a rolled-back install. Either way the
+    /// user is not left with no app after pressing "Install and restart".
+    /// </para>
+    /// </remarks>
+    public static string RelaunchingInstallCommand(string installer, string app) =>
+        $"/d /s /c \"start \"\" /wait msiexec.exe /i \"{installer}\" /passive & start \"\" \"{app}\"\"";
 
     // ------------------------------------------------------------------ parsing
 

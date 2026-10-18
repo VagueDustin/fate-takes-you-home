@@ -68,6 +68,23 @@ public sealed class PlatformIntegrationTests
         Assert.Null(UpdateService.TryParseLatest(json, new Version(0, 2, 0)));
     }
 
+    /// <summary>
+    /// The app has exited by the time the installer finishes, so the command that runs the
+    /// installer is also what starts the app again, and only once msiexec has returned. Every
+    /// path is quoted, since a profile folder can hold an ampersand.
+    /// </summary>
+    [Fact]
+    public void Install_and_restart_waits_for_msiexec_then_starts_the_app()
+    {
+        string command = UpdateService.RelaunchingInstallCommand(
+            @"C:\Users\Tom & Jo\AppData\Local\Updates\FateTakesYouHome-9.9.9-win-x64.msi",
+            @"C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe");
+
+        Assert.Equal(
+            """/d /s /c "start "" /wait msiexec.exe /i "C:\Users\Tom & Jo\AppData\Local\Updates\FateTakesYouHome-9.9.9-win-x64.msi" /passive & start "" "C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe"" """.TrimEnd(),
+            command);
+    }
+
     // ------------------------------------------------------------------ shortcuts
 
     [Theory]
