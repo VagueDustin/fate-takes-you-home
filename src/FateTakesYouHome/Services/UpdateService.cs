@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -53,8 +55,8 @@ public sealed record UpdateInfo(Version Version, string InstallerUrl, long Insta
 /// whose tray it lives in.
 /// </para>
 /// <para>
-/// The handoff is <c>msiexec /i package.msi /passive</c>, run by a <c>cmd</c> that waits for it
-/// and then starts the app again; see <see cref="RelaunchingInstallCommand"/>. The app exits
+/// The handoff is <c>msiexec /i package.msi /passive</c>, watched by a hidden PowerShell that
+/// waits for it and then starts the app again; see <see cref="RelaunchScript"/>. The app exits
 /// straight after the handoff so the installer can replace its files.
 /// </para>
 /// </remarks>
@@ -238,23 +240,17 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
 
         _log.Info("Starting the installer and exiting.");
 
-        string? app = AutostartService.GetExecutablePath();
-
-        // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
-        // Without a path to start again (dotnet run with nothing installed) the installer runs alone.
-        ProcessStartInfo start = app is null
-            ? new ProcessStartInfo("msiexec.exe", $"/i \"{installer}\" /passive")
-            : new ProcessStartInfo("cmd.exe", RelaunchingInstallCommand(installer, app));
-
-        start.UseShellExecute = false;
-        start.CreateNoWindow = true;
-
-        // Anywhere but the install folder, which a waiting cmd must not hold open.
-        start.WorkingDirectory = Path.GetDirectoryName(installer);
+        Process? msiexec;
 
         try
         {
-            Process.Start(start);
+            // /passive shows only a progress bar. Elevation is the installer's own prompt to make.
+            msiexec = Process.Start(new ProcessStartInfo
+            {
+                FileName = "msiexec.exe",
+                Arguments = $"/i \"{installer}\" /passive",
+                UseShellExecute = true,
+            });
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
@@ -267,12 +263,23 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
             return;
         }
 
+        // Without a path to start again (dotnet run with nothing installed) the installer runs alone.
+        if (msiexec is not null && AutostartService.GetExecutablePath() is { } app)
+        {
+            StartAfterInstaller(msiexec.Id, app, Path.GetDirectoryName(installer));
+        }
+
         ExitRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>
-    /// The <c>cmd</c> arguments that run the installer and, once it has returned, start the app.
-    /// </summary>
+    /// <summary>The copy the MSI installs, wherever the running copy is.</summary>
+    private static string InstalledExecutable => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+        "VagueDustin Enterprises",
+        "Fate Takes You Home",
+        "FateTakesYouHome.exe");
+
+    /// <summary>Starts a hidden PowerShell that runs <see cref="RelaunchScript"/>.</summary>
     /// <remarks>
     /// <para>
     /// <c>/passive</c> skips the installer's UI sequence, so the exit dialog's "Start now" never
@@ -282,13 +289,53 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
     /// started from there would run elevated, cut off from Explorer's messages.
     /// </para>
     /// <para>
-    /// The app is started whatever msiexec returns: the new version after an upgrade, or the old
-    /// one, still installed, after a refused UAC prompt or a rolled-back install. Either way the
-    /// user is not left with no app after pressing "Install and restart".
+    /// msiexec itself is still started by the app, not by the watcher, so a policy that blocks it
+    /// is reported here rather than lost in a hidden console. A watcher that cannot start costs
+    /// only the restart: the install goes ahead.
     /// </para>
     /// </remarks>
-    public static string RelaunchingInstallCommand(string installer, string app) =>
-        $"/d /s /c \"start \"\" /wait msiexec.exe /i \"{installer}\" /passive & start \"\" \"{app}\"\"";
+    private void StartAfterInstaller(int installerProcessId, string app, string? workingDirectory)
+    {
+        string script = RelaunchScript(installerProcessId, InstalledExecutable, app);
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand "
+                            + Convert.ToBase64String(Encoding.Unicode.GetBytes(script)),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+
+                // Anywhere but the install folder, which the waiting process must not hold open.
+                WorkingDirectory = workingDirectory,
+            });
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            _log.Warning("Could not arrange a restart after the installer; start the app by hand.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Waits for msiexec, then starts <paramref name="installed"/> if it exists and
+    /// <paramref name="fallback"/> if not.
+    /// </summary>
+    /// <remarks>
+    /// The app is started whatever msiexec returns. After an upgrade the installed copy is the new
+    /// version, even when the update was run from a portable copy. After a refused UAC prompt or a
+    /// rolled-back install it is the old version, or the portable copy when nothing is installed.
+    /// Either way nobody is left with no app after pressing "Install and restart".
+    /// </remarks>
+    public static string RelaunchScript(int installerProcessId, string installed, string fallback) =>
+        $"Wait-Process -Id {installerProcessId} -ErrorAction SilentlyContinue; "
+        + $"$app = if (Test-Path -LiteralPath {Quote(installed)}) {{ {Quote(installed)} }} else {{ {Quote(fallback)} }}; "
+        + "Start-Process -FilePath $app";
+
+    /// <summary>A PowerShell single-quoted literal, which treats the typographic quotes as quotes too.</summary>
+    private static string Quote(string value) =>
+        "'" + Regex.Replace(value, "['‘’‚‛]", "$0$0") + "'";
 
     // ------------------------------------------------------------------ parsing
 

@@ -69,20 +69,24 @@ public sealed class PlatformIntegrationTests
     }
 
     /// <summary>
-    /// The app has exited by the time the installer finishes, so the command that runs the
-    /// installer is also what starts the app again, and only once msiexec has returned. Every
-    /// path is quoted, since a profile folder can hold an ampersand.
+    /// The app has exited by the time the installer finishes, so something else waits for msiexec
+    /// and starts the app again: the installed copy when there is one, since the installer always
+    /// puts the new version there, and otherwise the copy that was running. A portable folder
+    /// can hold an apostrophe, which would end a PowerShell string early.
     /// </summary>
     [Fact]
-    public void Install_and_restart_waits_for_msiexec_then_starts_the_app()
+    public void Install_and_restart_waits_for_msiexec_then_starts_the_installed_copy()
     {
-        string command = UpdateService.RelaunchingInstallCommand(
-            @"C:\Users\Tom & Jo\AppData\Local\Updates\FateTakesYouHome-9.9.9-win-x64.msi",
-            @"C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe");
+        string script = UpdateService.RelaunchScript(
+            4242,
+            @"C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe",
+            @"D:\Jo's tools\Fate\FateTakesYouHome.exe");
 
         Assert.Equal(
-            """/d /s /c "start "" /wait msiexec.exe /i "C:\Users\Tom & Jo\AppData\Local\Updates\FateTakesYouHome-9.9.9-win-x64.msi" /passive & start "" "C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe"" """.TrimEnd(),
-            command);
+            """
+            Wait-Process -Id 4242 -ErrorAction SilentlyContinue; $app = if (Test-Path -LiteralPath 'C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe') { 'C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe' } else { 'D:\Jo''s tools\Fate\FateTakesYouHome.exe' }; Start-Process -FilePath $app
+            """,
+            script);
     }
 
     // ------------------------------------------------------------------ shortcuts
