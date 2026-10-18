@@ -100,6 +100,12 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     /// </summary>
     public bool RefuseSubscriptions { get; set; }
 
+    /// <summary>
+    /// When set, new connections are closed before the WebSocket handshake, as a server that is
+    /// still starting up does.
+    /// </summary>
+    public bool RefuseConnections { get; set; }
+
     /// <summary>How many times a client has completed the WebSocket handshake.</summary>
     public int ConnectionCount => Volatile.Read(ref _connectionCount);
 
@@ -232,6 +238,12 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     private async Task ServeAsync(TcpClient client)
     {
         using TcpClient owned = client;
+
+        if (RefuseConnections)
+        {
+            return;
+        }
+
         NetworkStream stream = owned.GetStream();
 
         try
