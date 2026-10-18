@@ -89,6 +89,12 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     public string? RefuseServiceCallsWith { get; set; }
 
     /// <summary>
+    /// When set, every <c>call_service</c> is swallowed without a reply, as an integration that
+    /// hangs inside Home Assistant leaves it.
+    /// </summary>
+    public bool IgnoreServiceCalls { get; set; }
+
+    /// <summary>
     /// When set, <c>subscribe_events</c> is refused, which ends the client's connection attempt
     /// while the socket is still open.
     /// </summary>
@@ -425,6 +431,9 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
                     ["name"] = "Test User",
                     ["is_admin"] = true,
                 }).ConfigureAwait(false);
+                break;
+
+            case "call_service" when IgnoreServiceCalls:
                 break;
 
             case "call_service" when RefuseServiceCallsWith is { } reason:

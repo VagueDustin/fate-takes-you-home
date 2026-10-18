@@ -234,10 +234,10 @@ public sealed class HaClient : IAsyncDisposable
             router = RouteAsync(inbound, connection.Token);
             pinger = PingLoopAsync(connection.Token);
 
-            // Raced against the watchers rather than awaited on its own. The subscription's reply
-            // has no timeout, and a connection that died before it arrived used to leave this
-            // waiting forever, showing Connected and hearing nothing, because nothing was yet
-            // watching for the socket to close.
+            // Raced against the watchers rather than awaited on its own. A connection that died
+            // before the subscription's reply arrived used to leave this waiting, showing
+            // Connected and hearing nothing, because nothing was yet watching for the socket to
+            // close.
             subscribe = SubscribeToStateChangesAsync(connection.Token);
 
             if (await Task.WhenAny(subscribe, router, pump, pinger).ConfigureAwait(false) == subscribe)
@@ -517,12 +517,10 @@ public sealed class HaClient : IAsyncDisposable
 
             try
             {
-                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                timeout.CancelAfter(_options.CommandTimeout);
-
+                // Times out inside SendCommandAsync, like every other command.
                 await SendCommandAsync(
                     new Dictionary<string, object?> { ["type"] = WireType.Ping },
-                    timeout.Token).ConfigureAwait(false);
+                    ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -540,11 +538,21 @@ public sealed class HaClient : IAsyncDisposable
     // ------------------------------------------------------------------ sending
 
     /// <summary>Sends an identified command and waits for its <c>result</c> frame.</summary>
+    /// <remarks>
+    /// Gives up after <see cref="HaConnectionOptions.CommandTimeout"/> with an
+    /// <see cref="OperationCanceledException"/>. Home Assistant can keep a healthy socket open while
+    /// a hung integration never answers a service call, and without a limit here the caller waited
+    /// for as long as the connection lasted.
+    /// </remarks>
     internal async Task<JsonElement?> SendCommandAsync(
-        Dictionary<string, object?> command, CancellationToken ct)
+        Dictionary<string, object?> command, CancellationToken cancellation)
     {
         ClientWebSocket socket = _socket
             ?? throw new HaConnectionException("Not connected to Home Assistant.");
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+        timeout.CancelAfter(_options.CommandTimeout);
+        CancellationToken ct = timeout.Token;
 
         var tcs = new TaskCompletionSource<JsonElement?>(TaskCreationOptions.RunContinuationsAsynchronously);
         long id;

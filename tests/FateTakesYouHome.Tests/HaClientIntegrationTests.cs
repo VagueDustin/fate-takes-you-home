@@ -23,14 +23,14 @@ public sealed class HaClientIntegrationTests
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
 
     private static HaConnectionOptions OptionsFor(
-        FakeHomeAssistantServer server, string? token = null) =>
+        FakeHomeAssistantServer server, string? token = null, TimeSpan? commandTimeout = null) =>
         new()
         {
             BaseUrl = server.BaseUrl,
             AccessToken = token ?? server.ExpectedToken,
 
             // Tight timings: these tests wait on real sockets and should not take ten seconds each.
-            CommandTimeout = TimeSpan.FromSeconds(5),
+            CommandTimeout = commandTimeout ?? TimeSpan.FromSeconds(5),
             PingInterval = TimeSpan.FromMilliseconds(300),
             ReconnectMinDelay = TimeSpan.FromMilliseconds(100),
             ReconnectMaxDelay = TimeSpan.FromSeconds(1),
@@ -269,6 +269,26 @@ public sealed class HaClientIntegrationTests
 
         Assert.Equal("service_not_found", error.Code);
         Assert.Equal("Service light.turn_on not found.", error.ServerMessage);
+    }
+
+    /// <summary>
+    /// A call Home Assistant never answers gives up after the command timeout. Without one, the
+    /// tile that sent it waited for as long as the connection stayed up, which with a hung
+    /// integration and a healthy socket is forever.
+    /// </summary>
+    [Fact]
+    public async Task AnUnansweredServiceCallTimesOut()
+    {
+        await using var server = new FakeHomeAssistantServer { IgnoreServiceCalls = true };
+        await using var client = new HaClient(
+            OptionsFor(server, commandTimeout: TimeSpan.FromMilliseconds(300)));
+
+        client.Start();
+        await FakeHomeAssistantServer.WaitUntilAsync(
+            () => client.State == HaConnectionState.Connected, Patience);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => client.TurnOnAsync("light.kitchen_ceiling").WaitAsync(Patience));
     }
 
     /// <summary>

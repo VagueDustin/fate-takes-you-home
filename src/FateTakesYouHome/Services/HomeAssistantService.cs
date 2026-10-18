@@ -282,22 +282,22 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
             // them is survivable (the UI falls back to grouping by domain), so they are gathered
             // individually rather than as one all-or-nothing batch.
             IReadOnlyList<HaArea> areas = await SafelyReadAsync(
-                () => client.GetAreasAsync(ct), "areas", []).ConfigureAwait(false);
+                () => client.GetAreasAsync(ct), "areas", [], ct).ConfigureAwait(false);
 
             IReadOnlyList<HaFloor> floors = await SafelyReadAsync(
-                () => client.GetFloorsAsync(ct), "floors", []).ConfigureAwait(false);
+                () => client.GetFloorsAsync(ct), "floors", [], ct).ConfigureAwait(false);
 
             IReadOnlyList<HaDevice> devices = await SafelyReadAsync(
-                () => client.GetDevicesAsync(ct), "devices", []).ConfigureAwait(false);
+                () => client.GetDevicesAsync(ct), "devices", [], ct).ConfigureAwait(false);
 
             IReadOnlyList<HaEntityRegistryEntry> registry = await SafelyReadAsync(
-                () => client.GetEntityRegistryAsync(ct), "the entity registry", []).ConfigureAwait(false);
+                () => client.GetEntityRegistryAsync(ct), "the entity registry", [], ct).ConfigureAwait(false);
 
             IReadOnlyList<HaService> services = await SafelyReadAsync(
-                () => client.GetServicesAsync(ct), "the service list", []).ConfigureAwait(false);
+                () => client.GetServicesAsync(ct), "the service list", [], ct).ConfigureAwait(false);
 
             HaConfig? config = await SafelyReadAsync<HaConfig?>(
-                () => client.GetConfigAsync(ct), "the server configuration", null).ConfigureAwait(false);
+                () => client.GetConfigAsync(ct), "the server configuration", null, ct).ConfigureAwait(false);
 
             ct.ThrowIfCancellationRequested();
 
@@ -347,9 +347,9 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
                 SnapshotReloaded?.Invoke(this, EventArgs.Empty);
             });
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            // Superseded by a newer connection.
+            // Superseded by a newer connection. A read that timed out is a failure, handled below.
         }
         catch (Exception ex)
         {
@@ -363,13 +363,14 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
         }
     }
 
-    private async Task<T> SafelyReadAsync<T>(Func<Task<T>> read, string what, T fallback)
+    private async Task<T> SafelyReadAsync<T>(
+        Func<Task<T>> read, string what, T fallback, CancellationToken ct)
     {
         try
         {
             return await read().ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             throw;
         }
