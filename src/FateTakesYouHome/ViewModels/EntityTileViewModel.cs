@@ -130,7 +130,8 @@ public sealed partial class EntityTileViewModel : ObservableObject
     public TileKind Kind => Domain switch
     {
         HaDomains.Scene or HaDomains.Button or HaDomains.InputButton => TileKind.Momentary,
-        HaDomains.Script => TileKind.Momentary,
+        // A tap runs an automation now. Enabling and disabling one is left to Home Assistant.
+        HaDomains.Script or HaDomains.Automation => TileKind.Momentary,
         HaDomains.Cover or HaDomains.Valve => TileKind.Positional,
         _ when HaDomains.ReadOnly.Contains(Domain) => TileKind.Readout,
         _ => TileKind.Toggle,
@@ -212,9 +213,11 @@ public sealed partial class EntityTileViewModel : ObservableObject
 
         CommandResult result = await _service
             .ExecuteAsync(
-                (client, ct) => Kind == TileKind.Momentary
-                    ? client.TurnOnAsync(EntityId, ct)
-                    : client.ToggleAsync(_state, ct),
+                (client, ct) => Domain == HaDomains.Automation
+                    ? client.TriggerAutomationAsync(EntityId, ct: ct)
+                    : Kind == TileKind.Momentary
+                        ? client.TurnOnAsync(EntityId, ct)
+                        : client.ToggleAsync(_state, ct),
                 $"Primary action on {EntityId}")
             .ConfigureAwait(true);
 

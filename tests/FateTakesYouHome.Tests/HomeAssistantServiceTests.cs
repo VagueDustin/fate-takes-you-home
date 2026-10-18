@@ -6,12 +6,14 @@ using System.Text.Json.Nodes;
 using System.Windows.Threading;
 using FateTakesYouHome.HomeAssistant;
 using FateTakesYouHome.Services;
+using FateTakesYouHome.ViewModels;
 using Xunit;
 
 namespace FateTakesYouHome.Tests;
 
 /// <summary>
-/// The application's Home Assistant service, driven against the fake server.
+/// The application's Home Assistant service, and the tiles built on it, driven against the fake
+/// server.
 /// </summary>
 /// <remarks>
 /// The service marshals onto a dispatcher, so each test runs one on a thread of its own. Work it
@@ -33,24 +35,6 @@ public sealed class HomeAssistantServiceTests
         ["last_changed"] = updated.ToString("O"),
         ["last_updated"] = updated.ToString("O"),
     };
-
-    private static Dispatcher StartDispatcher()
-    {
-        var ready = new TaskCompletionSource<Dispatcher>();
-        var thread = new Thread(() =>
-        {
-            ready.SetResult(Dispatcher.CurrentDispatcher);
-            Dispatcher.Run();
-        })
-        {
-            IsBackground = true,
-        };
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-
-        return ready.Task.Result;
-    }
 
     /// <summary>
     /// A change pushed while the snapshot is still being read survives it.
@@ -81,40 +65,118 @@ public sealed class HomeAssistantServiceTests
             }
         };
 
-        string root = Directory.CreateTempSubdirectory("fate-tests-").FullName;
-        Dispatcher dispatcher = StartDispatcher();
+        await using var harness = new Harness();
+        await harness.ConnectAsync(server);
 
-        try
+        Assert.Equal("on", harness.Service.Find("light.kitchen_ceiling")?.State);
+    }
+
+    /// <summary>
+    /// Tapping an automation runs it now, as the README promises, rather than disabling it.
+    /// </summary>
+    /// <remarks>
+    /// The tile used to treat an automation as something with an on and an off and send
+    /// <c>homeassistant.toggle</c>, so a tap meant to run the evening routine switched it off.
+    /// </remarks>
+    [Fact]
+    public async Task TappingAnAutomationTileTriggersIt()
+    {
+        await using var server = new FakeHomeAssistantServer(Token)
         {
-            using var log = new AppLog(Path.Combine(root, "logs"));
-            await using var service = new HomeAssistantService(log, dispatcher);
+            States =
+            [
+                new JsonObject
+                {
+                    ["entity_id"] = "automation.evening",
+                    ["state"] = "on",
+                    ["attributes"] = new JsonObject { ["friendly_name"] = "Evening" },
+                },
+            ],
+        };
 
+        await using var harness = new Harness();
+        await harness.ConnectAsync(server);
+
+        await harness.Dispatcher.InvokeAsync(async () =>
+        {
+            var tile = new EntityTileViewModel(
+                harness.Service.Find("automation.evening")!, harness.Service);
+
+            await tile.PrimaryCommand.ExecuteAsync(null);
+        }).Task.Unwrap();
+
+        JsonNode call = await server.WaitForCommandAsync("call_service", Patience);
+
+        Assert.Equal("automation", call["domain"]!.GetValue<string>());
+        Assert.Equal("trigger", call["service"]!.GetValue<string>());
+        Assert.Equal("automation.evening", call["target"]!["entity_id"]!.GetValue<string>());
+    }
+
+    /// <summary>A service on a dispatcher thread of its own, with a log in a temporary folder.</summary>
+    private sealed class Harness : IAsyncDisposable
+    {
+        private readonly string _root = Directory.CreateTempSubdirectory("fate-tests-").FullName;
+        private readonly AppLog _log;
+
+        public Harness()
+        {
+            Dispatcher = StartDispatcher();
+            _log = new AppLog(Path.Combine(_root, "logs"));
+            Service = new HomeAssistantService(_log, Dispatcher);
+        }
+
+        public Dispatcher Dispatcher { get; }
+
+        public HomeAssistantService Service { get; }
+
+        /// <summary>Connects and waits for the first snapshot to land.</summary>
+        public async Task ConnectAsync(FakeHomeAssistantServer server)
+        {
             var reloaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            service.SnapshotReloaded += (_, _) => reloaded.TrySetResult();
+            Service.SnapshotReloaded += (_, _) => reloaded.TrySetResult();
 
-            await service.ApplyConnectionAsync(new HaConnectionOptions
+            await Service.ApplyConnectionAsync(new HaConnectionOptions
             {
                 BaseUrl = server.BaseUrl,
-                AccessToken = Token,
+                AccessToken = server.ExpectedToken,
                 CommandTimeout = TimeSpan.FromSeconds(5),
             });
 
             await reloaded.Task.WaitAsync(Patience);
-
-            Assert.Equal("on", service.Find("light.kitchen_ceiling")?.State);
         }
-        finally
+
+        public async ValueTask DisposeAsync()
         {
-            dispatcher.InvokeShutdown();
+            await Service.DisposeAsync();
+            _log.Dispose();
+            Dispatcher.InvokeShutdown();
 
             try
             {
-                Directory.Delete(root, recursive: true);
+                Directory.Delete(_root, recursive: true);
             }
             catch (IOException)
             {
                 // A straggling handle on a temp directory is not worth failing the run over.
             }
+        }
+
+        private static Dispatcher StartDispatcher()
+        {
+            var ready = new TaskCompletionSource<Dispatcher>();
+            var thread = new Thread(() =>
+            {
+                ready.SetResult(Dispatcher.CurrentDispatcher);
+                Dispatcher.Run();
+            })
+            {
+                IsBackground = true,
+            };
+
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+
+            return ready.Task.Result;
         }
     }
 }
