@@ -1,6 +1,7 @@
 // Copyright © 2026 VagueDustin Enterprises
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using FateTakesYouHome.HomeAssistant;
 using FateTakesYouHome.HomeAssistant.Models;
@@ -387,6 +388,62 @@ public sealed class HaClientIntegrationTests
                 () => server.ConnectionCount >= 2 && client.State == HaConnectionState.Connected,
                 Patience),
             $"Did not reconnect; state {client.State}, {server.ConnectionCount} connections.");
+    }
+
+    /// <summary>
+    /// A connection that got as far as signing in starts its next outage from the shortest delay,
+    /// however long the outage before it took to recover from.
+    /// </summary>
+    /// <remarks>
+    /// The delay used to reset only when a connection closed without an error, and a dropped one
+    /// never does, so after a single slow restart every later blip waited the doubled delay.
+    /// </remarks>
+    [Fact]
+    public async Task TheBackoffStartsAgainAfterASuccessfulConnection()
+    {
+        await using var server = new FakeHomeAssistantServer { RefuseConnections = true };
+        HaConnectionOptions options = new()
+        {
+            BaseUrl = server.BaseUrl,
+            AccessToken = server.ExpectedToken,
+            CommandTimeout = TimeSpan.FromSeconds(5),
+            PingInterval = TimeSpan.FromSeconds(5),
+            ReconnectMinDelay = TimeSpan.FromMilliseconds(50),
+            ReconnectMaxDelay = TimeSpan.FromSeconds(5),
+        };
+        await using var client = new HaClient(options);
+
+        var retries = new ConcurrentQueue<TimeSpan>();
+        client.ConnectionStateChanged += (_, e) =>
+        {
+            if (e is { State: HaConnectionState.Reconnecting, RetryIn: { } retryIn })
+            {
+                retries.Enqueue(retryIn);
+            }
+        };
+
+        client.Start();
+
+        // Fail a few attempts so the delay has grown well past the floor.
+        Assert.True(
+            await FakeHomeAssistantServer.WaitUntilAsync(
+                () => retries.Any(d => d >= TimeSpan.FromMilliseconds(200)), Patience),
+            "The backoff never grew.");
+
+        server.RefuseConnections = false;
+        Assert.True(
+            await FakeHomeAssistantServer.WaitUntilAsync(
+                () => client.State == HaConnectionState.Connected, Patience),
+            "Never connected once the server accepted.");
+
+        int before = retries.Count;
+        server.DropConnection();
+
+        Assert.True(
+            await FakeHomeAssistantServer.WaitUntilAsync(() => retries.Count > before, Patience),
+            "No retry was scheduled after the drop.");
+
+        Assert.Equal(options.ReconnectMinDelay, retries.ElementAt(before));
     }
 
     /// <summary>

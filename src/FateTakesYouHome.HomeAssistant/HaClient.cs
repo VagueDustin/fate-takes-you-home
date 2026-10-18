@@ -123,9 +123,6 @@ public sealed class HaClient : IAsyncDisposable
             try
             {
                 await RunConnectionAsync(ct).ConfigureAwait(false);
-
-                // A clean return means the socket closed without an error. Treat it as transient.
-                delay = _options.ReconnectMinDelay;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -150,6 +147,14 @@ public sealed class HaClient : IAsyncDisposable
             if (ct.IsCancellationRequested)
             {
                 break;
+            }
+
+            // A connection that signed in ended the last outage, so whatever ended it starts a new
+            // one from the floor. Resetting only on a clean return almost never happened: a dropped
+            // socket throws, and every blip after one slow restart waited the grown delay.
+            if (_state == HaConnectionState.Connected)
+            {
+                delay = _options.ReconnectMinDelay;
             }
 
             SetState(
