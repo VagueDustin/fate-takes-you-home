@@ -80,7 +80,6 @@ the autostart setting can be toggled from inside it without an administrator pro
 | --- | --- |
 | `CommunityToolkit.Mvvm` | MIT |
 | `Microsoft.Extensions.DependencyInjection` | MIT |
-| `System.Security.Cryptography.ProtectedData` | MIT |
 | Inter, Cinzel, Crimson Pro | SIL Open Font License 1.1 |
 
 The dependency list is deliberately short. The tray icon, the WebSocket client, the logger, the

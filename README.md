@@ -17,7 +17,7 @@ server. One executable that lives beside the clock.
 <a href="https://github.com/VagueDustin/fate-takes-you-home/actions/workflows/build.yml?query=branch%3Amain"><img alt="Build status on main" src="https://img.shields.io/github/actions/workflow/status/VagueDustin/fate-takes-you-home/build.yml?branch=main&label=build&labelColor=16213E"></a>
 <a href="LICENSE"><img alt="Licence" src="https://img.shields.io/github/license/VagueDustin/fate-takes-you-home?label=licence&color=D4AF37&labelColor=16213E"></a>
 <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-D4AF37?labelColor=16213E">
-<img alt=".NET 8" src="https://img.shields.io/badge/.NET-8-D4AF37?labelColor=16213E">
+<img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-D4AF37?labelColor=16213E">
 
 **MSI** for a normal install with Start menu entry and one-click updates ·
 **portable zip** to run from any folder without installing
@@ -50,7 +50,7 @@ panel next to itself, with the handful of things you actually touch.
 - **It keeps itself current**: a once-a-day check against this repository's releases offers new
   versions with one click, and never installs without it.
 
-Built with WPF on .NET 8. It talks to Home Assistant over the native WebSocket API. No custom
+Built with WPF on .NET 10. It talks to Home Assistant over the native WebSocket API. No custom
 integration, no HACS component, nothing to install on the server side beyond a Long-Lived Access
 Token you create from your own profile page.
 

@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
 
   build:
-    # Windows only, and not a matrix: the projects target net8.0-windows and use WPF, so there is
+    # Windows only, and not a matrix: the projects target net10.0-windows and use WPF, so there is
     # nothing to gain from pretending otherwise.
     runs-on: windows-latest
 
@@ -46,7 +46,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore
         run: dotnet restore
@@ -75,7 +75,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       # The extensions must be pinned to the same version as the toolset. Unpinned, "extension add"
       # takes the latest published: WiX 7 extensions against a WiX 5 toolset, which fails with

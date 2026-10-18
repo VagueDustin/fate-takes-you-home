@@ -60,12 +60,12 @@ updates:
         patterns:
           - "*"
     ignore:
-      # .NET 8 is the LTS this targets on purpose; a major bump is a decision, not an update.
+      # .NET 10 is the LTS this targets on purpose; a major bump is a decision, not an update.
       - dependency-name: Microsoft.Extensions.DependencyInjection*
         update-types:
           - version-update:semver-major
 
-# Deliberately not watched: dotnet-sdk. global.json pins 8.0.0 with rollForward latestFeature,
-# which is a floor rather than a choice of SDK: any 8.0.x satisfies it, CI installs the newest
-# 8.0.x regardless, and the published build is whatever the runner had. Raising the floor would
+# Deliberately not watched: dotnet-sdk. global.json pins 10.0.100 with rollForward latestFeature,
+# which is a floor rather than a choice of SDK: any 10.0.x satisfies it, CI installs the newest
+# 10.0.x regardless, and the published build is whatever the runner had. Raising the floor would
 # narrow who can build the repository and change nothing about what ships.

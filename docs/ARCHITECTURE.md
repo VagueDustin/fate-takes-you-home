@@ -52,7 +52,9 @@ screen coordinate, and an animated transparent popup. All three are either unsup
 dropping to the same Win32 calls WPF would need anyway, at which point WPF's mature composition,
 per-monitor DPI handling and resource system are pure gain.
 
-.NET 8 rather than 9: it is the LTS release, and nothing here needs anything newer.
+.NET 10, because it is the current LTS release: .NET 8, which this started on, loses support on
+2026-11-10, and a self-contained build ships its runtime, so an unpatched runtime would be ours to
+answer for. .NET 10 is supported until 2028-11-14. Nothing here needs anything newer.
 
 The build is **self-contained**. Asking somebody to find and install the .NET Desktop Runtime before
 a tray utility will run is a bad first five minutes, and the size difference is a download rather

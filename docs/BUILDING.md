@@ -2,9 +2,9 @@
 
 ## What you need
 
-- **.NET 8 SDK**: `dotnet --version` should report 8.0.x or later.
+- **.NET 10 SDK**: `dotnet --version` should report 10.0.x or later.
 - **Windows 10 1809 or later** to run it. The build needs Windows too: the projects target
-  `net8.0-windows` and use WPF.
+  `net10.0-windows` and use WPF.
 - **WiX 5**, only if you want the MSI:
   ```bash
   dotnet tool install --global wix --version 5.0.2
@@ -163,7 +163,7 @@ because a tool window (which the tray panel is) is excluded from that by design.
 - `Directory.Build.props`: shared properties and product identity.
 - `Directory.Packages.props`: central package versions. Add a `PackageVersion` here and a bare
   `PackageReference` in the project.
-- `global.json`: pins the SDK to 8.0 with `latestFeature` roll-forward.
+- `global.json`: pins the SDK to 10.0 with `latestFeature` roll-forward.
 
-`FateTakesYouHome.HomeAssistant` targets plain `net8.0` and has no Windows or WPF dependency. Keep
+`FateTakesYouHome.HomeAssistant` targets plain `net10.0` and has no Windows or WPF dependency. Keep
 it that way; that is what makes the client testable and reusable.
