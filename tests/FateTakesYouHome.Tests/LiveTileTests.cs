@@ -139,18 +139,55 @@ public sealed class LiveTileTests : IDisposable
         await homeAssistant.DisposeAsync();
     });
 
+    // ------------------------------------------------------------------ busy
+
+    /// <summary>
+    /// The control's enabled state is bound to <see cref="EntityTileViewModel.IsInteractive"/>, so
+    /// it has to hear about the command starting and finishing, or a second press slips through.
+    /// </summary>
+    [Fact]
+    public Task ATileIsNotInteractiveWhileItsCommandIsInFlight() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token) { States = [Entity(Blind, "closed")] };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.Pinned = [new PinnedEntity { EntityId = Blind }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var flyout = new FlyoutViewModel(settings, homeAssistant);
+        EntityTileViewModel tile = Assert.Single(flyout.Tiles);
+
+        var heard = new List<bool>();
+        tile.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(EntityTileViewModel.IsInteractive))
+            {
+                heard.Add(tile.IsInteractive);
+            }
+        };
+
+        await tile.OpenCommand.ExecuteAsync(null);
+
+        Assert.Equal([false, true], heard);
+        await homeAssistant.DisposeAsync();
+    });
+
     // ------------------------------------------------------------------ plumbing
 
     private const string FrontDoor = "lock.front_door";
 
+    private const string Blind = "cover.study_blind";
+
     /// <summary>Long enough to pass the options' sanity check, which a real token always is.</summary>
     private const string Token = "fake-long-lived-access-token-for-tests";
 
-    private static JsonObject Lock(string state) => new()
+    private static JsonObject Lock(string state) => Entity(FrontDoor, state);
+
+    private static JsonObject Entity(string entityId, string state, JsonObject? attributes = null) => new()
     {
-        ["entity_id"] = FrontDoor,
+        ["entity_id"] = entityId,
         ["state"] = state,
-        ["attributes"] = new JsonObject { ["friendly_name"] = "Front Door" },
+        ["attributes"] = attributes ?? new JsonObject(),
     };
 
     private static async Task<HomeAssistantService> ConnectAsync(FakeHomeAssistantServer server, AppLog log)

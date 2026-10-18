@@ -67,6 +67,7 @@ public sealed partial class EntityTileViewModel : ObservableObject
     private bool _updatingFromServer;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInteractive))]
     private bool _isBusy;
 
     [ObservableProperty]
