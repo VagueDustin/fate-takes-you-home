@@ -6,6 +6,14 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] (2026-10-18)
+
+A release of fixes from a review of the whole app. Saved layouts follow the house again, a
+settings file that cannot be read is kept instead of being replaced, the tray icon survives
+Explorer restarting, Install and restart starts the app again, and a Home Assistant restart no
+longer leaves tiles stuck on Unavailable. Tapping an automation now runs it instead of switching
+it off.
+
 ### Fixed
 
 - **A settings file that cannot be read is no longer replaced with defaults.** When something
@@ -461,7 +469,8 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.0...v0.3.1
