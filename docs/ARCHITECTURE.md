@@ -60,7 +60,7 @@ than a decision.
 
 ## The tray icon
 
-`Interop/TrayIcon.cs` drives `Shell_NotifyIcon` directly against a message-only window.
+`Interop/TrayIcon.cs` drives `Shell_NotifyIcon` directly against a hidden top-level window.
 
 WPF has no tray icon, and the WinForms `NotifyIcon` cannot tell you where it is. That last part is
 the whole reason for hand-rolling it: **`Shell_NotifyIconGetRect`** returns the icon's rectangle in
@@ -72,7 +72,10 @@ Two details that are easy to get wrong:
 - The icon opts in to **`NOTIFYICON_VERSION_4`**, which changes the callback to deliver screen
   coordinates and the `NIN_*` notifications. Everything about placement depends on it.
 - Explorer restarting destroys every tray icon and broadcasts **`TaskbarCreated`**. Without
-  handling that message the app silently loses its icon whenever Explorer crashes.
+  handling that message the app silently loses its icon whenever Explorer crashes. The window is
+  a hidden `WS_POPUP` rather than a message-only window because message-only windows never
+  receive broadcasts, so the handler would never run. The same message is the retry for an icon
+  that could not be added at sign-in, before the notification area was up.
 
 The icon is registered by numeric id rather than by GUID. A GUID registration is tied to the
 executable path, so moving or reinstalling the app breaks it in a way that is very hard to
