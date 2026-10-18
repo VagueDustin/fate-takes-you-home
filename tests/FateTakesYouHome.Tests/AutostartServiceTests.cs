@@ -20,7 +20,7 @@ public sealed class AutostartServiceTests
         @"C:\Program Files\VagueDustin Enterprises\Fate Takes You Home\FateTakesYouHome.exe";
 
     private const string DevBuild =
-        @"C:\Source\fate\src\FateTakesYouHome\bin\Debug\net8.0-windows\win-x64\FateTakesYouHome.exe";
+        @"C:\Source\fate\src\FateTakesYouHome\bin\Debug\net10.0-windows\win-x64\FateTakesYouHome.exe";
 
     /// <summary>Stands in for the disk: only these executables exist.</summary>
     private static Func<string, bool> OnDisk(params string[] executables) =>

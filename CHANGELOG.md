@@ -6,6 +6,11 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Runs on .NET 10, which stays supported until 2028. .NET 8, which earlier versions bundled, stops
+  getting security fixes on 2026-11-10.
+
 ## [0.4.1] (2026-10-18)
 
 A release of fixes from a review of the whole app. Saved layouts follow the house again, a

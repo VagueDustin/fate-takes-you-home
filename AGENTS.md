@@ -5,7 +5,7 @@ docs/ARCHITECTURE.md are the full versions.
 
 ## What this is
 
-Fate Takes You Home is a Windows tray app (WPF, .NET 8, `net8.0-windows`) that controls a Home
+Fate Takes You Home is a Windows tray app (WPF, .NET 10, `net10.0-windows`) that controls a Home
 Assistant instance from a flyout. It builds and runs on Windows only.
 
 ## Layout
@@ -27,7 +27,7 @@ and shared build settings in `Directory.Build.props`.
 
 ## Commands
 
-.NET 8 SDK (`global.json` pins 8.0.100 with `latestFeature` roll-forward).
+.NET 10 SDK (`global.json` pins 10.0.100 with `latestFeature` roll-forward).
 
 ```bash
 dotnet restore

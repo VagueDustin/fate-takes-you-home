@@ -38,7 +38,7 @@
 
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- Windows 10 1809 is the floor: the app targets .NET 8, and the tray placement relies on
+    <!-- Windows 10 1809 is the floor: the app targets .NET 10, and the tray placement relies on
          per-monitor v2 DPI awareness, which is not dependable before it. -->
     <Launch
       Condition="Installed OR (VersionNT &gt;= 603)"
