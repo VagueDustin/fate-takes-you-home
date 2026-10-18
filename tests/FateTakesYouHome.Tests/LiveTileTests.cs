@@ -172,16 +172,51 @@ public sealed class LiveTileTests : IDisposable
         await homeAssistant.DisposeAsync();
     });
 
+    // ------------------------------------------------------------------ slider
+
+    /// <summary>
+    /// A state event that lands between the last drag frame and the debounced send used to replace
+    /// the user's value with the server's, and then send the server's value back to it.
+    /// </summary>
+    [Fact]
+    public Task AStateEventMidDragDoesNotOverwriteTheSlider() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token) { States = [DeskLight(255)] };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.Pinned = [new PinnedEntity { EntityId = DeskLamp }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var flyout = new FlyoutViewModel(settings, homeAssistant);
+        EntityTileViewModel tile = Assert.Single(flyout.Tiles);
+
+        tile.SliderValue = 40;
+        await PushAndWaitAsync(server, homeAssistant, DeskLight(128));
+
+        Assert.Equal(40, tile.SliderValue);
+
+        JsonNode call = await server.WaitForCommandAsync("call_service", Patience);
+        Assert.Equal(40, call["service_data"]?["brightness_pct"]?.GetValue<int>());
+        await homeAssistant.DisposeAsync();
+    });
+
     // ------------------------------------------------------------------ plumbing
 
     private const string FrontDoor = "lock.front_door";
 
     private const string Blind = "cover.study_blind";
 
+    private const string DeskLamp = "light.desk_lamp";
+
     /// <summary>Long enough to pass the options' sanity check, which a real token always is.</summary>
     private const string Token = "fake-long-lived-access-token-for-tests";
 
     private static JsonObject Lock(string state) => Entity(FrontDoor, state);
+
+    private static JsonObject DeskLight(int brightness) => Entity(
+        DeskLamp,
+        "on",
+        new JsonObject { ["supported_color_modes"] = new JsonArray("brightness"), ["brightness"] = brightness });
 
     private static JsonObject Entity(string entityId, string state, JsonObject? attributes = null) => new()
     {
@@ -222,7 +257,7 @@ public sealed class LiveTileTests : IDisposable
         void OnChanged(object? sender, EntityChangedEventArgs e) => heard.TrySetResult();
 
         homeAssistant.EntityChanged += OnChanged;
-        await server.PushStateChangedAsync(FrontDoor, state);
+        await server.PushStateChangedAsync(state["entity_id"]!.GetValue<string>(), state);
         await heard.Task.WaitAsync(Patience);
         homeAssistant.EntityChanged -= OnChanged;
     }
