@@ -39,7 +39,8 @@ Notable changes to Fate Takes You Home. The format follows
   connection lasted. Every command now gives up after the command timeout.
 - **Reconnects stayed slow after one long outage.** The retry delay only went back to its two
   seconds when a connection closed cleanly, which a dropped one never does, so after a slow
-  restart every later blip waited up to two minutes. It now resets whenever a connection signs in.
+  restart every later blip waited up to two minutes. It now resets once a connection is subscribed
+  and receiving changes.
 - **Tapping an automation switched it off.** The tile sent a toggle, which disables an automation,
   instead of running it as the README says. A tap now triggers it, skipping its conditions.
 

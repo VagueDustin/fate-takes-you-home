@@ -447,6 +447,36 @@ public sealed class HaClientIntegrationTests
     }
 
     /// <summary>
+    /// Signing in is not enough to count as recovered: a server that keeps refusing the
+    /// subscription still gets the growing delay, not a retry at the floor every time.
+    /// </summary>
+    [Fact]
+    public async Task ARefusedSubscriptionStillBacksOff()
+    {
+        await using var server = new FakeHomeAssistantServer { RefuseSubscriptions = true };
+        await using var client = new HaClient(OptionsFor(server));
+
+        var retries = new ConcurrentQueue<TimeSpan>();
+        client.ConnectionStateChanged += (_, e) =>
+        {
+            if (e is { State: HaConnectionState.Reconnecting, RetryIn: { } retryIn })
+            {
+                retries.Enqueue(retryIn);
+            }
+        };
+
+        client.Start();
+
+        Assert.True(
+            await FakeHomeAssistantServer.WaitUntilAsync(() => retries.Count >= 3, Patience),
+            "The client stopped retrying.");
+
+        Assert.True(
+            retries.Any(d => d > TimeSpan.FromMilliseconds(100)),
+            "Every retry was at the floor: " + string.Join(", ", retries));
+    }
+
+    /// <summary>
     /// Consumers re-read the whole state set on this, because changes during an outage were never
     /// delivered.
     /// </summary>

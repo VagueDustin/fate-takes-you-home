@@ -38,6 +38,7 @@ public sealed class HaClient : IAsyncDisposable
     private ClientWebSocket? _socket;
     private long _nextCommandId;
     private volatile HaConnectionState _state = HaConnectionState.Disconnected;
+    private bool _subscribedThisAttempt;
     private int _disposed;
 
     public HaClient(HaConnectionOptions options, Action<string, Exception?>? log = null)
@@ -149,10 +150,12 @@ public sealed class HaClient : IAsyncDisposable
                 break;
             }
 
-            // A connection that signed in ended the last outage, so whatever ended it starts a new
-            // one from the floor. Resetting only on a clean return almost never happened: a dropped
-            // socket throws, and every blip after one slow restart waited the grown delay.
-            if (_state == HaConnectionState.Connected)
+            // A connection whose subscription went live ended the last outage, so whatever ended it
+            // starts a new one from the floor. Resetting only on a clean return almost never
+            // happened: a dropped socket throws, and every blip after one slow restart waited the
+            // grown delay. Signing in alone is not enough, or a server that keeps refusing the
+            // subscription would be retried at the floor forever.
+            if (_subscribedThisAttempt)
             {
                 delay = _options.ReconnectMinDelay;
             }
@@ -196,6 +199,7 @@ public sealed class HaClient : IAsyncDisposable
 
         _socket = socket;
         _nextCommandId = 0;
+        _subscribedThisAttempt = false;
 
         using var handshake = CancellationTokenSource.CreateLinkedTokenSource(ct);
         handshake.CancelAfter(_options.CommandTimeout);
@@ -248,6 +252,7 @@ public sealed class HaClient : IAsyncDisposable
             if (await Task.WhenAny(subscribe, router, pump, pinger).ConfigureAwait(false) == subscribe)
             {
                 await subscribe.ConfigureAwait(false);
+                _subscribedThisAttempt = true;
                 Resynchronised?.Invoke(this, EventArgs.Empty);
 
                 await Task.WhenAny(router, pump, pinger).ConfigureAwait(false);
