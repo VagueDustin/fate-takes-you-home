@@ -26,8 +26,8 @@ public sealed class TrayClickEventArgs : EventArgs
 /// feeling native and feeling approximate.
 /// </para>
 /// <para>
-/// The icon is registered against a message-only window so it has no visible presence of its own,
-/// and re-registers itself when Explorer restarts.
+/// The icon is registered against a hidden top-level window, and re-registers itself when Explorer
+/// restarts. Not a message-only window: those never receive the <c>TaskbarCreated</c> broadcast.
 /// </para>
 /// </remarks>
 public sealed class TrayIcon : IDisposable
@@ -48,13 +48,17 @@ public sealed class TrayIcon : IDisposable
     {
         _log = log;
 
-        // A message-only window receives messages but is never composited, enumerated or shown.
+        // A real (invisible) top-level window, like the single-instance listener's. A message-only
+        // window is left out of broadcasts, so it never hears TaskbarCreated and the icon is gone
+        // for good after Explorer restarts.
         var parameters = new HwndSourceParameters("FateTakesYouHome.TrayIcon")
         {
-            ParentWindow = NativeMethods.HWND_MESSAGE,
-            WindowStyle = 0,
+            WindowStyle = unchecked((int)0x80000000), // WS_POPUP: no frame, and never visible.
+            ExtendedWindowStyle = NativeMethods.WS_EX_TOOLWINDOW, // Stays off the taskbar.
             Width = 0,
             Height = 0,
+            PositionX = 0,
+            PositionY = 0,
         };
 
         _messageWindow = new HwndSource(parameters);
@@ -95,26 +99,7 @@ public sealed class TrayIcon : IDisposable
             return;
         }
 
-        NativeMethods.NOTIFYICONDATA data = BuildData(
-            NativeMethods.NIF_MESSAGE | NativeMethods.NIF_ICON | NativeMethods.NIF_TIP | NativeMethods.NIF_SHOWTIP);
-
-        if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, ref data))
-        {
-            _log?.Invoke("Could not add the tray icon. The notification area may not be ready yet.", null);
-            return;
-        }
-
-        _added = true;
-
-        // Opting in to version 4 changes the callback to deliver screen coordinates and the
-        // NIN_* notifications. Everything about placement depends on this succeeding.
-        NativeMethods.NOTIFYICONDATA version = BuildData(0);
-        version.uVersion = NativeMethods.NOTIFYICON_VERSION_4;
-
-        if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_SETVERSION, ref version))
-        {
-            _log?.Invoke("Tray icon is running in legacy mode; placement may be less precise.", null);
-        }
+        Add();
     }
 
     /// <summary>Replaces the icon image, for example to reflect the connection state.</summary>
@@ -270,21 +255,41 @@ public sealed class TrayIcon : IDisposable
         // The old registration died with the previous Explorer instance.
         _added = false;
 
-        if (_iconHandle == IntPtr.Zero)
+        // Also the retry for an icon that could not be added at sign-in, since Show keeps the icon
+        // image whether or not the add worked.
+        if (_iconHandle != IntPtr.Zero)
         {
-            return;
+            Add();
         }
+    }
 
+    private void Add()
+    {
         NativeMethods.NOTIFYICONDATA data = BuildData(
             NativeMethods.NIF_MESSAGE | NativeMethods.NIF_ICON | NativeMethods.NIF_TIP | NativeMethods.NIF_SHOWTIP);
 
-        if (NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, ref data))
+        // The add fails while the notification area is not up yet at sign-in; TaskbarCreated
+        // retries it. It also fails when the taskbar was only rebuilt, as after a DPI change, and
+        // the icon is still there, in which case modifying it is what works.
+        if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, ref data)
+            && !NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_MODIFY, ref data))
         {
-            _added = true;
+            _log?.Invoke(
+                "Could not add the tray icon. The notification area may not be ready yet; "
+                + "it will be added when it announces itself.", null);
+            return;
+        }
 
-            NativeMethods.NOTIFYICONDATA version = BuildData(0);
-            version.uVersion = NativeMethods.NOTIFYICON_VERSION_4;
-            NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_SETVERSION, ref version);
+        _added = true;
+
+        // Opting in to version 4 changes the callback to deliver screen coordinates and the
+        // NIN_* notifications. Everything about placement depends on this succeeding.
+        NativeMethods.NOTIFYICONDATA version = BuildData(0);
+        version.uVersion = NativeMethods.NOTIFYICON_VERSION_4;
+
+        if (!NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_SETVERSION, ref version))
+        {
+            _log?.Invoke("Tray icon is running in legacy mode; placement may be less precise.", null);
         }
     }
 

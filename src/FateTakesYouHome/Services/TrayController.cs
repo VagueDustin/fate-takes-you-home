@@ -282,8 +282,8 @@ public sealed class TrayController : IDisposable
         }
 
         // Without this the menu will not dismiss when the user clicks elsewhere: Win32 only
-        // auto-closes a menu owned by the foreground window, and ours is a message-only window
-        // that has never been foreground.
+        // auto-closes a menu owned by the foreground window, and ours is a hidden window that
+        // has never been foreground.
         NativeMethods.SetForegroundWindow(_icon.WindowHandle);
 
         _menu ??= BuildContextMenu();

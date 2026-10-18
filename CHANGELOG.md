@@ -15,6 +15,9 @@ Notable changes to Fate Takes You Home. The format follows
   Changes made before the next start are not saved.
 - A hand-edited settings file with a null pin, font choice or shortcut list no longer stops the
   app from starting.
+- **The tray icon comes back after Explorer restarts.** It used to stay gone until the app was
+  restarted. An icon that could not be added at sign-in, before the notification area was ready,
+  now appears once it is.
 
 ## [0.4.0] (2026-09-30)
 
