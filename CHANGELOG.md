@@ -13,6 +13,8 @@ Notable changes to Fate Takes You Home. The format follows
   and then saved them over the real file, losing the server, token, pins and layouts. It now tries
   again for a moment, and if the file still cannot be read it is left alone and the app says so.
   Changes made before the next start are not saved.
+- A hand-edited settings file with a null pin, font choice or shortcut list no longer stops the
+  app from starting.
 
 ## [0.4.0] (2026-09-30)
 

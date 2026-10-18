@@ -313,11 +313,13 @@ public sealed class SettingsService : IDisposable
     private static void Normalise(AppSettings settings)
     {
         settings.Pinned ??= [];
+        settings.Shortcuts ??= [];
+        settings.FontOverrides ??= new FontOverrides();
 
-        // Drop pins with no entity id, and collapse duplicates keeping the first.
+        // Drop nulls and pins with no entity id, and collapse duplicates keeping the first.
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         settings.Pinned = settings.Pinned
-            .Where(p => !string.IsNullOrWhiteSpace(p.EntityId))
+            .Where(p => p is not null && !string.IsNullOrWhiteSpace(p.EntityId))
             .Where(p => seen.Add(p.EntityId))
             .ToList();
 
