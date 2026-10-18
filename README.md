@@ -15,7 +15,7 @@ server. One executable that lives beside the clock.
 <a href="https://github.com/VagueDustin/fate-takes-you-home/releases/latest"><img alt="Release date" src="https://img.shields.io/github/release-date/VagueDustin/fate-takes-you-home?label=released&labelColor=16213E&color=D4AF37"></a>
 <a href="https://github.com/VagueDustin/fate-takes-you-home/releases"><img alt="Total downloads" src="https://img.shields.io/github/downloads/VagueDustin/fate-takes-you-home/total?label=downloads&labelColor=16213E&color=D4AF37"></a>
 <a href="https://github.com/VagueDustin/fate-takes-you-home/actions/workflows/build.yml?query=branch%3Amain"><img alt="Build status on main" src="https://img.shields.io/github/actions/workflow/status/VagueDustin/fate-takes-you-home/build.yml?branch=main&label=build&labelColor=16213E"></a>
-<a href="LICENSE"><img alt="Licence" src="https://img.shields.io/github/license/VagueDustin/fate-takes-you-home?label=licence&color=D4AF37&labelColor=16213E"></a>
+<a href="LICENSE"><img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-D4AF37?labelColor=16213E"></a>
 <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-D4AF37?labelColor=16213E">
 <img alt=".NET 8" src="https://img.shields.io/badge/.NET-8-D4AF37?labelColor=16213E">
 
