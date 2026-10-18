@@ -6,6 +6,12 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] (2026-10-18)
+
+The make-it-fit release. Layout widgets can be renamed and resized without hunting for the
+corner, the home screen loses its fixed headline unless you want it, the app has a new icon and
+animated glyphs, and each update now links its release notes.
+
 ### Added
 
 - **Rename widgets in the layout editor.** Tiles, buttons and graphs have their name in an edit
@@ -16,6 +22,10 @@ Notable changes to Fate Takes You Home. The format follows
 
 ### Changed
 
+- **A new icon and redrawn glyphs.** The mark is now a keystoned arch with a guiding star, in the
+  tray, the taskbar and the installer. The navigation and device icons are redrawn on one shared
+  frame, draw themselves in when their page opens or their device comes on, and lift on hover.
+  Reduced motion switches the movement off.
 - **The home screen's headline is now optional, and off by default.** The "lights still
   burning" line, its counts and the Turn off all lights button can be switched back on from the
   Layout page; all of them are also widgets a layout can place.
@@ -499,7 +509,8 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.2...v0.4.0
