@@ -214,6 +214,62 @@ public sealed class SettingsFileRepairTests : IDisposable
         Assert.Equal("Tile", tile.GetProperty("kind").GetString());
     }
 
+    // ------------------------------------------------------------------ a file that cannot be read
+
+    /// <summary>
+    /// A virus scanner or sync client holding the file at sign-in made the app start from
+    /// defaults, and the first save then wrote those defaults over the only copy of the real
+    /// settings. A file that cannot be read has to be left exactly as it is.
+    /// </summary>
+    [Fact]
+    public void ASettingsFileThatCannotBeReadIsNeverReplacedWithDefaults()
+    {
+        string original = SettingsFile("""
+            "grouping": "Floor"
+            """);
+        File.WriteAllText(SettingsPath, original);
+
+        SettingsService settings;
+
+        using (new FileStream(SettingsPath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            settings = new SettingsService(_log, SettingsPath);
+        }
+
+        using (settings)
+        {
+            settings.Current.LastRunVersion = "9.9.9";
+            settings.Save();
+            settings.SaveNow();
+
+            Assert.NotNull(settings.LastSaveError);
+        }
+
+        Assert.Equal(original, File.ReadAllText(SettingsPath));
+    }
+
+    [Fact]
+    public async Task ASettingsFileLockedForAMomentIsReadOnceItIsFree()
+    {
+        File.WriteAllText(SettingsPath, SettingsFile("""
+            "grouping": "Floor"
+            """));
+
+        var held = new FileStream(SettingsPath, FileMode.Open, FileAccess.Read, FileShare.None);
+        Task release = Task.Run(async () =>
+        {
+            await Task.Delay(50);
+            held.Dispose();
+        });
+
+        using var settings = new SettingsService(_log, SettingsPath);
+        await release;
+
+        AssertTheRestSurvived(settings.Current);
+        Assert.Equal(EntityGrouping.Floor, settings.Current.Grouping);
+        Assert.Null(settings.LastSaveError);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     /// <summary>Puts <paramref name="json"/> where the settings file lives and loads it as the app does.</summary>

@@ -22,6 +22,13 @@ public sealed class SettingsService : IDisposable
 {
     private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(600);
 
+    private static readonly TimeSpan[] ReadRetryDelays =
+    [
+        TimeSpan.FromMilliseconds(100),
+        TimeSpan.FromMilliseconds(200),
+        TimeSpan.FromMilliseconds(400),
+    ];
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -39,6 +46,9 @@ public sealed class SettingsService : IDisposable
 
     private bool _savePending;
     private bool _disposed;
+
+    /// <summary>The file exists but could not be read, so it must not be written over.</summary>
+    private bool _readFailed;
 
     public SettingsService(AppLog log, string? path = null)
     {
@@ -168,9 +178,26 @@ public sealed class SettingsService : IDisposable
             return new AppSettings();
         }
 
+        string json;
+
         try
         {
-            string json = File.ReadAllText(_path);
+            json = ReadWithRetry();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // What is in memory now is defaults, and the file may be the only copy of the real
+            // settings, so nothing is written over it this session.
+            _readFailed = true;
+            LastSaveError =
+                "The settings file could not be read, so it is being kept as it is rather than "
+                + "replaced. Restart the app to load it.";
+            _log.Error("The settings file could not be read. Starting with defaults and saving nothing.", ex);
+            return new AppSettings();
+        }
+
+        try
+        {
             AppSettings? loaded = JsonSerializer.Deserialize<AppSettings>(json, SerializerOptions);
 
             if (loaded is null)
@@ -203,10 +230,26 @@ public sealed class SettingsService : IDisposable
 
             return new AppSettings();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+    }
+
+    /// <summary>
+    /// Reads the file, giving whatever holds it at sign-in (a virus scanner, a sync client) a
+    /// moment to let go.
+    /// </summary>
+    private string ReadWithRetry()
+    {
+        for (int attempt = 0; ; attempt++)
         {
-            _log.Error("The settings file could not be read. Starting with defaults.", ex);
-            return new AppSettings();
+            try
+            {
+                return File.ReadAllText(_path);
+            }
+            catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException)
+                                       && attempt < ReadRetryDelays.Length)
+            {
+                _log.Warning($"The settings file could not be read ({ex.Message}); trying again.");
+                Thread.Sleep(ReadRetryDelays[attempt]);
+            }
         }
     }
 
@@ -228,6 +271,12 @@ public sealed class SettingsService : IDisposable
 
     private void WriteToDisk(AppSettings settings)
     {
+        if (_readFailed)
+        {
+            _log.Warning("Not saving settings: the settings file could not be read at startup.");
+            return;
+        }
+
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
