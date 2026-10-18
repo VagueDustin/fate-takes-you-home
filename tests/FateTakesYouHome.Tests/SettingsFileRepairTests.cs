@@ -128,6 +128,29 @@ public sealed class SettingsFileRepairTests : IDisposable
         Assert.Equal(WidgetKind.Activity, Assert.Single(settings.Current.HomeWidgets).Kind);
     }
 
+    /// <summary>
+    /// A null pin threw out of the settings service before the app had a window, and a null
+    /// font or shortcut list threw the first time anything read it.
+    /// </summary>
+    [Fact]
+    public void NullsWhereAPinFontsOrShortcutsShouldBeAreRepaired()
+    {
+        using SettingsService settings = Load("""
+            {
+              "serverUrl": "http://homeassistant.local:8123",
+              "pinned": [ null, { "entityId": "light.desk" }, null ],
+              "fontOverrides": null,
+              "shortcuts": null
+            }
+            """);
+
+        Assert.False(File.Exists(SettingsPath + ".invalid"), "The settings file was set aside as unreadable.");
+        Assert.Equal("http://homeassistant.local:8123", settings.Current.ServerUrl);
+        Assert.Equal("light.desk", Assert.Single(settings.Current.Pinned).EntityId);
+        Assert.NotNull(settings.Current.FontOverrides);
+        Assert.NotNull(settings.Current.Shortcuts);
+    }
+
     // ------------------------------------------------------------------ values of the wrong shape
 
     /// <summary>
