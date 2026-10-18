@@ -86,6 +86,59 @@ public sealed class LiveTileTests : IDisposable
         await homeAssistant.DisposeAsync();
     });
 
+    // ------------------------------------------------------------------ optimistic state
+
+    [Fact]
+    public Task ARefusedToggleShowsTheRealStateAtOnce() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token)
+        {
+            States = [Lock("locked")],
+            RefuseServiceCallsWith = "The lock is jammed.",
+        };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.Pinned = [new PinnedEntity { EntityId = FrontDoor }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var flyout = new FlyoutViewModel(settings, homeAssistant);
+        EntityTileViewModel tile = Assert.Single(flyout.Tiles);
+
+        await tile.PrimaryCommand.ExecuteAsync(null);
+
+        Assert.Equal("The lock is jammed.", tile.ErrorMessage);
+        Assert.False(tile.IsOn);
+        Assert.Equal("Locked", tile.StateText);
+        await homeAssistant.DisposeAsync();
+    });
+
+    /// <summary>
+    /// The guess made on a click is only a stand-in for the event that confirms it. When the event
+    /// says otherwise, the event wins, even inside the window the guess was given.
+    /// </summary>
+    [Fact]
+    public Task AStateEventOverridesTheGuessMadeOnAClick() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token) { States = [Lock("locked")] };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.Pinned = [new PinnedEntity { EntityId = FrontDoor }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var flyout = new FlyoutViewModel(settings, homeAssistant);
+        EntityTileViewModel tile = Assert.Single(flyout.Tiles);
+
+        await tile.PrimaryCommand.ExecuteAsync(null);
+        Assert.Equal("Unlocked", tile.StateText);
+
+        // Accepted, but the bolt never moved.
+        await PushAndWaitAsync(server, homeAssistant, Lock("locked"));
+
+        Assert.False(tile.IsOn);
+        Assert.Equal("Locked", tile.StateText);
+        await homeAssistant.DisposeAsync();
+    });
+
     // ------------------------------------------------------------------ plumbing
 
     private const string FrontDoor = "lock.front_door";
