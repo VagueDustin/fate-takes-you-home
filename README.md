@@ -69,7 +69,7 @@ The app walks you through all four the first time it runs, and Help tracks which
 | `switch`, `input_boolean` | On/off |
 | `scene` | Activate, with optional transition |
 | `script` | Run, with variables |
-| `automation` | Trigger now, or enable/disable |
+| `automation` | Trigger now from its tile; enable or disable from a device shortcut |
 | `cover`, `valve` | Open, close, stop, position, tilt |
 | `climate` | Mode, target temperature, range, fan mode, preset |
 | `fan` | On/off, speed, oscillation, preset |
