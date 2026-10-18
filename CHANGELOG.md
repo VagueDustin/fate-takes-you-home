@@ -21,6 +21,15 @@ Notable changes to Fate Takes You Home. The format follows
 - **Install and restart restarts.** The update installed, but the app stayed closed until it was
   started by hand. It now starts again when the installer finishes, and if the installer is
   cancelled at the Windows permission prompt, the version already installed starts again instead.
+- **Layout tiles follow the house again.** Once a layout was saved, its tiles and one-action
+  buttons kept whatever state they had when the page was built, so a lock could read Locked while
+  the door stood unlocked. They now change as the devices do, disappear when Home Assistant
+  removes the entity, and come back when it returns, as it does after an integration reload.
+- A tile switched on that did not respond no longer stays showing On. Its guess gives way to the
+  first real state from Home Assistant.
+- A tile that finished a slow action no longer stays greyed out until something else changes.
+- A brightness or volume slider no longer jumps back while you drag it, or sends the old value
+  when you let go.
 
 ## [0.4.0] (2026-09-30)
 
