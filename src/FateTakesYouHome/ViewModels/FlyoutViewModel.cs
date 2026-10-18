@@ -221,9 +221,10 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
     {
         if (!_tiles.Contains(e.EntityId))
         {
-            // A pinned entity that was missing may have just appeared.
+            // A pinned or laid-out entity that was missing may have just appeared.
             if (_settings.Current.Pinned.Any(
-                    p => string.Equals(p.EntityId, e.EntityId, StringComparison.OrdinalIgnoreCase)))
+                    p => string.Equals(p.EntityId, e.EntityId, StringComparison.OrdinalIgnoreCase))
+                || WidgetFactory.NeedsEntity(_settings.Current.FlyoutWidgets, e.EntityId))
             {
                 Rebuild();
             }

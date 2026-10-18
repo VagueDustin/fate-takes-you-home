@@ -63,10 +63,11 @@ public sealed class LiveTileTests : IDisposable
 
     /// <summary>
     /// A widget for an entity Home Assistant has deleted would otherwise linger with its last state
-    /// and keep sending actions at nothing.
+    /// and keep sending actions at nothing. Reloading an integration removes and re-adds every
+    /// entity it owns, so the widget has to come back as well as go.
     /// </summary>
     [Fact]
-    public Task AWidgetLeavesTheHomeLayoutWhenItsEntityIsRemoved() => OnUiThread(async () =>
+    public Task AWidgetLeavesTheHomeLayoutWithItsEntityAndComesBackWithIt() => OnUiThread(async () =>
     {
         await using var server = new FakeHomeAssistantServer(Token) { States = [Lock("locked")] };
         using var log = new AppLog(Path.Combine(_root, "logs"));
@@ -78,8 +79,29 @@ public sealed class LiveTileTests : IDisposable
         Assert.Single(dashboard.Widgets);
 
         await PushAndWaitAsync(server, homeAssistant, FrontDoor, state: null);
-
         Assert.Empty(dashboard.Widgets);
+
+        await PushAndWaitAsync(server, homeAssistant, Lock("locked"));
+        Assert.Single(dashboard.Widgets);
+        await homeAssistant.DisposeAsync();
+    });
+
+    [Fact]
+    public Task AWidgetComesBackToThePanelWhenItsEntityReturns() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token) { States = [Lock("locked")] };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.FlyoutWidgets = [new WidgetSpec { Kind = WidgetKind.QuickAction, EntityId = FrontDoor }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var flyout = new FlyoutViewModel(settings, homeAssistant);
+
+        await PushAndWaitAsync(server, homeAssistant, FrontDoor, state: null);
+        Assert.Empty(flyout.Widgets);
+
+        await PushAndWaitAsync(server, homeAssistant, Lock("locked"));
+        Assert.Single(flyout.Widgets);
         await homeAssistant.DisposeAsync();
     });
 

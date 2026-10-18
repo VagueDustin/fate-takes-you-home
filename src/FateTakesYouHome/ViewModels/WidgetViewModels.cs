@@ -239,6 +239,18 @@ public sealed partial class SparklineWidgetViewModel : WidgetViewModel
 public static class WidgetFactory
 {
     /// <summary>
+    /// Whether any of <paramref name="specs"/> is a tile or quick action for the entity, so its
+    /// surface must rebuild when the entity appears or disappears.
+    /// </summary>
+    /// <remarks>
+    /// Sparklines also name an entity but are built whether or not it exists, and they point at
+    /// sensors that report constantly; counting them would rebuild the surface on every reading.
+    /// </remarks>
+    public static bool NeedsEntity(IEnumerable<WidgetSpec>? specs, string entityId) =>
+        specs?.Any(spec => spec.Kind is WidgetKind.Tile or WidgetKind.QuickAction
+            && string.Equals(spec.EntityId, entityId, StringComparison.OrdinalIgnoreCase)) == true;
+
+    /// <summary>
     /// Creates the view model for one spec, or null when the spec cannot be realised here:
     /// an entity that no longer exists, or a rooms widget on a surface with no room data.
     /// </summary>
