@@ -62,6 +62,28 @@ public sealed class LiveTileTests : IDisposable
     });
 
     /// <summary>
+    /// A widget for an entity Home Assistant has deleted would otherwise linger with its last state
+    /// and keep sending actions at nothing.
+    /// </summary>
+    [Fact]
+    public Task AWidgetLeavesTheHomeLayoutWhenItsEntityIsRemoved() => OnUiThread(async () =>
+    {
+        await using var server = new FakeHomeAssistantServer(Token) { States = [Lock("locked")] };
+        using var log = new AppLog(Path.Combine(_root, "logs"));
+        using var settings = new SettingsService(log, Path.Combine(_root, "settings.json"));
+        settings.Current.HomeWidgets = [new WidgetSpec { Kind = WidgetKind.Tile, EntityId = FrontDoor }];
+        HomeAssistantService homeAssistant = await ConnectAsync(server, log);
+
+        using var dashboard = new DashboardViewModel(settings, homeAssistant, tray: null!);
+        Assert.Single(dashboard.Widgets);
+
+        await PushAndWaitAsync(server, homeAssistant, FrontDoor, state: null);
+
+        Assert.Empty(dashboard.Widgets);
+        await homeAssistant.DisposeAsync();
+    });
+
+    /// <summary>
     /// The dangerous half of the stale-tile bug: a toggle picks its direction from the state it
     /// last heard, so a button frozen at "locked" answers a press on an unlocked door by sending
     /// unlock again instead of locking it.
@@ -250,14 +272,18 @@ public sealed class LiveTileTests : IDisposable
     /// Waiting on it rather than on the tile is what makes a missed update fail at once instead
     /// of timing out.
     /// </remarks>
+    private static Task PushAndWaitAsync(
+        FakeHomeAssistantServer server, HomeAssistantService homeAssistant, JsonObject state) =>
+        PushAndWaitAsync(server, homeAssistant, state["entity_id"]!.GetValue<string>(), state);
+
     private static async Task PushAndWaitAsync(
-        FakeHomeAssistantServer server, HomeAssistantService homeAssistant, JsonObject state)
+        FakeHomeAssistantServer server, HomeAssistantService homeAssistant, string entityId, JsonObject? state)
     {
         var heard = new TaskCompletionSource();
         void OnChanged(object? sender, EntityChangedEventArgs e) => heard.TrySetResult();
 
         homeAssistant.EntityChanged += OnChanged;
-        await server.PushStateChangedAsync(state["entity_id"]!.GetValue<string>(), state);
+        await server.PushStateChangedAsync(entityId, state);
         await heard.Task.WaitAsync(Patience);
         homeAssistant.EntityChanged -= OnChanged;
     }
