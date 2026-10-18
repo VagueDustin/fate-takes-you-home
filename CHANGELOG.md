@@ -6,6 +6,14 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **A settings file that cannot be read is no longer replaced with defaults.** When something
+  such as a virus scanner was holding the file as the app started, the app started from defaults
+  and then saved them over the real file, losing the server, token, pins and layouts. It now tries
+  again for a moment, and if the file still cannot be read it is left alone and the app says so.
+  Changes made before the next start are not saved.
+
 ## [0.4.0] (2026-09-30)
 
 The keyboard release. System-wide keys can now switch, dim, pause and mute the devices you choose,
