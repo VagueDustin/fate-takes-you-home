@@ -101,6 +101,12 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
     public bool RefuseSubscriptions { get; set; }
 
     /// <summary>
+    /// Runs with each command's type before the server answers it, so a test can push events into
+    /// the gap between a client's request and its reply.
+    /// </summary>
+    public Func<string, Task>? BeforeAnswering { get; set; }
+
+    /// <summary>
     /// When set, new connections are closed before the WebSocket handshake, as a server that is
     /// still starting up does.
     /// </summary>
@@ -390,6 +396,11 @@ internal sealed class FakeHomeAssistantServer : IAsyncDisposable
             }
 
             Interlocked.Exchange(ref _lastCommandId, id);
+        }
+
+        if (BeforeAnswering is { } hook)
+        {
+            await hook(type).ConfigureAwait(false);
         }
 
         switch (type)
