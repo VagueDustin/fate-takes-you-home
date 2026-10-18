@@ -18,6 +18,9 @@ Notable changes to Fate Takes You Home. The format follows
 - **The tray icon comes back after Explorer restarts.** It used to stay gone until the app was
   restarted. An icon that could not be added at sign-in, before the notification area was ready,
   now appears once it is.
+- **Install and restart restarts.** The update installed, but the app stayed closed until it was
+  started by hand. It now starts again when the installer finishes, and if the installer is
+  cancelled at the Windows permission prompt, the version already installed starts again instead.
 
 ## [0.4.0] (2026-09-30)
 
