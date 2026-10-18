@@ -41,8 +41,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly HomeAssistantService _homeAssistant;
     private readonly TrayController _tray;
 
-    private readonly Dictionary<string, EntityTileViewModel> _byEntityId =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly EntityTileIndex _tiles = new();
 
     /// <summary>
     /// How long to wait for state churn to settle before recounting.
@@ -161,7 +160,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         }
 
         Pinned.Clear();
-        _byEntityId.Clear();
+        _tiles.Clear();
 
         foreach (PinnedEntity pin in _settings.Current.Pinned)
         {
@@ -174,7 +173,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
             var tile = new EntityTileViewModel(state, _homeAssistant, pin.Label);
             Pinned.Add(tile);
-            _byEntityId[pin.EntityId] = tile;
+            _tiles.Add(tile);
         }
 
         RebuildActivity();
@@ -208,6 +207,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
                 is { } widget)
             {
                 Widgets.Add(widget);
+
+                if (widget.EntityTile is { } tile)
+                {
+                    _tiles.Add(tile);
+                }
             }
         }
     }
@@ -342,9 +346,9 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     private void OnEntityChanged(object? sender, EntityChangedEventArgs e)
     {
-        if (_byEntityId.TryGetValue(e.EntityId, out EntityTileViewModel? tile) && e.State is not null)
+        if (e.State is not null && _tiles.Contains(e.EntityId))
         {
-            tile.Update(e.State);
+            _tiles.Update(e.EntityId, e.State);
         }
         else if (_settings.Current.Pinned.Any(
                      p => string.Equals(p.EntityId, e.EntityId, StringComparison.OrdinalIgnoreCase)))

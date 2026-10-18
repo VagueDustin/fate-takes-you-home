@@ -23,8 +23,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
 {
     private readonly SettingsService _settings;
     private readonly HomeAssistantService _homeAssistant;
-    private readonly Dictionary<string, EntityTileViewModel> _byEntityId =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly EntityTileIndex _tiles = new();
 
     private bool _disposed;
 
@@ -156,7 +155,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
         }
 
         Tiles.Clear();
-        _byEntityId.Clear();
+        _tiles.Clear();
 
         foreach (PinnedEntity pin in _settings.Current.Pinned)
         {
@@ -172,7 +171,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
 
             var tile = new EntityTileViewModel(state, _homeAssistant, pin.Label);
             Tiles.Add(tile);
-            _byEntityId[pin.EntityId] = tile;
+            _tiles.Add(tile);
         }
 
         RebuildWidgets();
@@ -209,13 +208,18 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
             if (WidgetFactory.Build(spec, _homeAssistant, null, null, label) is { } widget)
             {
                 Widgets.Add(widget);
+
+                if (widget.EntityTile is { } tile)
+                {
+                    _tiles.Add(tile);
+                }
             }
         }
     }
 
     private void OnEntityChanged(object? sender, EntityChangedEventArgs e)
     {
-        if (!_byEntityId.TryGetValue(e.EntityId, out EntityTileViewModel? tile))
+        if (!_tiles.Contains(e.EntityId))
         {
             // A pinned entity that was missing may have just appeared.
             if (_settings.Current.Pinned.Any(
@@ -233,7 +237,7 @@ public sealed partial class FlyoutViewModel : ObservableObject, IDisposable
             return;
         }
 
-        tile.Update(e.State);
+        _tiles.Update(e.EntityId, e.State);
     }
 
     private void OnSnapshotReloaded(object? sender, EventArgs e) => Rebuild();

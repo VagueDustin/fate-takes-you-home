@@ -34,6 +34,9 @@ public abstract partial class WidgetViewModel(WidgetSpec spec) : ObservableObjec
 
     public int H => Spec.H;
 
+    /// <summary>The entity tile behind this widget, if any, which its surface feeds state to.</summary>
+    public virtual EntityTileViewModel? EntityTile => null;
+
     public virtual void Dispose()
     {
     }
@@ -49,6 +52,8 @@ public sealed class TileWidgetViewModel : WidgetViewModel
     }
 
     public EntityTileViewModel Tile { get; }
+
+    public override EntityTileViewModel? EntityTile => Tile;
 
     public override void Dispose() => Tile.Detach();
 }
@@ -93,6 +98,8 @@ public sealed partial class QuickActionWidgetViewModel : WidgetViewModel
             LastResult = result.Succeeded ? "Done." : result.ErrorMessage;
         }
     }
+
+    public override EntityTileViewModel? EntityTile => _entity;
 
     public override void Dispose() => _entity?.Detach();
 }
