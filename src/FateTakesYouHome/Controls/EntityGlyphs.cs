@@ -50,7 +50,7 @@ public static class EntityGlyphs
     {
         string path = Lookup(domain, deviceClass);
 
-        Geometry geometry = Geometry.Parse(path);
+        Geometry geometry = Geometry.Parse(Frame + path);
         geometry.Freeze();
         return geometry;
     }
@@ -120,6 +120,17 @@ public static class EntityGlyphs
     // Stroked outlines on a 24-unit grid, kept inside a 3-unit margin so they optically match
     // when set beside one another.
 
+    /// <summary>
+    /// Two bare move-to points at opposite corners of the grid, prefixed to every glyph.
+    /// </summary>
+    /// <remarks>
+    /// A figure with no segments draws nothing but still counts toward the geometry's bounds, and
+    /// a <c>Path</c> with <c>Stretch="Uniform"</c> scales to those bounds. Without the frame every
+    /// glyph was stretched to fill the box on its own, so a hash sign came out half as large again
+    /// as a light bulb and the 3-unit margin above did nothing.
+    /// </remarks>
+    private const string Frame = "M0,0 M24,24 ";
+
     /// <summary>A bulb with a filament and a base.</summary>
     private const string Light =
         "M12,3.2 A6,6 0 0 1 18,9.2 C18,12.2 16.2,13.6 15.4,15.2 L8.6,15.2 "
@@ -132,10 +143,11 @@ public static class EntityGlyphs
         + "L5.5,19.5 A1.6,1.6 0 0 1 3.9,17.9 L3.9,6.1 A1.6,1.6 0 0 1 5.5,4.5 Z "
         + "M9,8.2 L15,8.2 L15,12 L9,12 Z";
 
-    /// <summary>A wall socket.</summary>
+    /// <summary>A faceplate with a round socket and two pins. Two slots on a square read as a face.</summary>
     private const string Outlet =
-        "M4.5,4.5 L19.5,4.5 L19.5,19.5 L4.5,19.5 Z "
-        + "M9.5,9 L9.5,12.5 M14.5,9 L14.5,12.5 M8.5,16 L15.5,16";
+        "M6,3.5 L18,3.5 A2.5,2.5 0 0 1 20.5,6 L20.5,18 A2.5,2.5 0 0 1 18,20.5 L6,20.5 "
+        + "A2.5,2.5 0 0 1 3.5,18 L3.5,6 A2.5,2.5 0 0 1 6,3.5 Z "
+        + "M12,6.6 A5.4,5.4 0 1 1 11.99,6.6 Z M9.9,12 L9.91,12 M14.1,12 L14.11,12";
 
     /// <summary>A four-point star: the moment a scene is set.</summary>
     private const string Scene =
@@ -146,14 +158,10 @@ public static class EntityGlyphs
         "M6,3.5 L14,3.5 L18.5,8 L18.5,20.5 L6,20.5 Z M14,3.5 L14,8 L18.5,8 "
         + "M10,12.5 L10,17 L14.2,14.75 Z";
 
-    /// <summary>Interlocked gears: a rule that runs itself.</summary>
+    /// <summary>A loop with a spark inside: a rule that runs itself. The old gear broke up below 20 pixels.</summary>
     private const string Automation =
-        "M9.6,3.6 L11.4,3.6 L11.8,5.6 L13.4,6.3 L15,5.1 L16.3,6.4 L15.1,8 L15.8,9.6 "
-        + "L17.8,10 L17.8,11.8 L15.8,12.2 L15.1,13.8 L16.3,15.4 L15,16.7 L13.4,15.5 "
-        + "L11.8,16.2 L11.4,18.2 L9.6,18.2 L9.2,16.2 L7.6,15.5 L6,16.7 L4.7,15.4 "
-        + "L5.9,13.8 L5.2,12.2 L3.2,11.8 L3.2,10 L5.2,9.6 L5.9,8 L4.7,6.4 L6,5.1 "
-        + "L7.6,6.3 L9.2,5.6 Z "
-        + "M10.5,10.9 A2.4,2.4 0 1 0 10.51,10.9 Z";
+        "M18.9,8 A8,8 0 1 1 12,4 M9.8,1.8 L12.2,4 L9.8,6.2 "
+        + "M12.9,7.6 L9.4,12.8 L12.2,12.8 L11.1,16.4 L14.6,11.2 L11.8,11.2 Z";
 
     /// <summary>A blind with slats.</summary>
     private const string Blinds =
@@ -170,9 +178,10 @@ public static class EntityGlyphs
     private const string Window =
         "M4,4 L20,4 L20,20 L4,20 Z M12,4 L12,20 M4,12 L20,12";
 
-    /// <summary>A dial with a pointer: the target, not the reading.</summary>
+    /// <summary>A thermostat dial with its knob, open at the foot so it is not mistaken for a clock.</summary>
     private const string Climate =
-        "M12,3.6 A8.4,8.4 0 1 1 11.99,3.6 Z M12,7.4 L12,12 L15.2,14.4";
+        "M12,3.6 A8.4,8.4 0 1 1 11.99,3.6 Z "
+        + "M8.2,15.8 A5.4,5.4 0 1 1 15.8,15.8 M12,12 L14.6,9.4";
 
     /// <summary>Three blades around a hub.</summary>
     private const string Fan =
@@ -194,15 +203,17 @@ public static class EntityGlyphs
     private const string Television =
         "M3.6,6 L20.4,6 L20.4,17 L3.6,17 Z M8.4,20 L15.6,20 M12,17 L12,20";
 
+    /// <summary>A robot vacuum from above: the body, its bumper line and the sensor.</summary>
     private const string Vacuum =
-        "M12,4 A8,8 0 1 1 11.99,4 Z M12,8.6 A3.4,3.4 0 1 0 12.01,8.6 Z "
-        + "M12,4 L12,8.6 M18.4,15.6 L14.6,13.6";
+        "M12,4 A8,8 0 1 1 11.99,4 Z M6.4,9.4 A7,7 0 0 1 17.6,9.4 "
+        + "M12,14.2 A1.6,1.6 0 1 1 11.99,14.2 Z";
 
     private const string Humidity =
         "M12,3.4 C12,3.4 5.6,10.6 5.6,14.6 A6.4,6.4 0 0 0 18.4,14.6 C18.4,10.6 12,3.4 12,3.4 Z";
 
+    /// <summary>The engineering valve symbol: two cones meeting, with a stem and a handwheel.</summary>
     private const string Valve =
-        "M12,4 L12,10 M6.5,4 L17.5,4 M12,10 L6.5,20 L17.5,20 Z";
+        "M4,10 L4,18 L12,14 Z M20,10 L20,18 L12,14 Z M12,14 L12,7 M8.5,7 L15.5,7";
 
     private const string Siren =
         "M6,17.5 C6,12 8.4,8.5 12,8.5 C15.6,8.5 18,12 18,17.5 Z "
@@ -215,18 +226,25 @@ public static class EntityGlyphs
         "M12,4 A3.9,3.9 0 1 1 11.99,4 Z "
         + "M4.8,20.4 C4.8,16.4 8,14.2 12,14.2 C16,14.2 19.2,16.4 19.2,20.4";
 
+    /// <summary>A push button from above: the cap standing in its bezel.</summary>
     private const string Button =
-        "M12,3.8 A8.2,8.2 0 1 1 11.99,3.8 Z M12,8.4 A3.6,3.6 0 1 0 12.01,8.4 Z";
+        "M6.4,4.6 L17.6,4.6 A1.8,1.8 0 0 1 19.4,6.4 L19.4,17.6 A1.8,1.8 0 0 1 17.6,19.4 "
+        + "L6.4,19.4 A1.8,1.8 0 0 1 4.6,17.6 L4.6,6.4 A1.8,1.8 0 0 1 6.4,4.6 Z M12,8 A4,4 0 1 1 11.99,8 Z";
 
     private const string Number =
         "M4.5,9 L19.5,9 M4.5,15 L19.5,15 M9.6,4.5 L8,19.5 M16,4.5 L14.4,19.5";
 
+    /// <summary>A dropdown: a field, its value and the chevron.</summary>
     private const string Select =
-        "M4.5,6.5 L19.5,6.5 M4.5,12 L19.5,12 M4.5,17.5 L19.5,17.5 "
-        + "M16.4,16 L18,17.6 L19.6,16";
+        "M5,7.5 L19,7.5 A1.5,1.5 0 0 1 20.5,9 L20.5,15 A1.5,1.5 0 0 1 19,16.5 L5,16.5 "
+        + "A1.5,1.5 0 0 1 3.5,15 L3.5,9 A1.5,1.5 0 0 1 5,7.5 Z "
+        + "M7,12 L12.5,12 M15.4,11 L17,12.6 L18.6,11";
 
+    /// <summary>A text field with an I-beam caret.</summary>
     private const string Text =
-        "M5,6 L19,6 M5,6 L5,4.4 L19,4.4 L19,6 M12,4.4 L12,19.6 M9,19.6 L15,19.6";
+        "M5,7.5 L19,7.5 A1.5,1.5 0 0 1 20.5,9 L20.5,15 A1.5,1.5 0 0 1 19,16.5 L5,16.5 "
+        + "A1.5,1.5 0 0 1 3.5,15 L3.5,9 A1.5,1.5 0 0 1 5,7.5 Z "
+        + "M8.5,9.8 L8.5,14.2 M7.3,9.8 L9.7,9.8 M7.3,14.2 L9.7,14.2";
 
     private const string Thermometer =
         "M12,3.6 A2.4,2.4 0 0 1 14.4,6 L14.4,13.4 A4.2,4.2 0 1 1 9.6,13.4 L9.6,6 "
@@ -235,12 +253,16 @@ public static class EntityGlyphs
     private const string Power =
         "M13.4,3 L6.6,13.2 L11.6,13.2 L10.6,21 L17.4,10.8 L12.4,10.8 Z";
 
+    /// <summary>A cell standing upright, two bars of charge showing.</summary>
     private const string Battery =
-        "M3.6,7.8 L18,7.8 L18,16.2 L3.6,16.2 Z M20.4,10.8 L20.4,13.2 "
-        + "M6,10.4 L6,13.6 M9,10.4 L9,13.6";
+        "M8.5,5 L15.5,5 A1.5,1.5 0 0 1 17,6.5 L17,19.5 A1.5,1.5 0 0 1 15.5,21 L8.5,21 "
+        + "A1.5,1.5 0 0 1 7,19.5 L7,6.5 A1.5,1.5 0 0 1 8.5,5 Z "
+        + "M10.5,3 L13.5,3 M10,17.6 L14,17.6 M10,14.6 L14,14.6";
 
+    /// <summary>A dial with its needle on a hub.</summary>
     private const string Gauge =
-        "M4.2,17.4 A9,9 0 1 1 19.8,17.4 M12,17.4 L15.6,10.2";
+        "M4.2,17.4 A9,9 0 1 1 19.8,17.4 M12.9,13.9 L16,9 "
+        + "M12,13.4 A1.6,1.6 0 1 1 11.99,13.4 Z";
 
     private const string Motion =
         "M13.5,4.4 A1.7,1.7 0 1 1 13.49,4.4 Z "
@@ -250,8 +272,9 @@ public static class EntityGlyphs
     private const string Update =
         "M12,4.5 A7.5,7.5 0 1 0 19.5,12 M12,4.5 L12,13.5 M8.4,10 L12,13.5 L15.6,10";
 
+    /// <summary>A ring with a centre point: something that is either on or off.</summary>
     private const string Dot =
-        "M12,7.6 A4.4,4.4 0 1 1 11.99,7.6 Z";
+        "M12,6.6 A5.4,5.4 0 1 1 11.99,6.6 Z M12,12 L12.01,12";
 
     /// <summary>The fallback: a plain rounded square, so an unknown domain still looks deliberate.</summary>
     private const string Generic =

@@ -105,49 +105,49 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 Section = MainWindowSection.Dashboard,
                 Label = "Home",
-                IconKey = "Fate.Icon.Grid",
+                IconKey = "Fate.Icon.Nav.Home",
                 Description = "The things you pinned, and what is on right now.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Entities,
                 Label = "Everything",
-                IconKey = "Fate.Icon.Search",
+                IconKey = "Fate.Icon.Nav.Everything",
                 Description = "Browse every entity Home Assistant knows about.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Layout,
                 Label = "Layout",
-                IconKey = "Fate.Icon.Layout",
+                IconKey = "Fate.Icon.Nav.Layout",
                 Description = "Arrange the home screen and tray panel like widgets on a phone.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Themes,
                 Label = "Themes",
-                IconKey = "Fate.Icon.Palette",
+                IconKey = "Fate.Icon.Nav.Themes",
                 Description = "Change how the interface looks, or build your own theme.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Shortcuts,
                 Label = "Shortcuts",
-                IconKey = "Fate.Icon.Keyboard",
+                IconKey = "Fate.Icon.Nav.Shortcuts",
                 Description = "Keys that work from anywhere in Windows, for the app and for your devices.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Settings,
                 Label = "Settings",
-                IconKey = "Fate.Icon.Settings",
+                IconKey = "Fate.Icon.Nav.Settings",
                 Description = "Connection, startup and tray behaviour.",
             },
             new NavigationItem
             {
                 Section = MainWindowSection.Help,
                 Label = "Help",
-                IconKey = "Fate.Icon.Book",
+                IconKey = "Fate.Icon.Nav.Help",
                 Description = "Quickstart, the guided tour, and troubleshooting.",
             },
         ];

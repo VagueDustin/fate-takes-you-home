@@ -2,6 +2,7 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:vm="clr-namespace:FateTakesYouHome.ViewModels"
+  xmlns:anim="clr-namespace:FateTakesYouHome.Animation"
   xmlns:conv="clr-namespace:FateTakesYouHome.Converters">
 
   <!--
@@ -19,8 +20,8 @@
 
   <!-- The domain glyph. Stroked, never filled: the tier calls for engraving, not pictographs. -->
   <Style x:Key="Fate.TileIcon" TargetType="Path">
-    <Setter Property="Width" Value="22" />
-    <Setter Property="Height" Value="22" />
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
     <Setter Property="Stretch" Value="Uniform" />
     <Setter Property="StrokeThickness" Value="1.6" />
     <Setter Property="StrokeLineJoin" Value="Round" />
@@ -100,7 +101,13 @@
               BorderBrush="{DynamicResource Fate.Brush.BorderDefault}"
               BorderThickness="1"
               CornerRadius="18">
-              <Path x:Name="Icon" Data="{Binding Glyph}" Style="{StaticResource Fate.TileIcon}" />
+              <!-- Draws itself in when the entity comes on, from here or from anywhere else. -->
+              <Path
+                x:Name="Icon"
+                Data="{Binding Glyph}"
+                Style="{StaticResource Fate.TileIcon}"
+                anim:GlyphMotion.IsActive="{Binding IsOn}"
+                anim:GlyphMotion.IsHovered="{Binding IsMouseOver, ElementName=Card}" />
             </Border>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">

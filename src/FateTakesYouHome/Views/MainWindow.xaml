@@ -4,6 +4,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
   xmlns:c="clr-namespace:FateTakesYouHome.Controls"
+  xmlns:anim="clr-namespace:FateTakesYouHome.Animation"
   xmlns:conv="clr-namespace:FateTakesYouHome.Converters"
   xmlns:pages="clr-namespace:FateTakesYouHome.Views.Pages"
   xmlns:onboarding="clr-namespace:FateTakesYouHome.Onboarding"
@@ -341,13 +342,19 @@
                             <ColumnDefinition Width="*" />
                           </Grid.ColumnDefinitions>
 
+                          <!-- 20 rather than the usual 16: the nav set is framed on the full
+                               24-unit grid, so its ink sits inside a margin the others lack. -->
                           <Path
                             x:Name="Icon"
                             Grid.Column="0"
                             Style="{StaticResource Fate.UiIcon}"
+                            Width="20"
+                            Height="20"
                             Data="{Binding Icon}"
-                            Margin="0,0,11,0"
-                            VerticalAlignment="Center" />
+                            Margin="0,0,9,0"
+                            VerticalAlignment="Center"
+                            anim:GlyphMotion.IsActive="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}"
+                            anim:GlyphMotion.IsHovered="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}}" />
 
                           <TextBlock
                             x:Name="Label"
