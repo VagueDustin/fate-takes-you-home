@@ -278,6 +278,9 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
         {
             IReadOnlyList<HaEntityState> states = await client.GetStatesAsync(ct).ConfigureAwait(false);
 
+            ct.ThrowIfCancellationRequested();
+            ApplySnapshotStates(states);
+
             // The registries are what turn a flat list of entity ids into rooms. Failing to read
             // them is survivable (the UI falls back to grouping by domain), so they are gathered
             // individually rather than as one all-or-nothing batch.
@@ -300,12 +303,6 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
                 () => client.GetConfigAsync(ct), "the server configuration", null, ct).ConfigureAwait(false);
 
             ct.ThrowIfCancellationRequested();
-
-            _states.Clear();
-            foreach (HaEntityState state in states)
-            {
-                _states[state.EntityId] = state;
-            }
 
             Post(() =>
             {
@@ -360,6 +357,38 @@ public sealed partial class HomeAssistantService : ObservableObject, IAsyncDispo
                 IsLoadingSnapshot = false;
                 StatusMessage = "Connected, but the entity list could not be read. Retrying shortly.";
             });
+        }
+    }
+
+    /// <summary>Replaces the cached states with a fresh <c>get_states</c> reply.</summary>
+    /// <remarks>
+    /// Applied as soon as the reply arrives, not after the registry reads that follow it. Any
+    /// <c>state_changed</c> arriving during those is newer than this snapshot, and writing the
+    /// snapshot over it afterwards left tiles Unavailable after a Home Assistant restart. An event
+    /// can still slip in between the reply and this method, so a cached state that is newer than
+    /// the snapshot's is kept.
+    /// </remarks>
+    private void ApplySnapshotStates(IReadOnlyList<HaEntityState> states)
+    {
+        var current = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (HaEntityState state in states)
+        {
+            current.Add(state.EntityId);
+            _states.AddOrUpdate(
+                state.EntityId,
+                state,
+                (_, cached) => cached.LastUpdated > state.LastUpdated ? cached : state);
+        }
+
+        // shortcut: an entity created in the instant between the reply and here is dropped until
+        // it next changes; tracking that would need a per-entry generation, which nothing else uses.
+        foreach (string entityId in _states.Keys)
+        {
+            if (!current.Contains(entityId))
+            {
+                _states.TryRemove(entityId, out _);
+            }
         }
     }
 
