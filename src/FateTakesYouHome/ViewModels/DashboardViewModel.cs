@@ -350,7 +350,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         {
             _tiles.Update(e.EntityId, e.State);
         }
-        else if (_settings.Current.Pinned.Any(
+        else if (_tiles.Contains(e.EntityId)
+                 || _settings.Current.Pinned.Any(
                      p => string.Equals(p.EntityId, e.EntityId, StringComparison.OrdinalIgnoreCase)))
         {
             Rebuild();
