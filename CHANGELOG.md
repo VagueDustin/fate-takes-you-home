@@ -30,6 +30,18 @@ Notable changes to Fate Takes You Home. The format follows
 - A tile that finished a slow action no longer stays greyed out until something else changes.
 - A brightness or volume slider no longer jumps back while you drag it, or sends the old value
   when you let go.
+- **Tiles could stay Unavailable after Home Assistant restarted.** After every connect the app read
+  the states, then the registries, then wrote the states it had read first over anything that had
+  changed meanwhile, and straight after a restart is exactly when entities come up. The states are
+  now applied as soon as they arrive, and a newer change is never replaced by an older snapshot.
+- **A service call Home Assistant never answered waited forever.** Only the handshake and the
+  keepalive had a timeout; a tile pressed while an integration hung stayed busy for as long as the
+  connection lasted. Every command now gives up after the command timeout.
+- **Reconnects stayed slow after one long outage.** The retry delay only went back to its two
+  seconds when a connection closed cleanly, which a dropped one never does, so after a slow
+  restart every later blip waited up to two minutes. It now resets whenever a connection signs in.
+- **Tapping an automation switched it off.** The tile sent a toggle, which disables an automation,
+  instead of running it as the README says. A tap now triggers it, skipping its conditions.
 
 ## [0.4.0] (2026-09-30)
 
