@@ -273,6 +273,13 @@ public sealed class LiveTileTests : IDisposable
     {
         var homeAssistant = new HomeAssistantService(log, Dispatcher.CurrentDispatcher);
 
+        // States land before the registries, so a count or IsReady can be true mid-snapshot. A view
+        // model built then is rebuilt when the snapshot finishes, and the test would hold a widget
+        // that no longer listens. The reload event is the one signal that comes after all of it.
+        var reloaded = new TaskCompletionSource();
+        void OnReloaded(object? sender, EventArgs e) => reloaded.TrySetResult();
+        homeAssistant.SnapshotReloaded += OnReloaded;
+
         await homeAssistant.ApplyConnectionAsync(new HaConnectionOptions
         {
             BaseUrl = server.BaseUrl,
@@ -280,11 +287,20 @@ public sealed class LiveTileTests : IDisposable
             CommandTimeout = TimeSpan.FromSeconds(5),
         });
 
-        Assert.True(
-            await FakeHomeAssistantServer.WaitUntilAsync(
-                () => homeAssistant.IsReady && homeAssistant.StateCount > 0, Patience),
-            $"Never became ready; ended at {homeAssistant.ConnectionState}: {homeAssistant.StatusMessage}");
+        try
+        {
+            await reloaded.Task.WaitAsync(Patience);
+        }
+        catch (TimeoutException)
+        {
+            Assert.Fail($"Never loaded; ended at {homeAssistant.ConnectionState}: {homeAssistant.StatusMessage}");
+        }
+        finally
+        {
+            homeAssistant.SnapshotReloaded -= OnReloaded;
+        }
 
+        Assert.True(homeAssistant.StateCount > 0);
         return homeAssistant;
     }
 
