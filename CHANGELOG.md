@@ -6,6 +6,25 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Rename widgets in the layout editor.** Tiles, buttons and graphs have their name in an edit
+  box on their card, so a long entity name can become a short one that fits a small button.
+  Clear the box to go back to the entity's own name.
+- **Release notes in the app.** The update banner has a What's new button for the version on
+  offer, and Settings and Help open the notes for every release.
+
+### Changed
+
+- **The home screen's headline is now optional, and off by default.** The "lights still
+  burning" line, its counts and the Turn off all lights button can be switched back on from the
+  Layout page; all of them are also widgets a layout can place.
+
+### Fixed
+
+- The resize corner on a layout card was only as big as the two lines drawn in it. The whole
+  corner now grabs.
+
 ## [0.5.0] (2026-10-18)
 
 The runtime release. The app now carries .NET 10 instead of .NET 8, so the runtime inside it keeps

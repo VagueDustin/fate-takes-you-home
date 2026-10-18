@@ -215,6 +215,7 @@
             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
               <Button Content="Open the log" Command="{Binding OpenLogFileCommand}" />
               <Button Margin="10,0,0,0" Content="Project page" Command="{Binding OpenProjectPageCommand}" />
+              <Button Margin="10,0,0,0" Content="Release notes" Command="{Binding OpenReleaseNotesCommand}" />
               <Button Margin="10,0,0,0" Content="Home Assistant docs" Command="{Binding OpenHomeAssistantDocsCommand}" />
             </StackPanel>
 

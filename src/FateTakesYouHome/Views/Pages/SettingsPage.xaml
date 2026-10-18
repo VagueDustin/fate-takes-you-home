@@ -442,6 +442,11 @@
 
               <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button
+                  Content="Release notes"
+                  ToolTip="What each version changed, on GitHub."
+                  Command="{Binding Updates.OpenReleaseNotesCommand}" />
+                <Button
+                  Margin="8,0,0,0"
                   Content="Check now"
                   Command="{Binding Updates.CheckNowCommand}" />
                 <Button

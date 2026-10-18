@@ -226,6 +226,9 @@ public sealed partial class HelpViewModel : ObservableObject
         OpenUrl("https://github.com/VagueDustin/fate-takes-you-home");
 
     [RelayCommand]
+    private void OpenReleaseNotes() => OpenUrl(UpdateService.ReleasesPageUrl);
+
+    [RelayCommand]
     private void OpenHomeAssistantDocs() =>
         OpenUrl("https://www.home-assistant.io/docs/");
 

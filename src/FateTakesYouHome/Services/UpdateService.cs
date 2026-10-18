@@ -124,6 +124,31 @@ public sealed partial class UpdateService : ObservableObject, IDisposable
     [RelayCommand]
     private Task CheckNowAsync() => CheckAsync(manual: true);
 
+    /// <summary>Every release, with the notes for each, newest first.</summary>
+    public const string ReleasesPageUrl = "https://github.com/VagueDustin/fate-takes-you-home/releases";
+
+    /// <summary>
+    /// Opens the notes for the newer release when one is known, otherwise every release's notes.
+    /// </summary>
+    [RelayCommand]
+    private void OpenReleaseNotes()
+    {
+        // The URL came off the network, so only ever hand the shell a GitHub page.
+        string url = Available?.ReleaseNotesUrl is { } notes
+                     && notes.StartsWith("https://github.com/", StringComparison.OrdinalIgnoreCase)
+            ? notes
+            : ReleasesPageUrl;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Warning($"Could not open '{url}'.", ex);
+        }
+    }
+
     /// <summary>The banner's "install and restart" button.</summary>
     [RelayCommand]
     private Task InstallAsync() => DownloadAndInstallAsync();
