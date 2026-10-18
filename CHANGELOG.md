@@ -6,6 +6,12 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] (2026-10-18)
+
+The runtime release. The app now carries .NET 10 instead of .NET 8, so the runtime inside it keeps
+getting security fixes after .NET 8's support ends next month. Nothing about how it looks or
+behaves is meant to change.
+
 ### Changed
 
 - Runs on .NET 10, which stays supported until 2028. .NET 8, which earlier versions bundled, stops
@@ -474,7 +480,8 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.3.1...v0.3.2
