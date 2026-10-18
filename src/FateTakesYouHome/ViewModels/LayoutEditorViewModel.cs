@@ -26,11 +26,14 @@ public sealed partial class EditorWidget : ObservableObject
     [ObservableProperty]
     private int _h;
 
+    private string? _label;
+
     public EditorWidget(WidgetSpec spec, string title, string subtitle)
     {
         Spec = spec;
-        Title = title;
+        DefaultTitle = title;
         Subtitle = subtitle;
+        _label = string.IsNullOrWhiteSpace(spec.Label) ? null : spec.Label.Trim();
         _x = spec.X;
         _y = spec.Y;
         _w = spec.W;
@@ -41,17 +44,49 @@ public sealed partial class EditorWidget : ObservableObject
 
     public WidgetKind Kind => Spec.Kind;
 
-    public string Title { get; }
+    /// <summary>Whether the live widget shows a name, so renaming it means something.</summary>
+    public bool CanRename => Kind is WidgetKind.Tile or WidgetKind.QuickAction or WidgetKind.Sparkline;
+
+    /// <summary>The name the widget would have without a label of its own.</summary>
+    public string DefaultTitle { get; }
+
+    /// <summary>The name shown on the card, edited in place.</summary>
+    /// <remarks>
+    /// Clearing it, or typing the default back, goes back to the default rather than storing a
+    /// copy, so a renamed entity in Home Assistant still shows through.
+    /// </remarks>
+    public string Title
+    {
+        get => _label ?? DefaultTitle;
+        set
+        {
+            string trimmed = value?.Trim() ?? string.Empty;
+            string? label = trimmed.Length == 0 || trimmed == DefaultTitle ? null : trimmed;
+
+            if (label != _label)
+            {
+                _label = label;
+                Renamed?.Invoke(this, EventArgs.Empty);
+            }
+
+            // Raised even when unchanged, so a cleared box shows the default again.
+            OnPropertyChanged();
+        }
+    }
 
     public string Subtitle { get; }
 
-    /// <summary>Writes the live placement back into the spec, for saving.</summary>
+    /// <summary>Raised when the user gives the widget a different name.</summary>
+    public event EventHandler? Renamed;
+
+    /// <summary>Writes the live placement and name back into the spec, for saving.</summary>
     public WidgetSpec Commit()
     {
         Spec.X = X;
         Spec.Y = Y;
         Spec.W = W;
         Spec.H = H;
+        Spec.Label = _label;
         return Spec;
     }
 
@@ -85,6 +120,10 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _hasUnsavedChanges;
+
+    /// <summary>The home screen's summary header, committed with the layout on Save.</summary>
+    [ObservableProperty]
+    private bool _showsHomeSummary;
 
     // -- picker state ----------------------------------------------------------------------------
 
@@ -135,6 +174,8 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
 
     partial void OnPickerQueryChanged(string value) => RefreshPickerResults();
 
+    partial void OnShowsHomeSummaryChanged(bool value) => MarkDirty();
+
     // ------------------------------------------------------------------ load / save
 
     /// <summary>Loads the saved layout, or a generated equivalent of the standard view.</summary>
@@ -156,6 +197,7 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
             Items.Add(Realise(spec));
         }
 
+        ShowsHomeSummary = _settings.Current.ShowHomeSummary;
         HasUnsavedChanges = false;
         StatusMessage = null;
     }
@@ -235,7 +277,9 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
             _ => ("Widget", spec.Kind.ToString()),
         };
 
-        return new EditorWidget(spec, title, subtitle);
+        var widget = new EditorWidget(spec, title, subtitle);
+        widget.Renamed += (_, _) => MarkDirty();
+        return widget;
     }
 
     private string EntityName(string? entityId)
@@ -274,6 +318,7 @@ public sealed partial class LayoutEditorViewModel : ObservableObject
         else
         {
             _settings.Current.HomeWidgets = specs;
+            _settings.Current.ShowHomeSummary = ShowsHomeSummary;
         }
 
         _settings.Save();

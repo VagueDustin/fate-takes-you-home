@@ -88,6 +88,9 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     /// <summary>True when the home screen renders the widget grid instead of the standard view.</summary>
     public bool UsesCustomLayout => _settings.Current.HomeWidgets is { Count: > 0 };
 
+    /// <summary>Whether the headline, counts and turn-off button sit above the home screen.</summary>
+    public bool ShowsSummary => _settings.Current.ShowHomeSummary;
+
     public ObservableCollection<ActivitySummary> Activity { get; } = [];
 
     /// <summary>Every room that has lights, lit rooms first.</summary>
@@ -182,6 +185,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasPins));
         OnPropertyChanged(nameof(Greeting));
         OnPropertyChanged(nameof(UsesCustomLayout));
+        OnPropertyChanged(nameof(ShowsSummary));
     }
 
     /// <summary>Rebuilds the widget grid from the saved layout, when there is one.</summary>

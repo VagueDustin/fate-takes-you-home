@@ -46,6 +46,10 @@ public sealed class WidgetSpec
     [JsonPropertyName("action")]
     public string? Action { get; set; }
 
+    /// <summary>The name shown instead of the entity's own, or null for the default.</summary>
+    [JsonPropertyName("label")]
+    public string? Label { get; set; }
+
     [JsonPropertyName("x")]
     public int X { get; set; }
 
@@ -69,6 +73,7 @@ public sealed class WidgetSpec
         Kind = Kind,
         EntityId = EntityId,
         Action = Action,
+        Label = Label,
         X = X,
         Y = Y,
         W = W,

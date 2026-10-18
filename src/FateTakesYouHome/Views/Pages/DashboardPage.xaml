@@ -32,9 +32,11 @@
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
+        <!-- The summary (headline, button, counts) is off unless chosen on the Layout page. -->
         <StackPanel Grid.Column="0">
           <c:TrackedTextBlock Style="{StaticResource Fate.Display.SectionLabel}" Text="Home" />
           <TextBlock
+            Visibility="{Binding ShowsSummary, Converter={StaticResource BoolToVisibility}}"
             Margin="0,8,0,0"
             Style="{StaticResource Fate.Text.Subtitle}"
             FontSize="{DynamicResource Fate.Size.Title}"
@@ -47,7 +49,8 @@
           VerticalAlignment="Top"
           Style="{StaticResource Fate.Button.Primary}"
           Content="Turn off all lights"
-          Command="{Binding TurnOffAllLightsCommand}" />
+          Command="{Binding TurnOffAllLightsCommand}"
+          Visibility="{Binding ShowsSummary, Converter={StaticResource BoolToVisibility}}" />
       </Grid>
 
       <TextBlock
@@ -64,7 +67,7 @@
         Grid.Row="1"
         Margin="0,20,0,0"
         ItemsSource="{Binding Activity}"
-        Visibility="{Binding Activity.Count, Converter={StaticResource AnyToVisibility}}">
+        Visibility="{Binding ShowsSummary, Converter={StaticResource BoolToVisibility}}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel Orientation="Horizontal" />

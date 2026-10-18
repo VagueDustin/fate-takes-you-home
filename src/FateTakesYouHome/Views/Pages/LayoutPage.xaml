@@ -25,12 +25,24 @@
         Cursor="SizeAll"
         MouseLeftButtonDown="OnWidgetGrabbed">
         <Grid>
-          <StackPanel Margin="12,8,26,8" VerticalAlignment="Center">
+          <StackPanel Margin="12,8,30,8" VerticalAlignment="Center">
             <TextBlock
               Style="{StaticResource Fate.Text.Body}"
               FontWeight="Medium"
               TextTrimming="CharacterEllipsis"
-              Text="{Binding Title}" />
+              Text="{Binding Title}"
+              Visibility="{Binding CanRename, Converter={StaticResource InverseBoolToVisibility}}" />
+            <!-- The name, edited in place. A text box takes its own clicks, so typing never
+                 starts a drag. Empty goes back to the entity's own name. -->
+            <TextBox
+              Style="{StaticResource Fate.TextBox}"
+              Padding="6,3"
+              FontWeight="Medium"
+              Cursor="IBeam"
+              Text="{Binding Title, UpdateSourceTrigger=LostFocus}"
+              ToolTip="Rename. Leave empty for the entity's own name."
+              AutomationProperties.Name="Widget name"
+              Visibility="{Binding CanRename, Converter={StaticResource BoolToVisibility}}" />
             <TextBlock
               Margin="0,2,0,0"
               Style="{StaticResource Fate.Text.Faint}"
@@ -56,22 +68,32 @@
                   Data="{StaticResource Fate.Icon.Close}" />
           </Button>
 
-          <!-- Resize grip. -->
-          <Path
-            x:Name="Grip"
-            Data="M 8 0 L 0 8 M 8 4 L 4 8"
-            Stroke="{DynamicResource Fate.Brush.TextFaint}"
-            StrokeThickness="1.4"
-            StrokeStartLineCap="Round"
-            StrokeEndLineCap="Round"
-            Width="9"
-            Height="9"
-            Margin="0,0,5,5"
+          <!-- Resize grip. A Path only hit-tests on its strokes, so the transparent border is
+               what gives the corner a target big enough to grab. -->
+          <Border
+            x:Name="GripTarget"
+            Width="28"
+            Height="28"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Stretch="Uniform"
+            Background="Transparent"
             Cursor="SizeNWSE"
-            MouseLeftButtonDown="OnGripGrabbed" />
+            ToolTip="Drag to resize"
+            MouseLeftButtonDown="OnGripGrabbed">
+            <Path
+              x:Name="Grip"
+              Data="M 8 0 L 0 8 M 8 4 L 4 8"
+              Stroke="{DynamicResource Fate.Brush.TextFaint}"
+              StrokeThickness="1.4"
+              StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round"
+              Width="9"
+              Height="9"
+              Margin="0,0,5,5"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Bottom"
+              Stretch="Uniform" />
+          </Border>
         </Grid>
       </Border>
 
@@ -186,6 +208,14 @@
                   TextWrapping="Wrap"
                   Margin="0,0,0,10"
                   Text="{Binding SurfaceExplainer}" />
+
+                <CheckBox
+                  Margin="0,0,0,12"
+                  Style="{StaticResource Fate.CheckBox}"
+                  Content="Show the lights-on headline, counts and Turn off all lights above the home screen"
+                  IsChecked="{Binding ShowsHomeSummary}"
+                  Visibility="{Binding EditingFlyout, Converter={StaticResource InverseBoolToVisibility}}"
+                  AutomationProperties.Name="Show the home screen summary" />
 
                 <Grid>
                   <!-- Beneath the cards: the outline of where a dragged card will settle. -->

@@ -185,6 +185,13 @@ public sealed class AppSettings
     [JsonPropertyName("homeWidgets")]
     public List<WidgetSpec>? HomeWidgets { get; set; }
 
+    /// <summary>
+    /// Whether the home screen opens with the lights-on headline, its counts and the turn-off
+    /// button. Off by default: the same things are widgets, so a layout can place them itself.
+    /// </summary>
+    [JsonPropertyName("showHomeSummary")]
+    public bool ShowHomeSummary { get; set; }
+
     /// <summary>The tray panel's widget layout. Null means the standard pinned list.</summary>
     [JsonPropertyName("flyoutWidgets")]
     public List<WidgetSpec>? FlyoutWidgets { get; set; }
@@ -223,6 +230,7 @@ public sealed class AppSettings
         DeviceShortcuts = DeviceShortcuts.Select(s => s.Clone()).ToList(),
         HomeWidgets = HomeWidgets?.Select(w => w.Clone()).ToList(),
         FlyoutWidgets = FlyoutWidgets?.Select(w => w.Clone()).ToList(),
+        ShowHomeSummary = ShowHomeSummary,
         FontOverrides = new FontOverrides
         {
             Display = FontOverrides.Display,

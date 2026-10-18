@@ -76,6 +76,7 @@ public sealed partial class QuickActionWidgetViewModel : WidgetViewModel
     }
 
     public string Label => _entity?.DisplayName
+        ?? (!string.IsNullOrWhiteSpace(Spec.Label) ? Spec.Label : null)
         ?? (Spec.Action == WidgetSpec.AllLightsOffAction ? "All lights off" : "Quick action");
 
     public Geometry? Glyph => _entity is not null
@@ -147,7 +148,9 @@ public sealed partial class SparklineWidgetViewModel : WidgetViewModel
         _homeAssistant = homeAssistant;
 
         HaEntityState? state = spec.EntityId is not null ? homeAssistant.Find(spec.EntityId) : null;
-        Name = state?.FriendlyName ?? spec.EntityId ?? "History";
+        Name = !string.IsNullOrWhiteSpace(spec.Label)
+            ? spec.Label
+            : state?.FriendlyName ?? spec.EntityId ?? "History";
         Unit = state?.AttrString("unit_of_measurement") ?? string.Empty;
 
         _refresh = new DispatcherTimer { Interval = RefreshEvery };
@@ -261,6 +264,12 @@ public static class WidgetFactory
         ObservableCollection<ActivitySummary>? activity,
         string? pinLabel = null)
     {
+        // A name given in the layout editor is meant for this one widget, so it beats the pin's.
+        if (!string.IsNullOrWhiteSpace(spec.Label))
+        {
+            pinLabel = spec.Label;
+        }
+
         switch (spec.Kind)
         {
             case WidgetKind.Tile when spec.EntityId is not null:
