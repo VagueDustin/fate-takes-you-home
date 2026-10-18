@@ -83,6 +83,7 @@ public sealed partial class EntityTileViewModel : ObservableObject
         _sliderTimer.Tick += OnSliderSettled;
 
         Glyph = EntityGlyphs.For(state);
+        _pendingSliderValue = ReadSliderValue();
     }
 
     public string EntityId => _state.EntityId;
@@ -150,9 +151,13 @@ public sealed partial class EntityTileViewModel : ObservableObject
         _state.AttrStringList("supported_color_modes").Any(HaColorModes.HasBrightness);
 
     /// <summary>The slider's value, 0–100. Setting it schedules a debounced service call.</summary>
+    /// <remarks>
+    /// Reads the pending value rather than the state: the binding re-reads after every set, and
+    /// the state still holds the old value until the server catches up.
+    /// </remarks>
     public double SliderValue
     {
-        get => ReadSliderValue();
+        get => _pendingSliderValue;
         set
         {
             double clamped = Math.Clamp(value, 0, 100);
@@ -312,8 +317,9 @@ public sealed partial class EntityTileViewModel : ObservableObject
         OnPropertyChanged(nameof(StatusKind));
         OnPropertyChanged(nameof(HasSlider));
 
-        // While the echo window is open the thumb belongs to the user, not to the server.
-        if (DateTimeOffset.UtcNow >= _suppressEchoUntil)
+        // While a drag is waiting to be sent, or its echo window is open, the thumb belongs to
+        // the user, not to the server.
+        if (!_sliderTimer.IsEnabled && DateTimeOffset.UtcNow >= _suppressEchoUntil)
         {
             _updatingFromServer = true;
             _pendingSliderValue = ReadSliderValue();
