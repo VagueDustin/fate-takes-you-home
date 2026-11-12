@@ -27,7 +27,7 @@ and shared build settings in `Directory.Build.props`.
 
 ## Commands
 
-.NET 10 SDK (`global.json` pins 10.0.100 with `latestFeature` roll-forward).
+.NET 10 SDK (`global.json` pins 10.0.404 with `latestFeature` roll-forward).
 
 ```bash
 dotnet restore

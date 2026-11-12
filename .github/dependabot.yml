@@ -65,7 +65,9 @@ updates:
         update-types:
           - version-update:semver-major
 
-# Deliberately not watched: dotnet-sdk. global.json pins 10.0.100 with rollForward latestFeature,
-# which is a floor rather than a choice of SDK: any 10.0.x satisfies it, CI installs the newest
-# 10.0.x regardless, and the published build is whatever the runner had. Raising the floor would
-# narrow who can build the repository and change nothing about what ships.
+# Deliberately not watched: dotnet-sdk. global.json pins 10.0.404 with rollForward latestFeature,
+# which is a floor rather than a choice of SDK: any later 10.0 SDK satisfies it, and CI installs the
+# newest 10.0.x regardless. The floor exists because a self-contained publish bundles the runtime
+# patch its SDK shipped with (10.0.404 carries runtime 10.0.15), so it is what stops a build on an
+# older SDK from shipping a runtime with known vulnerabilities. Raise it by hand when a .NET patch
+# fixes a security issue.
