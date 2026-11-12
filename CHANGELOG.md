@@ -6,6 +6,16 @@ Notable changes to Fate Takes You Home. The format follows
 
 ## [Unreleased]
 
+## [0.6.1] (2026-11-12)
+
+A security update for the runtime the app carries. Nothing about how it looks or behaves is meant
+to change.
+
+### Security
+
+- **The .NET runtime inside the app moves to 10.0.15.** It carries the security fixes Microsoft
+  published for .NET 10 after 0.6.0 was built, which bundled an older 10.0 runtime.
+
 ## [0.6.0] (2026-10-18)
 
 The make-it-fit release. Layout widgets can be renamed and resized without hunting for the
@@ -509,7 +519,8 @@ First release.
 - **No variable font support**, because WPF has none. The bundled faces are static instances.
 - Themes change how things look, not what is there. There is no plugin surface for new controls.
 
-[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/VagueDustin/fate-takes-you-home/compare/v0.4.0...v0.4.1
